@@ -1,104 +1,115 @@
-# Azure SQL consumption contract
+# Contrato de consumo Azure SQL
 
-Status: proposed application contract for review by the database owner. The application does not own migrations in this phase. Names below are stable application-facing endpoints; underlying normalized tables may differ.
+Estado: contrato de aplicación propuesto para revisión con el responsable de base de datos. La aplicación no administra migraciones en esta fase. Azure SQL sigue siendo el destino de persistencia; el backend puede operar en modo `mock`, pero debe exponer el mismo contrato.
 
-## Design constraints
+## Decisión de idioma
 
-- Azure SQL generates customer codes beginning at `1` and product codes beginning at `1000` (identity or equivalent sequences).
-- The database should preserve payment rows as an append-only history. Corrections should be represented by reversal/replacement records, not destructive updates.
-- Order addresses are order snapshots and must not be inferred from a customer table.
-- Dates must be exposed as `datetime2`/`datetimeoffset`; the API serializes them as ISO-8601 strings.
-- Monetary values use fixed-point `decimal`, never floating-point SQL types.
-- Status and card-type constraints must agree with the domain enums.
-- Application access should use a least-privilege identity and encrypted transport.
+- Código interno TypeScript y endpoints REST: inglés (`/api/v1/customers`, `/api/v1/products`, `/api/v1/inventory`, `/api/v1/orders`, `/api/v1/payments`). Se mantiene el alias `/api/v1/clientes` para consumo académico.
+- UI visible y documentación: español.
+- Valores de negocio y campos del dominio: nombres del enunciado académico y del modelo ER.
 
-## Read views required by the phase-one SQL adapter
+## Reglas de diseño
+
+- Azure SQL genera `codigo_cliente` desde `1` y `codigo_producto` desde `1000`.
+- `fecha_pedido` no puede ser futura y no puede ser anterior al `2024-12-29`.
+- Los estados oficiales de pedido son exactamente: `generado`, `proceso`, `entregado`, `cancelado`, `facturado`.
+- Los pagos se preservan como historial append-only. Una corrección debe registrarse como reverso/reemplazo, no como actualización destructiva.
+- La dirección pertenece al pedido como snapshot; no debe inferirse desde cliente.
+- Fechas en SQL: `datetime2` o `datetimeoffset`; la API serializa ISO-8601.
+- Montos en SQL: `decimal`, nunca `float`/`real`.
+- El acceso de la aplicación debe usar identidad de privilegio mínimo y transporte cifrado.
+
+## Vistas requeridas por el adaptador SQL
 
 ### `app.vw_provinces`
 
-| Column | Suggested SQL type | Notes |
+| Columna | Tipo SQL sugerido | Notas |
 | --- | --- | --- |
-| `code` | `char(2)` | Stable, uppercase two-letter prefix |
-| `name` | `nvarchar(80)` | Province display name |
+| `code` | `char(2)` | Código estable de provincia |
+| `name` | `nvarchar(80)` | Nombre visible |
+
+La API mapea esta vista a `id`, `codigo`, `nombre`, `prefijo`.
 
 ### `app.vw_clients`
 
-| Column | Suggested SQL type | Notes |
+| Columna | Tipo SQL sugerido | Notas |
 | --- | --- | --- |
-| `code` | `int` | Database generated, minimum 1 |
-| `name` | `nvarchar(160)` | Display/legal name |
-| `email` | `nvarchar(254)` | Unique where business policy requires |
-| `phone` | `nvarchar(32)` | Text preserves country code |
-| `balance` | `decimal(19,4)` | Must be positive to generate an order |
-| `created_at` | `datetimeoffset` | Creation instant |
+| `codigo_cliente` | `int` | Generado por base de datos, mínimo `1` |
+| `nombre` | `nvarchar(80)` | Nombre del cliente |
+| `apellido` | `nvarchar(80)` | Apellido del cliente |
+| `identificacion` | `nvarchar(32)` | Cédula/RUC u otro identificador académico |
+| `provincia_codigo` | `char(2)` | Referencia a provincia |
+| `provincia_nombre` | `nvarchar(80)` | Nombre de provincia para payload de lectura |
+| `provincia_prefijo` | `char(2)` | Prefijo usado en pedidos |
+| `tipo_tarjeta` | `char(2)` | `DB` o `CR` |
+| `paz_y_salvo` | `bit` | Debe ser `1` para generar pedidos |
 
-No customer address is requested because addresses belong to orders.
+`email`, `phone`, `balance` y campos similares no son obligatorios en el modelo académico. Si se agregan después, deben ser extensiones opcionales y no reemplazar `paz_y_salvo`.
 
 ### `app.vw_products`
 
-| Column | Suggested SQL type | Notes |
+| Columna | Tipo SQL sugerido | Notas |
 | --- | --- | --- |
-| `code` | `int` | Database generated, minimum 1000 |
-| `name` | `nvarchar(160)` | Product display name |
-| `description` | `nvarchar(1000)` | Nullable |
-| `unit_price` | `decimal(19,4)` | Non-negative |
-| `active` | `bit` | Availability flag |
+| `codigo_producto` | `int` | Generado por base de datos, mínimo `1000` |
+| `nombre` | `nvarchar(160)` | Nombre del producto |
+| `categoria` | `nvarchar(80)` | Categoría del producto |
+| `activo` | `bit` | Opcional para UI; no es regla académica |
+
+`unit_price` no es obligatorio; el monto del pedido se expone como snapshot en `monto`.
 
 ### `app.vw_inventory`
 
-| Column | Suggested SQL type | Notes |
+| Columna | Tipo SQL sugerido | Notas |
 | --- | --- | --- |
-| `product_code` | `int` | Product reference |
-| `quantity_on_hand` | `int` | Non-negative physical stock |
-| `quantity_reserved` | `int` | Between 0 and on-hand |
-| `reorder_level` | `int` | Non-negative threshold |
-| `updated_at` | `datetimeoffset` | Last inventory observation |
+| `codigo_producto` | `int` | Referencia a producto |
+| `cant_ventas` | `int` | Cantidad vendida |
+| `cant_bodega` | `int` | Existencia en bodega |
+| `cant_reservado` | `int` | Cantidad reservada |
+| `nivel_reposicion` | `int` | Opcional para alertas visuales |
 
 ### `app.vw_orders`
 
-| Column | Suggested SQL type | Notes |
+| Columna | Tipo SQL sugerido | Notas |
 | --- | --- | --- |
-| `code` | `nvarchar(64)` | Begins with `province_code + '-'` |
-| `client_code` | `int` | Client reference |
-| `province_code` | `char(2)` | Delivery province/prefix |
-| `delivery_address` | `nvarchar(500)` | Immutable order snapshot |
-| `order_date` | `datetimeoffset` | No later than 2024-12-29 |
-| `valid_date` | `datetimeoffset` | Nullable valid fallback date |
-| `delivery_date` | `datetimeoffset` | Nullable; 48 hours after payment/valid date |
-| `status` | `varchar(20)` | `generated`, `in process`, `delivered`, `canceled`, `invoiced` |
-| `total` | `decimal(19,4)` | Non-negative |
-| `is_paid` | `bit` | Derived from valid payment history where possible |
-| `monthly_rule_applies` | `bit` | Explicit exception marker; semantics pending |
-
-The final schema will also need order-line exposure (`order_code`, `product_code`, `quantity`, captured price) for preference calculations. A future `app.vw_order_lines` is recommended.
+| `codigo_pedido` | `nvarchar(64)` | Identificador del pedido; debe respetar el prefijo de provincia cuando aplique |
+| `codigo_cliente` | `int` | Referencia a cliente |
+| `codigo_producto` | `int` | Referencia a producto |
+| `cantidad` | `int` | Entero positivo |
+| `monto` | `decimal(19,4)` | Snapshot monetario del pedido |
+| `etiqueta` | `nvarchar(80)` | Etiqueta académica/operativa del pedido |
+| `direccion` | `nvarchar(500)` | Snapshot de dirección de entrega |
+| `fecha_pedido` | `datetimeoffset` | `>= 2024-12-29` y no futura |
+| `fecha_entrega` | `datetimeoffset` | Nullable |
+| `estado` | `varchar(20)` | `generado`, `proceso`, `entregado`, `cancelado`, `facturado` |
+| `tipo_duracion` | `nvarchar(40)` | Clasificación académica de duración |
+| `pagado` | `bit` | Derivado opcional desde historial de pagos |
 
 ### `app.vw_payments`
 
-| Column | Suggested SQL type | Notes |
+| Columna | Tipo SQL sugerido | Notas |
 | --- | --- | --- |
-| `id` | `bigint` | Immutable database-generated history key |
-| `order_code` | `nvarchar(64)` | Order reference |
-| `amount` | `decimal(19,4)` | Positive amount |
-| `card_type` | `char(2)` | `DB` or `CR` |
-| `paid_at` | `datetimeoffset` | Payment instant |
-| `reference` | `nvarchar(128)` | Provider/reference token; never raw card data |
+| `id_pago` | `bigint` | Llave inmutable de historial |
+| `codigo_pedido` | `nvarchar(64)` | Referencia a pedido |
+| `monto_pagado` | `decimal(19,4)` | Monto positivo |
+| `fecha_pago` | `datetimeoffset` | Instante de pago |
+| `tipo_tarjeta` | `char(2)` | `DB` o `CR` |
+| `referencia` | `nvarchar(128)` | Opcional; nunca datos sensibles de tarjeta |
 
-## Proposed transactional procedures for later phases
+## Procedimientos transaccionales propuestos
 
-These are not called by the phase-one adapter but define the preferred mutation boundary:
+No son llamados por el adaptador de fase uno, pero definen la frontera recomendada para mutaciones futuras:
 
-- `app.usp_client_create`: validates client fields and returns the generated code.
-- `app.usp_product_create`: validates product fields and returns the generated code.
-- `app.usp_order_create`: atomically checks positive customer balance, reserves inventory, stores the order address/lines, applies the two-letter prefix, and returns the order code.
-- `app.usp_payment_record`: appends payment history and returns the payment id; must be idempotent by external reference.
-- `app.usp_order_transition`: validates allowed status transitions and timestamps.
+- `app.usp_cliente_create`: valida cliente y retorna `codigo_cliente`.
+- `app.usp_producto_create`: valida producto y retorna `codigo_producto`.
+- `app.usp_pedido_create`: valida `paz_y_salvo`, reserva inventario, guarda dirección y snapshot del pedido, aplica prefijo y retorna `codigo_pedido`.
+- `app.usp_pago_record`: agrega historial de pago y retorna `id_pago`; debe ser idempotente por `referencia` cuando exista.
+- `app.usp_pedido_transition`: valida transiciones de `estado` y fechas.
 
-Transactions should use optimistic concurrency or appropriate row locks around stock and balance checks. Procedures should return structured error codes so the API can map conflicts separately from validation and infrastructure failures.
+Las transacciones deben usar concurrencia optimista o bloqueos adecuados sobre inventario y elegibilidad de cliente. Los procedimientos deben retornar códigos de error estructurados para separar validación, conflicto e infraestructura.
 
-## Questions requiring database-owner resolution
+## Preguntas pendientes
 
-1. Is “balance” credit available, account balance, or outstanding debt? The supplied rule is implemented literally as `balance > 0`.
-2. What qualifies as the “valid date” used when a payment timestamp is unavailable?
-3. What exactly activates the monthly exception to the 48-hour in-process limit?
-4. Should day 31 be rejected, excluded from monthly reporting, or assigned to another accounting period? Phase one excludes it from monthly reporting.
-5. Which province-code standard and collision policy should generate order suffixes?
+1. ¿Qué catálogo oficial define `tipo_duracion`?
+2. ¿Cuál es el estándar definitivo del código/prefijo de provincia para `codigo_pedido`?
+3. ¿`fecha_entrega` se calcula siempre 48 horas después del pago o puede venir del enunciado como dato independiente?
+4. ¿El día 31 se excluye solo de reportes mensuales o requiere una regla contable adicional?
