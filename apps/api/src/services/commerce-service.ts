@@ -78,14 +78,7 @@ export class CommerceService {
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([month, orderCount]) => ({ month, orders: orderCount })),
       orderStatuses: [...statuses.entries()].map(([status, count]) => ({ status, count })),
-      lowStock: inventory
-        .map((stock) => ({
-          productCode: stock.productCode,
-          available: stock.quantityOnHand - stock.quantityReserved,
-          reorderLevel: stock.reorderLevel,
-        }))
-        .filter((stock) => stock.available <= stock.reorderLevel)
-        .sort((left, right) => left.available - right.available),
+      lowStock: computeLowStockItems(inventory),
     };
   }
 
@@ -112,4 +105,15 @@ function trackMonthlyOrder(orderDate: string, acc: Map<string, number>): void {
     const key = date.toISOString().slice(0, 7);
     acc.set(key, (acc.get(key) ?? 0) + 1);
   }
+}
+
+function computeLowStockItems(inventory: readonly Inventory[]): DashboardSnapshot["lowStock"] {
+  return inventory
+    .map((stock) => ({
+      productCode: stock.productCode,
+      available: stock.quantityOnHand - stock.quantityReserved,
+      reorderLevel: stock.reorderLevel,
+    }))
+    .filter((stock) => stock.available <= stock.reorderLevel)
+    .sort((left, right) => left.available - right.available);
 }
