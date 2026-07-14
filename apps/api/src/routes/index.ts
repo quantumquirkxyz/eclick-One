@@ -11,6 +11,7 @@ export function createRouter(
   router.register("GET", "/api/v1/dashboard", commerceController.dashboard);
   router.register("GET", "/api/v1/provinces", commerceController.provinces);
   router.register("GET", "/api/v1/customers", commerceController.clients);
+  router.register("GET", "/api/v1/clientes", commerceController.clients);
   router.register("GET", "/api/v1/products", commerceController.products);
   router.register("GET", "/api/v1/inventory", commerceController.inventory);
   router.register("GET", "/api/v1/orders", commerceController.orders);

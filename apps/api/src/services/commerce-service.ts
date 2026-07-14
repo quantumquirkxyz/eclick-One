@@ -58,8 +58,8 @@ export class CommerceService {
     const monthly = new Map<string, number>();
     const statuses = new Map<OrderStatus, number>();
     for (const order of orders) {
-      trackMonthlyOrder(order.orderDate, monthly);
-      statuses.set(order.status, (statuses.get(order.status) ?? 0) + 1);
+      trackMonthlyOrder(order.fecha_pedido, monthly);
+      statuses.set(order.estado, (statuses.get(order.estado) ?? 0) + 1);
     }
 
     return {
@@ -70,11 +70,11 @@ export class CommerceService {
         : "Connected Azure SQL data.",
       metrics: {
         clients: clients.length,
-        activeProducts: products.filter((product) => product.active).length,
+        activeProducts: products.filter((product) => product.activo !== false).length,
         openOrders: orders.filter((order) =>
-          order.status === "generated" || order.status === "in process",
+          order.estado === "generado" || order.estado === "proceso",
         ).length,
-        collected: payments.reduce((total, payment) => total + payment.amount, 0),
+        collected: payments.reduce((total, payment) => total + payment.monto_pagado, 0),
       },
       monthlyOrders: [...monthly.entries()]
         .sort(([left], [right]) => left.localeCompare(right))
@@ -116,9 +116,9 @@ function trackMonthlyOrder(orderDate: string, acc: Map<string, number>): void {
 function computeLowStockItems(inventory: readonly Inventory[]): DashboardSnapshot["lowStock"] {
   return inventory
     .map((stock) => ({
-      productCode: stock.productCode,
-      available: stock.quantityOnHand - stock.quantityReserved,
-      reorderLevel: stock.reorderLevel,
+      productCode: stock.codigo_producto,
+      available: stock.cant_bodega - stock.cant_reservado,
+      reorderLevel: stock.nivel_reposicion ?? 0,
     }))
     .filter((stock) => stock.available <= stock.reorderLevel)
     .sort((left, right) => left.available - right.available);
