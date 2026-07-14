@@ -12,6 +12,9 @@ export function integerEnv(
   fallback: number,
   limits: { min: number; max: number },
 ): number {
+  if (fallback < limits.min || fallback > limits.max) {
+    throw new Error(`${key} fallback value ${fallback} is outside the allowed range.`);
+  }
   const raw = env[key];
   if (raw === undefined || raw.trim() === "") return fallback;
   const value = Number(raw);
