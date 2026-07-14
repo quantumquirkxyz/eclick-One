@@ -10,6 +10,10 @@ export const MIN_CLIENT_CODE = 1;
 export const MIN_PRODUCT_CODE = 1000;
 export const ORDER_DATE_DEADLINE = "2024-12-29T23:59:59.999Z";
 export const DELIVERY_DELAY_HOURS = 48;
+export const DELIVERY_AMOUNT_1 = 50;
+export const DELIVERY_AMOUNT_2 = 70;
+export const DELIVERY_AMOUNT_3 = 90;
+export const MIN_PREFERENCE_REQUESTS = 3;
 
 export class DomainRuleError extends Error {
   constructor(message: string) {
@@ -20,9 +24,9 @@ export class DomainRuleError extends Error {
 
 export function amountForQuantity(quantity: number): number {
   assertPositiveInteger(quantity, "quantity");
-  if (quantity === 1) return 50;
-  if (quantity === 2) return 70;
-  return 90;
+  if (quantity === 1) return DELIVERY_AMOUNT_1;
+  if (quantity === 2) return DELIVERY_AMOUNT_2;
+  return DELIVERY_AMOUNT_3;
 }
 
 export function isCardType(value: string): value is CardType {
@@ -106,7 +110,7 @@ export function selectProductPreference(
 
   return (
     [...aggregates.values()]
-      .filter((candidate) => candidate.requestCount >= 3)
+      .filter((candidate) => candidate.requestCount >= MIN_PREFERENCE_REQUESTS)
       .sort(
         (left, right) =>
           right.requestCount - left.requestCount ||
