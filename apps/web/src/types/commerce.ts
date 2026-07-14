@@ -2,6 +2,9 @@ import type {
   CardType,
   Client,
   Inventory,
+  NewClient,
+  NewOrder,
+  NewPayment,
   Order,
   OrderStatus,
   Payment,
@@ -17,6 +20,9 @@ export type Producto = Product;
 export type Inventario = Inventory;
 export type Pedido = Order;
 export type Pago = Payment;
+export type NewCliente = NewClient;
+export type NewPedido = NewOrder;
+export type NewPago = NewPayment;
 
 export type Vista =
   | "resumen"
