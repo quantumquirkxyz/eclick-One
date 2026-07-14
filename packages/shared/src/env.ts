@@ -24,6 +24,24 @@ export function integerEnv(
   return value;
 }
 
+export function numberEnv(
+  env: Environment,
+  key: string,
+  fallback: number,
+  limits: { min: number; max: number },
+): number {
+  if (fallback < limits.min || fallback > limits.max) {
+    throw new Error(`${key} fallback value ${fallback} is outside the allowed range.`);
+  }
+  const raw = env[key];
+  if (raw === undefined || raw.trim() === "") return fallback;
+  const value = Number(raw);
+  if (Number.isNaN(value) || value < limits.min || value > limits.max) {
+    throw new Error(`${key} must be a number between ${limits.min} and ${limits.max}.`);
+  }
+  return value;
+}
+
 export function booleanEnv(env: Environment, key: string, fallback: boolean): boolean {
   const raw = env[key]?.trim().toLowerCase();
   if (!raw) return fallback;
