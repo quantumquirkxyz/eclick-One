@@ -7,7 +7,7 @@ describe("API application", () => {
   test("returns a shallow health check", async () => {
     const response = await app.fetch(new Request("http://localhost/api/v1/health"));
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ status: "ok", repositoryMode: "mock" });
+    expect(await response.json()).toMatchObject({ status: "ok", repositoryMode: "mock", uptime: expect.any(Number) });
   });
 
   test("marks dashboard data as synthetic", async () => {
