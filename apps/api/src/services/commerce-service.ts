@@ -57,12 +57,7 @@ export class CommerceService {
     const monthly = new Map<string, number>();
     const statuses = new Map<OrderStatus, number>();
     for (const order of orders) {
-      const date = new Date(order.orderDate);
-      // Business rule: day 31 does not enter monthly order reporting.
-      if (date.getUTCDate() <= 30) {
-        const key = date.toISOString().slice(0, 7);
-        monthly.set(key, (monthly.get(key) ?? 0) + 1);
-      }
+      trackMonthlyOrder(order.orderDate, monthly);
       statuses.set(order.status, (statuses.get(order.status) ?? 0) + 1);
     }
 
@@ -105,5 +100,16 @@ export class CommerceService {
         { key: "low-stock", title: "Low stock watchlist", rows: dashboard.lowStock },
       ],
     };
+  }
+}
+
+/**
+ * Business rule: day 31 does not enter monthly order reporting.
+ */
+function trackMonthlyOrder(orderDate: string, acc: Map<string, number>): void {
+  const date = new Date(orderDate);
+  if (date.getUTCDate() <= 30) {
+    const key = date.toISOString().slice(0, 7);
+    acc.set(key, (acc.get(key) ?? 0) + 1);
   }
 }
