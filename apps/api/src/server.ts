@@ -14,8 +14,16 @@ console.info(`eclick One API listening at ${server.url} (${app.database.mode} re
 
 async function shutdown(signal: string): Promise<void> {
   console.info(`${signal} received; closing resources.`);
-  await app.database.close();
-  await server.stop();
+  try {
+    await app.database.close();
+  } catch (error) {
+    console.error("Error closing database:", error);
+  }
+  try {
+    await server.stop();
+  } catch (error) {
+    console.error("Error stopping server:", error);
+  }
   process.exit(0);
 }
 
