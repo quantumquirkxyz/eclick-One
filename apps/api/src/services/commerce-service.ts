@@ -82,7 +82,11 @@ export class CommerceService {
     };
   }
 
-  async getReports() {
+  async getReports(): Promise<{
+    synthetic: boolean;
+    generatedAt: string;
+    sections: readonly { key: string; title: string; rows: readonly unknown[] }[];
+  }> {
     const dashboard = await this.getDashboard();
     return {
       synthetic: dashboard.synthetic,
