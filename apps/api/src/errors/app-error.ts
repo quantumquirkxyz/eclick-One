@@ -16,3 +16,24 @@ export class NotFoundError extends AppError {
     this.name = "NotFoundError";
   }
 }
+
+export class BadRequestError extends AppError {
+  constructor(message = "Invalid request.", details?: unknown) {
+    super(message, 400, "BAD_REQUEST", details);
+    this.name = "BadRequestError";
+  }
+}
+
+export class ConflictError extends AppError {
+  constructor(message = "Operation not allowed.", details?: unknown) {
+    super(message, 409, "CONFLICT", details);
+    this.name = "ConflictError";
+  }
+}
+
+export class ServiceUnavailableError extends AppError {
+  constructor(message = "Service temporarily unavailable.", details?: unknown) {
+    super(message, 503, "SERVICE_UNAVAILABLE", details);
+    this.name = "ServiceUnavailableError";
+  }
+}

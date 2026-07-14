@@ -3,4 +3,7 @@ export interface ControllerResult<T = unknown> {
   body: T;
 }
 
-export type Controller = (request: Request) => Promise<ControllerResult> | ControllerResult;
+export type Controller = (
+  request: Request,
+  params: Record<string, string>,
+) => Promise<ControllerResult> | ControllerResult;
