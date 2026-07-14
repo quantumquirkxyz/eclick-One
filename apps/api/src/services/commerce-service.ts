@@ -1,6 +1,7 @@
 import type { Client, CommerceRepositories, Inventory, Order, OrderStatus, Payment, Product, Province } from "@eclick-one/domain";
 
 export interface DashboardSnapshot {
+  readonly kind: "dashboard";
   synthetic: boolean;
   notice: string;
   metrics: {
@@ -62,6 +63,7 @@ export class CommerceService {
     }
 
     return {
+      kind: "dashboard",
       synthetic: this.synthetic,
       notice: this.synthetic
         ? "Synthetic demonstration data — not operational or customer data."
