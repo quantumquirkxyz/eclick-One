@@ -17,20 +17,29 @@ export interface DatabaseContext {
 }
 
 export function createDatabase(env: Environment): DatabaseContext {
+
   const rawMode = env.REPOSITORY_MODE?.trim().toLowerCase() || "mock";
   if (rawMode !== "mock" && rawMode !== "sql") {
     throw new Error("REPOSITORY_MODE must be either mock or sql.");
   }
 
   if (rawMode === "mock") {
-    return {
-      repositories: new MockCommerceRepository(),
-      mode: "mock",
-      async ping() {},
-      async close() {},
-    };
+    return createMockDatabase();
   }
 
+  return createSqlDatabase(env);
+}
+
+function createMockDatabase(): DatabaseContext {
+  return {
+    repositories: new MockCommerceRepository(),
+    mode: "mock",
+    async ping() {},
+    async close() {},
+  };
+}
+
+function createSqlDatabase(env: Environment): DatabaseContext {
   const client = new AzureSqlClient(azureSqlConfigFromEnv(env));
   return {
     repositories: new SqlCommerceRepository(client),
