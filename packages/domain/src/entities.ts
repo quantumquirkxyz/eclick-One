@@ -2,102 +2,105 @@ export const CARD_TYPES = ["DB", "CR"] as const satisfies readonly string[];
 export type CardType = (typeof CARD_TYPES)[number];
 
 export const ORDER_STATUSES = [
-  "generated",
-  "in process",
-  "delivered",
-  "canceled",
-  "invoiced",
+  "generado",
+  "proceso",
+  "entregado",
+  "cancelado",
+  "facturado",
 ] as const satisfies readonly string[];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export interface Province {
+  /** Stable academic identifier; often the same value as prefijo. */
+  id: string;
+  codigo: string;
+  nombre: string;
   /** Stable uppercase prefix used in order codes. */
-  code: string;
-  name: string;
+  prefijo: string;
 }
 
 export interface Client {
   /** Database-generated integer, starting at 1. */
-  code: number;
-  name: string;
-  email: string;
-  phone: string;
-  balance: number;
-  createdAt: string;
+  codigo_cliente: number;
+  nombre: string;
+  apellido: string;
+  identificacion: string;
+  provincia: Province;
+  tipo_tarjeta: CardType;
+  paz_y_salvo: boolean;
+  /** Optional operational extension; not part of the academic rule set. */
+  email?: string;
+  /** Optional operational extension; not part of the academic rule set. */
+  phone?: string;
 }
 
 export interface Product {
   /** Database-generated integer, starting at 1000. */
-  code: number;
-  name: string;
-  description?: string;
-  unitPrice: number;
-  active: boolean;
+  codigo_producto: number;
+  nombre: string;
+  categoria: string;
+  /** Optional catalog extension for UI filtering; not an academic rule. */
+  activo?: boolean;
 }
 
 export interface Inventory {
-  productCode: number;
-  quantityOnHand: number;
-  quantityReserved: number;
-  reorderLevel: number;
-  updatedAt: string;
-}
-
-export interface OrderLine {
-  productCode: number;
-  quantity: number;
-  /** Captured value prevents later catalog changes from rewriting history. */
-  amount: number;
+  codigo_producto: number;
+  cant_ventas: number;
+  cant_bodega: number;
+  cant_reservado: number;
+  /** Optional operational threshold; not part of the academic ER model. */
+  nivel_reposicion?: number;
 }
 
 export interface Order {
   /** Province-prefixed application identifier, e.g. PA-SYN-0001. */
-  code: string;
-  clientCode: number;
-  provinceCode: string;
+  codigo_pedido: string;
+  codigo_cliente: number;
+  codigo_producto: number;
+  cantidad: number;
+  monto: number;
+  etiqueta: string;
   /** Delivery address is an immutable order snapshot, never a Client field. */
-  deliveryAddress: string;
-  orderDate: string;
-  validDate?: string;
-  deliveryDate?: string;
-  status: OrderStatus;
-  total: number;
-  isPaid: boolean;
-  monthlyRuleApplies: boolean;
-  lines: readonly OrderLine[];
+  direccion: string;
+  fecha_pedido: string;
+  fecha_entrega?: string;
+  estado: OrderStatus;
+  tipo_duracion: string;
+  /** Optional UI/API derivative from payment history; not part of the ER model. */
+  pagado?: boolean;
 }
 
 export interface Payment {
   /** Immutable payment-history key. */
-  id: number;
-  orderCode: string;
-  amount: number;
-  cardType: CardType;
-  paidAt: string;
-  reference: string;
+  id_pago: number;
+  codigo_pedido: string;
+  monto_pagado: number;
+  fecha_pago: string;
+  tipo_tarjeta: CardType;
+  referencia?: string;
 }
 
 export interface NewClient {
-  name: string;
-  email: string;
-  phone: string;
-  balance: number;
+  nombre: string;
+  apellido: string;
+  identificacion: string;
+  provincia: Province;
+  tipo_tarjeta: CardType;
+  paz_y_salvo: boolean;
 }
 
 export interface NewProduct {
-  name: string;
-  description?: string;
-  unitPrice: number;
-  active: boolean;
+  nombre: string;
+  categoria: string;
 }
 
 export interface ProductRequest {
-  productCode: number;
-  quantity: number;
+  codigo_producto: number;
+  cantidad: number;
 }
 
 export interface ProductPreference {
-  productCode: number;
-  requestCount: number;
-  totalQuantity: number;
+  codigo_producto: number;
+  cant_solicitudes: number;
+  cantidad_total: number;
 }

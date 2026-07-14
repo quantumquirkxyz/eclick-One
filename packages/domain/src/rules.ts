@@ -8,7 +8,7 @@ import { CARD_TYPES, ORDER_STATUSES } from "./entities";
 
 export const MIN_CLIENT_CODE = 1;
 export const MIN_PRODUCT_CODE = 1000;
-export const ORDER_DATE_DEADLINE = "2024-12-29T23:59:59.999Z";
+export const MIN_ORDER_DATE = "2024-12-29T00:00:00.000Z";
 export const DELIVERY_DELAY_HOURS = 48;
 export const DELIVERY_AMOUNT_1 = 50;
 export const DELIVERY_AMOUNT_2 = 70;
@@ -39,8 +39,11 @@ export function isOrderStatus(value: string): value is OrderStatus {
 
 export function assertOrderDateAllowed(orderDate: string): void {
   const instant = parseDate(orderDate, "orderDate");
-  if (instant.getTime() > Date.parse(ORDER_DATE_DEADLINE)) {
-    throw new DomainRuleError("Order date must be no later than December 29, 2024.");
+  if (instant.getTime() < Date.parse(MIN_ORDER_DATE)) {
+    throw new DomainRuleError("Order date cannot be earlier than December 29, 2024.");
+  }
+  if (instant.getTime() > Date.now()) {
+    throw new DomainRuleError("Order date cannot be in the future.");
   }
 }
 
@@ -53,9 +56,9 @@ export function canDeliverOrder(isPaid: boolean): boolean {
   return isPaid;
 }
 
-export function assertClientCanGenerateOrder(balance: number): void {
-  if (!Number.isFinite(balance) || balance <= 0) {
-    throw new DomainRuleError("A client needs a positive balance to generate an order.");
+export function assertClientCanGenerateOrder(pazYSalvo: boolean): void {
+  if (pazYSalvo !== true) {
+    throw new DomainRuleError("A client must be paz y salvo to generate an order.");
   }
 }
 
@@ -98,24 +101,24 @@ export function selectProductPreference(
   const aggregates = new Map<number, ProductPreference>();
 
   for (const request of requests) {
-    assertPositiveInteger(request.productCode, "productCode");
-    assertPositiveInteger(request.quantity, "quantity");
-    const current = aggregates.get(request.productCode);
-    aggregates.set(request.productCode, {
-      productCode: request.productCode,
-      requestCount: (current?.requestCount ?? 0) + 1,
-      totalQuantity: (current?.totalQuantity ?? 0) + request.quantity,
+    assertPositiveInteger(request.codigo_producto, "codigo_producto");
+    assertPositiveInteger(request.cantidad, "cantidad");
+    const current = aggregates.get(request.codigo_producto);
+    aggregates.set(request.codigo_producto, {
+      codigo_producto: request.codigo_producto,
+      cant_solicitudes: (current?.cant_solicitudes ?? 0) + 1,
+      cantidad_total: (current?.cantidad_total ?? 0) + request.cantidad,
     });
   }
 
   return (
     [...aggregates.values()]
-      .filter((candidate) => candidate.requestCount >= MIN_PREFERENCE_REQUESTS)
+      .filter((candidate) => candidate.cant_solicitudes >= MIN_PREFERENCE_REQUESTS)
       .sort(
         (left, right) =>
-          right.requestCount - left.requestCount ||
-          right.totalQuantity - left.totalQuantity ||
-          left.productCode - right.productCode,
+          right.cant_solicitudes - left.cant_solicitudes ||
+          right.cantidad_total - left.cantidad_total ||
+          left.codigo_producto - right.codigo_producto,
       )[0] ?? null
   );
 }

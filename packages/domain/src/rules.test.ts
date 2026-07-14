@@ -17,9 +17,11 @@ describe("domain business rules", () => {
     expect(() => amountForQuantity(0)).toThrow(DomainRuleError);
   });
 
-  test("enforces the inclusive order deadline", () => {
-    expect(() => assertOrderDateAllowed("2024-12-29T23:59:59.999Z")).not.toThrow();
-    expect(() => assertOrderDateAllowed("2024-12-30T00:00:00.000Z")).toThrow();
+  test("enforces the inclusive order date lower bound and rejects future dates", () => {
+    expect(() => assertOrderDateAllowed("2024-12-29T00:00:00.000Z")).not.toThrow();
+    expect(() => assertOrderDateAllowed("2024-12-28T23:59:59.999Z")).toThrow();
+    const future = new Date(Date.now() + 60_000).toISOString();
+    expect(() => assertOrderDateAllowed(future)).toThrow();
   });
 
   test("calculates delivery exactly 48 hours later", () => {
@@ -28,9 +30,9 @@ describe("domain business rules", () => {
     );
   });
 
-  test("requires positive client balance", () => {
-    expect(() => assertClientCanGenerateOrder(0)).toThrow();
-    expect(() => assertClientCanGenerateOrder(0.01)).not.toThrow();
+  test("requires paz y salvo before generating an order", () => {
+    expect(() => assertClientCanGenerateOrder(false)).toThrow();
+    expect(() => assertClientCanGenerateOrder(true)).not.toThrow();
   });
 
   test("monthly reporting excludes day 31", () => {
@@ -55,21 +57,21 @@ describe("domain business rules", () => {
 
   test("preference returns null when fewer than three requests exist", () => {
     expect(selectProductPreference([
-      { productCode: 1000, quantity: 1 },
-      { productCode: 1000, quantity: 1 },
+      { codigo_producto: 1000, cantidad: 1 },
+      { codigo_producto: 1000, cantidad: 1 },
     ])).toBeNull();
   });
 
   test("preference uses frequency, then quantity", () => {
     expect(
       selectProductPreference([
-        { productCode: 1000, quantity: 1 },
-        { productCode: 1000, quantity: 1 },
-        { productCode: 1000, quantity: 1 },
-        { productCode: 1001, quantity: 4 },
-        { productCode: 1001, quantity: 4 },
-        { productCode: 1001, quantity: 4 },
+        { codigo_producto: 1000, cantidad: 1 },
+        { codigo_producto: 1000, cantidad: 1 },
+        { codigo_producto: 1000, cantidad: 1 },
+        { codigo_producto: 1001, cantidad: 4 },
+        { codigo_producto: 1001, cantidad: 4 },
+        { codigo_producto: 1001, cantidad: 4 },
       ]),
-    ).toEqual({ productCode: 1001, requestCount: 3, totalQuantity: 12 });
+    ).toEqual({ codigo_producto: 1001, cant_solicitudes: 3, cantidad_total: 12 });
   });
 });
