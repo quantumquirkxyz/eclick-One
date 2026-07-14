@@ -4,6 +4,7 @@ import {
   amountForQuantity,
   assertClientCanGenerateOrder,
   assertOrderDateAllowed,
+  assertProvinceOrderCode,
   calculateDeliveryDate,
   canRemainInProcess,
   isIncludedInMonthlyOrders,
@@ -44,6 +45,19 @@ describe("domain business rules", () => {
     };
     expect(canRemainInProcess({ ...base, monthlyRuleApplies: false })).toBe(false);
     expect(canRemainInProcess({ ...base, monthlyRuleApplies: true })).toBe(true);
+  });
+
+  test("asserts province code format with exactly two uppercase letters", () => {
+    expect(() => assertProvinceOrderCode("PA-SYN-0001", "PA")).not.toThrow();
+    expect(() => assertProvinceOrderCode("PA-SYN-0001", "PA.")).toThrow(DomainRuleError);
+    expect(() => assertProvinceOrderCode("PA-SYN-0001", "pan")).toThrow(DomainRuleError);
+  });
+
+  test("preference returns null when fewer than three requests exist", () => {
+    expect(selectProductPreference([
+      { productCode: 1000, quantity: 1 },
+      { productCode: 1000, quantity: 1 },
+    ])).toBeNull();
   });
 
   test("preference uses frequency, then quantity", () => {
