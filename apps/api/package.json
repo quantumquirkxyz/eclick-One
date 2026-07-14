@@ -1,0 +1,17 @@
+{
+  "name": "@eclick-one/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/server.ts",
+    "start": "bun src/server.ts",
+    "build": "bun build ./src/server.ts --outdir ./dist --target bun --external mssql",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@eclick-one/db": "workspace:*",
+    "@eclick-one/domain": "workspace:*",
+    "@eclick-one/shared": "workspace:*"
+  }
+}
