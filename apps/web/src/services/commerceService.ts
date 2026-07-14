@@ -10,7 +10,6 @@ export interface ComercioServicio {
   listarPagos(): Promise<readonly Pago[]>;
 }
 
-/** Adaptador temporal. Su interfaz permite sustituirlo por REST sin cambiar las vistas. */
 export const comercioMockService: ComercioServicio = {
   listarClientes: async () => clientesMock,
   listarProductos: async () => productosMock,
@@ -19,7 +18,11 @@ export const comercioMockService: ComercioServicio = {
   listarPagos: async () => pagosMock,
 };
 
-export function validarPedidoSintetico(cliente: Cliente, cantidad: number, fecha: string): Pick<Pedido, "monto" | "fechaEntrega"> {
+export function validarPedidoSintetico(
+  cliente: Cliente,
+  cantidad: number,
+  fecha: string,
+): Pick<Pedido, "monto" | "fechaEntrega"> {
   assertClientCanGenerateOrder(cliente.saldo);
   assertOrderDateAllowed(fecha);
   return { monto: amountForQuantity(cantidad), fechaEntrega: calculateDeliveryDate(fecha) };
