@@ -2,7 +2,11 @@ import type {
   Client,
   CommerceRepositories,
   Inventory,
+  NewClient,
+  NewOrder,
+  NewPayment,
   Order,
+  OrderStatusTransition,
   Payment,
   Product,
   Province,
@@ -53,6 +57,14 @@ export class SqlCommerceRepository implements CommerceRepositories {
     return row ? mapClient(row) : null;
   }
 
+  async createClient(_input: NewClient): Promise<Client> {
+    throw new Error("Operación no disponible hasta integrar Azure SQL");
+  }
+
+  async getClientPreference(_code: number): Promise<import("@eclick-one/domain").ProductPreference | null> {
+    throw new Error("Operación no disponible hasta integrar Azure SQL");
+  }
+
   async listProducts(): Promise<readonly Product[]> {
     const pool = await this.client.getPool();
     const { recordset } = await pool.request().query<ProductRow>(
@@ -101,6 +113,19 @@ export class SqlCommerceRepository implements CommerceRepositories {
     }));
   }
 
+  async listCurrentOrders(): Promise<readonly Order[]> {
+    const orders = await this.listOrders();
+    return orders.filter((order) => order.estado === "generado" || order.estado === "proceso");
+  }
+
+  async createOrder(_input: NewOrder): Promise<Order> {
+    throw new Error("Operación no disponible hasta integrar Azure SQL");
+  }
+
+  async transitionOrderStatus(_input: OrderStatusTransition): Promise<Order> {
+    throw new Error("Operación no disponible hasta integrar Azure SQL");
+  }
+
   async listPayments(): Promise<readonly Payment[]> {
     const pool = await this.client.getPool();
     const { recordset } = await pool.request().query<PaymentRow>(
@@ -114,6 +139,10 @@ export class SqlCommerceRepository implements CommerceRepositories {
       tipo_tarjeta: row.tipo_tarjeta,
       ...(row.referencia === null ? {} : { referencia: row.referencia }),
     }));
+  }
+
+  async recordPayment(_input: NewPayment): Promise<Payment> {
+    throw new Error("Operación no disponible hasta integrar Azure SQL");
   }
 }
 

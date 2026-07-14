@@ -1,28 +1,35 @@
-import type {
-  Client,
-  CommerceRepositories,
-  Inventory,
-  Order,
-  Payment,
-  Product,
-  Province,
+import {
+  amountForQuantity,
+  calculateDeliveryDate,
+  selectProductPreference,
+  type Client,
+  type CommerceRepositories,
+  type Inventory,
+  type NewClient,
+  type NewOrder,
+  type NewPayment,
+  type Order,
+  type OrderStatusTransition,
+  type Payment,
+  type Product,
+  type ProductPreference,
+  type Province,
 } from "@eclick-one/domain";
 
-// Every value in this adapter is synthetic and exists only to exercise the MVP.
-const provinces: readonly Province[] = [
+const seedProvinces: Province[] = [
   { id: "PA", codigo: "PA", nombre: "Panamá", prefijo: "PA" },
   { id: "CH", codigo: "CH", nombre: "Chiriquí", prefijo: "CH" },
   { id: "CO", codigo: "CO", nombre: "Colón", prefijo: "CO" },
   { id: "OC", codigo: "OC", nombre: "Coclé", prefijo: "OC" },
 ];
 
-const clients: readonly Client[] = [
+const seedClients: Client[] = [
   {
     codigo_cliente: 1,
     nombre: "Ana",
     apellido: "Morales",
     identificacion: "8-000-001",
-    provincia: provinces[0]!,
+    provincia: seedProvinces[0]!,
     tipo_tarjeta: "CR",
     paz_y_salvo: true,
   },
@@ -31,7 +38,7 @@ const clients: readonly Client[] = [
     nombre: "Carlos",
     apellido: "Ríos",
     identificacion: "4-000-002",
-    provincia: provinces[1]!,
+    provincia: seedProvinces[1]!,
     tipo_tarjeta: "DB",
     paz_y_salvo: true,
   },
@@ -40,47 +47,74 @@ const clients: readonly Client[] = [
     nombre: "Lucía",
     apellido: "Castillo",
     identificacion: "3-000-003",
-    provincia: provinces[2]!,
+    provincia: seedProvinces[2]!,
     tipo_tarjeta: "CR",
     paz_y_salvo: false,
   },
 ];
 
-const products: readonly Product[] = [
+const seedProducts: Product[] = [
   { codigo_producto: 1000, nombre: "Laptop Académica", categoria: "Tecnología", activo: true },
   { codigo_producto: 1001, nombre: "Silla Ergonómica", categoria: "Oficina", activo: true },
   { codigo_producto: 1002, nombre: "Impresora Láser", categoria: "Tecnología", activo: true },
   { codigo_producto: 1003, nombre: "Kit de Papelería", categoria: "Oficina", activo: true },
 ];
 
-const inventory: readonly Inventory[] = [
+const seedInventory: Inventory[] = [
   { codigo_producto: 1000, cant_ventas: 19, cant_bodega: 34, cant_reservado: 4, nivel_reposicion: 12 },
   { codigo_producto: 1001, cant_ventas: 14, cant_bodega: 18, cant_reservado: 6, nivel_reposicion: 10 },
   { codigo_producto: 1002, cant_ventas: 11, cant_bodega: 8, cant_reservado: 3, nivel_reposicion: 10 },
   { codigo_producto: 1003, cant_ventas: 7, cant_bodega: 24, cant_reservado: 2, nivel_reposicion: 5 },
 ];
 
-const orders: readonly Order[] = [
+const seedOrders: Order[] = [
   {
     codigo_pedido: "PA-SYN-0001",
     codigo_cliente: 1,
     codigo_producto: 1000,
     cantidad: 2,
-    monto: 70,
+    monto: amountForQuantity(2),
     etiqueta: "pedido-web",
     direccion: "Dirección sintética 101, Panamá",
     fecha_pedido: "2024-12-29T14:00:00.000Z",
-    fecha_entrega: "2024-12-31T14:00:00.000Z",
+    fecha_entrega: "2024-12-31T15:00:00.000Z",
     estado: "facturado",
     tipo_duracion: "48h",
     pagado: true,
   },
   {
-    codigo_pedido: "CH-SYN-0002",
+    codigo_pedido: "PA-SYN-0002",
+    codigo_cliente: 1,
+    codigo_producto: 1000,
+    cantidad: 1,
+    monto: amountForQuantity(1),
+    etiqueta: "pedido-web",
+    direccion: "Dirección sintética 102, Panamá",
+    fecha_pedido: "2024-12-30T10:00:00.000Z",
+    fecha_entrega: "2025-01-01T11:00:00.000Z",
+    estado: "entregado",
+    tipo_duracion: "48h",
+    pagado: true,
+  },
+  {
+    codigo_pedido: "PA-SYN-0003",
+    codigo_cliente: 1,
+    codigo_producto: 1000,
+    cantidad: 3,
+    monto: amountForQuantity(3),
+    etiqueta: "pedido-web",
+    direccion: "Dirección sintética 103, Panamá",
+    fecha_pedido: "2024-12-31T12:00:00.000Z",
+    estado: "proceso",
+    tipo_duracion: "48h",
+    pagado: false,
+  },
+  {
+    codigo_pedido: "CH-SYN-0004",
     codigo_cliente: 2,
     codigo_producto: 1001,
     cantidad: 1,
-    monto: 50,
+    monto: amountForQuantity(1),
     etiqueta: "pedido-web",
     direccion: "Dirección sintética 202, Chiriquí",
     fecha_pedido: "2024-12-30T16:00:00.000Z",
@@ -89,52 +123,177 @@ const orders: readonly Order[] = [
     pagado: false,
   },
   {
-    codigo_pedido: "CO-SYN-0003",
-    codigo_cliente: 1,
+    codigo_pedido: "CO-SYN-0005",
+    codigo_cliente: 3,
     codigo_producto: 1002,
-    cantidad: 3,
-    monto: 90,
+    cantidad: 2,
+    monto: amountForQuantity(2),
     etiqueta: "pedido-web",
     direccion: "Dirección sintética 303, Colón",
     fecha_pedido: "2024-12-31T18:00:00.000Z",
     fecha_entrega: "2025-01-02T18:00:00.000Z",
-    estado: "entregado",
+    estado: "generado",
     tipo_duracion: "48h",
-    pagado: true,
+    pagado: false,
   },
 ];
 
-const payments: readonly Payment[] = [
-  { id_pago: 1, codigo_pedido: "PA-SYN-0001", monto_pagado: 70, tipo_tarjeta: "CR", fecha_pago: "2024-12-29T15:00:00.000Z", referencia: "SYN-PAGO-001" },
-  { id_pago: 2, codigo_pedido: "CO-SYN-0003", monto_pagado: 90, tipo_tarjeta: "DB", fecha_pago: "2024-12-31T18:15:00.000Z", referencia: "SYN-PAGO-002" },
+const seedPayments: Payment[] = [
+  {
+    id_pago: 1,
+    codigo_pedido: "PA-SYN-0001",
+    monto_pagado: 70,
+    tipo_tarjeta: "CR",
+    fecha_pago: "2024-12-29T15:00:00.000Z",
+    referencia: "SYN-PAGO-001",
+  },
+  {
+    id_pago: 2,
+    codigo_pedido: "PA-SYN-0002",
+    monto_pagado: 50,
+    tipo_tarjeta: "DB",
+    fecha_pago: "2024-12-30T11:00:00.000Z",
+    referencia: "SYN-PAGO-002",
+  },
 ];
 
 export class MockCommerceRepository implements CommerceRepositories {
+  private readonly provinces = structuredClone(seedProvinces);
+  private readonly clients = structuredClone(seedClients);
+  private readonly products = structuredClone(seedProducts);
+  private readonly inventory = structuredClone(seedInventory);
+  private readonly orders = structuredClone(seedOrders);
+  private readonly payments = structuredClone(seedPayments);
+
   async listProvinces(): Promise<readonly Province[]> {
-    return structuredClone(provinces);
+    return structuredClone(this.provinces);
   }
 
   async listClients(): Promise<readonly Client[]> {
-    return structuredClone(clients);
+    return structuredClone(this.clients);
   }
 
   async findClientByCode(code: number): Promise<Client | null> {
-    return structuredClone(clients.find((client) => client.codigo_cliente === code) ?? null);
+    return structuredClone(this.clients.find((client) => client.codigo_cliente === code) ?? null);
+  }
+
+  async createClient(input: NewClient): Promise<Client> {
+    const nextCode = Math.max(...this.clients.map((client) => client.codigo_cliente), 0) + 1;
+    const client: Client = {
+      codigo_cliente: nextCode,
+      nombre: input.nombre,
+      apellido: input.apellido,
+      identificacion: input.identificacion,
+      provincia: structuredClone(input.provincia),
+      tipo_tarjeta: input.tipo_tarjeta,
+      paz_y_salvo: input.paz_y_salvo,
+      ...(input.email ? { email: input.email } : {}),
+      ...(input.phone ? { phone: input.phone } : {}),
+    };
+    this.clients.push(client);
+    return structuredClone(client);
+  }
+
+  async getClientPreference(code: number): Promise<ProductPreference | null> {
+    const requests = this.orders
+      .filter((order) => order.codigo_cliente === code)
+      .map((order) => ({ codigo_producto: order.codigo_producto, cantidad: order.cantidad }));
+    return selectProductPreference(requests);
   }
 
   async listProducts(): Promise<readonly Product[]> {
-    return structuredClone(products);
+    return structuredClone(this.products);
   }
 
   async listInventory(): Promise<readonly Inventory[]> {
-    return structuredClone(inventory);
+    return structuredClone(this.inventory);
   }
 
   async listOrders(): Promise<readonly Order[]> {
-    return structuredClone(orders);
+    return structuredClone(this.orders);
+  }
+
+  async listCurrentOrders(): Promise<readonly Order[]> {
+    return structuredClone(
+      this.orders.filter((order) => order.estado === "generado" || order.estado === "proceso"),
+    );
+  }
+
+  async createOrder(input: NewOrder): Promise<Order> {
+    const client = this.clients.find((item) => item.codigo_cliente === input.codigo_cliente);
+    if (!client) {
+      throw new Error("Client does not exist.");
+    }
+    const product = this.products.find((item) => item.codigo_producto === input.codigo_producto);
+    if (!product) {
+      throw new Error("Product does not exist.");
+    }
+    const nextSequence = nextOrderSequence(this.orders, client.provincia.prefijo);
+    const order: Order = {
+      codigo_pedido: `${client.provincia.prefijo}-SYN-${String(nextSequence).padStart(4, "0")}`,
+      codigo_cliente: input.codigo_cliente,
+      codigo_producto: input.codigo_producto,
+      cantidad: input.cantidad,
+      monto: amountForQuantity(input.cantidad),
+      etiqueta: input.etiqueta,
+      direccion: input.direccion,
+      fecha_pedido: input.fecha_pedido,
+      ...(input.fecha_entrega ? { fecha_entrega: input.fecha_entrega } : {}),
+      estado: "generado",
+      tipo_duracion: input.tipo_duracion,
+      pagado: false,
+    };
+    this.orders.push(order);
+    return structuredClone(order);
+  }
+
+  async transitionOrderStatus(input: OrderStatusTransition): Promise<Order> {
+    const order = this.orders.find((item) => item.codigo_pedido === input.codigo_pedido);
+    if (!order) {
+      throw new Error("Order does not exist.");
+    }
+    order.estado = input.estado;
+    if (input.estado === "entregado" && !order.fecha_entrega) {
+      const payment = [...this.payments].reverse().find((item) => item.codigo_pedido === order.codigo_pedido);
+      if (payment) {
+        order.fecha_entrega = calculateDeliveryDate(payment.fecha_pago);
+      }
+    }
+    return structuredClone(order);
   }
 
   async listPayments(): Promise<readonly Payment[]> {
-    return structuredClone(payments);
+    return structuredClone(this.payments);
   }
+
+  async recordPayment(input: NewPayment): Promise<Payment> {
+    const nextId = Math.max(...this.payments.map((payment) => payment.id_pago), 0) + 1;
+    const payment: Payment = {
+      id_pago: nextId,
+      codigo_pedido: input.codigo_pedido,
+      monto_pagado: input.monto_pagado,
+      fecha_pago: input.fecha_pago,
+      tipo_tarjeta: input.tipo_tarjeta,
+      ...(input.referencia ? { referencia: input.referencia } : {}),
+    };
+    this.payments.push(payment);
+    const order = this.orders.find((item) => item.codigo_pedido === input.codigo_pedido);
+    if (order) {
+      order.pagado = true;
+      if (order.estado === "generado") {
+        order.estado = "proceso";
+        if (!order.fecha_entrega) {
+          order.fecha_entrega = calculateDeliveryDate(input.fecha_pago);
+        }
+      }
+    }
+    return structuredClone(payment);
+  }
+}
+
+function nextOrderSequence(orders: readonly Order[], prefix: string): number {
+  const codes = orders
+    .filter((order) => order.codigo_pedido.startsWith(`${prefix}-SYN-`))
+    .map((order) => Number(order.codigo_pedido.slice(`${prefix}-SYN-`.length)));
+  return Math.max(...codes, 0) + 1;
 }
