@@ -87,11 +87,37 @@ export interface NewClient {
   provincia: Province;
   tipo_tarjeta: CardType;
   paz_y_salvo: boolean;
+  email?: string;
+  phone?: string;
 }
 
 export interface NewProduct {
   nombre: string;
   categoria: string;
+}
+
+export interface NewOrder {
+  codigo_cliente: number;
+  codigo_producto: number;
+  cantidad: number;
+  direccion: string;
+  fecha_pedido: string;
+  etiqueta: string;
+  tipo_duracion: string;
+  fecha_entrega?: string;
+}
+
+export interface NewPayment {
+  codigo_pedido: string;
+  monto_pagado: number;
+  fecha_pago: string;
+  tipo_tarjeta: CardType;
+  referencia?: string;
+}
+
+export interface OrderStatusTransition {
+  codigo_pedido: string;
+  estado: OrderStatus;
 }
 
 export interface ProductRequest {

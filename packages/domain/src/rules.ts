@@ -1,5 +1,6 @@
 import type {
   CardType,
+  Order,
   OrderStatus,
   ProductPreference,
   ProductRequest,
@@ -54,6 +55,37 @@ export function calculateDeliveryDate(paymentOrValidDate: string): string {
 
 export function canDeliverOrder(isPaid: boolean): boolean {
   return isPaid;
+}
+
+export function assertOrderPaymentAmount(expected: number, actual: number): void {
+  assertPositiveMoney(expected, "expected");
+  assertPositiveMoney(actual, "actual");
+  if (expected !== actual) {
+    throw new DomainRuleError("Payment amount must match the order amount.");
+  }
+}
+
+export function assertOrderTransitionAllowed(order: Order, nextStatus: OrderStatus): void {
+  if (!isOrderStatus(nextStatus)) {
+    throw new DomainRuleError("Order status is not allowed.");
+  }
+  if (order.estado === nextStatus) return;
+  if (order.estado === "generado" && (nextStatus === "proceso" || nextStatus === "cancelado")) return;
+  if (order.estado === "proceso" && (nextStatus === "entregado" || nextStatus === "cancelado" || nextStatus === "facturado")) return;
+  if (order.estado === "entregado" && nextStatus === "facturado") return;
+  throw new DomainRuleError(`Cannot transition order from ${order.estado} to ${nextStatus}.`);
+}
+
+export function assertOrderDeliveryAllowed(order: Order): void {
+  if (!order.pagado) {
+    throw new DomainRuleError("An order cannot be delivered until it is paid.");
+  }
+}
+
+export function assertPaymentReference(reference?: string): void {
+  if (reference !== undefined && reference.trim().length === 0) {
+    throw new DomainRuleError("Payment reference cannot be empty when provided.");
+  }
 }
 
 export function assertClientCanGenerateOrder(pazYSalvo: boolean): void {
@@ -143,5 +175,11 @@ function parseDate(value: string, field: string): Date {
 function assertPositiveInteger(value: number, field: string): void {
   if (!Number.isInteger(value) || value < 1) {
     throw new DomainRuleError(`${field} must be a positive integer.`);
+  }
+}
+
+function assertPositiveMoney(value: number, field: string): void {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new DomainRuleError(`${field} must be a positive amount.`);
   }
 }

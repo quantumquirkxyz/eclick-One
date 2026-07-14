@@ -4,6 +4,8 @@ import {
   amountForQuantity,
   assertClientCanGenerateOrder,
   assertOrderDateAllowed,
+  assertOrderPaymentAmount,
+  assertOrderTransitionAllowed,
   assertProvinceOrderCode,
   calculateDeliveryDate,
   canRemainInProcess,
@@ -73,5 +75,25 @@ describe("domain business rules", () => {
         { codigo_producto: 1001, cantidad: 4 },
       ]),
     ).toEqual({ codigo_producto: 1001, cant_solicitudes: 3, cantidad_total: 12 });
+  });
+
+  test("rejects invalid order transitions and payment mismatches", () => {
+    const order = {
+      codigo_pedido: "PA-SYN-0001",
+      codigo_cliente: 1,
+      codigo_producto: 1000,
+      cantidad: 1,
+      monto: 50,
+      etiqueta: "pedido-web",
+      direccion: "Dirección",
+      fecha_pedido: "2024-12-29T00:00:00.000Z",
+      estado: "proceso" as const,
+      tipo_duracion: "48h",
+      pagado: false,
+    };
+    expect(() => assertOrderTransitionAllowed(order, "entregado")).not.toThrow();
+    expect(() => assertOrderTransitionAllowed(order, "generado")).toThrow();
+    expect(() => assertOrderPaymentAmount(50, 50)).not.toThrow();
+    expect(() => assertOrderPaymentAmount(50, 40)).toThrow();
   });
 });
