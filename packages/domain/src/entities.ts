@@ -1,4 +1,4 @@
-export const CARD_TYPES = ["DB", "CR"] as const;
+export const CARD_TYPES = ["DB", "CR"] as const satisfies readonly string[];
 export type CardType = (typeof CARD_TYPES)[number];
 
 export const ORDER_STATUSES = [
@@ -7,7 +7,7 @@ export const ORDER_STATUSES = [
   "delivered",
   "canceled",
   "invoiced",
-] as const;
+] as const satisfies readonly string[];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export interface Province {
