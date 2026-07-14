@@ -1,0 +1,22 @@
+{
+  "name": "@eclick-one/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --external mssql",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dev": "tsc --noEmit -p tsconfig.json --watch"
+  },
+  "dependencies": {
+    "@eclick-one/domain": "workspace:*",
+    "@eclick-one/shared": "workspace:*",
+    "mssql": "^12.7.0"
+  },
+  "devDependencies": {
+    "@types/mssql": "^12.3.0"
+  }
+}
