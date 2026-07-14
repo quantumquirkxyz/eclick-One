@@ -1,4 +1,4 @@
-import type { CommerceRepositories, OrderStatus } from "@eclick-one/domain";
+import type { Client, CommerceRepositories, Inventory, Order, OrderStatus, Payment, Product, Province } from "@eclick-one/domain";
 
 export interface DashboardSnapshot {
   synthetic: boolean;
@@ -20,27 +20,27 @@ export class CommerceService {
     private readonly synthetic: boolean,
   ) {}
 
-  listProvinces() {
+  listProvinces(): Promise<readonly Province[]> {
     return this.repositories.listProvinces();
   }
 
-  listClients() {
+  listClients(): Promise<readonly Client[]> {
     return this.repositories.listClients();
   }
 
-  listProducts() {
+  listProducts(): Promise<readonly Product[]> {
     return this.repositories.listProducts();
   }
 
-  listInventory() {
+  listInventory(): Promise<readonly Inventory[]> {
     return this.repositories.listInventory();
   }
 
-  listOrders() {
+  listOrders(): Promise<readonly Order[]> {
     return this.repositories.listOrders();
   }
 
-  listPayments() {
+  listPayments(): Promise<readonly Payment[]> {
     return this.repositories.listPayments();
   }
 
