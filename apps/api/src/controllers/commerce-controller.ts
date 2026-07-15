@@ -4,6 +4,8 @@ import { localeFromRequest } from "../i18n";
 import type { CommerceService } from "../services/commerce-service";
 import type { ControllerResult } from "./controller";
 
+const MAX_JSON_BODY_BYTES = 64_000;
+
 export class CommerceController {
   constructor(private readonly service: CommerceService) {}
 
@@ -26,22 +28,38 @@ export class CommerceController {
   };
 
   createClient = async (request: Request): Promise<ControllerResult> => {
-    const body = await readJson<NewClient>(request);
+    const body = await readJsonObject<NewClient>(request);
+    assertString(body.nombre, "nombre");
+    assertString(body.apellido, "apellido");
+    assertString(body.identificacion, "identificacion");
+    assertProvinceObject(body.provincia);
+    assertString(body.tipo_tarjeta, "tipo_tarjeta");
     return { status: 201, body: await this.service.createClient(body) };
   };
 
   createOrder = async (request: Request): Promise<ControllerResult> => {
-    const body = await readJson<NewOrder>(request);
+    const body = await readJsonObject<NewOrder>(request);
+    assertNumber(body.codigo_cliente, "codigo_cliente");
+    assertNumber(body.codigo_producto, "codigo_producto");
+    assertNumber(body.cantidad, "cantidad");
+    assertString(body.direccion, "direccion");
+    assertString(body.fecha_pedido, "fecha_pedido");
+    assertString(body.etiqueta, "etiqueta");
+    assertString(body.tipo_duracion, "tipo_duracion");
     return { status: 201, body: await this.service.createOrder(body) };
   };
 
   recordPayment = async (request: Request): Promise<ControllerResult> => {
-    const body = await readJson<NewPayment>(request);
+    const body = await readJsonObject<NewPayment>(request);
+    assertString(body.codigo_pedido, "codigo_pedido");
+    assertNumber(body.monto_pagado, "monto_pagado");
+    assertString(body.fecha_pago, "fecha_pago");
+    assertString(body.tipo_tarjeta, "tipo_tarjeta");
     return { status: 201, body: await this.service.recordPayment(body) };
   };
 
   transitionOrderStatus = async (request: Request, params: Record<string, string>): Promise<ControllerResult> => {
-    const body = await readJson<{ estado: OrderStatus }>(request);
+    const body = await readJsonObject<{ estado: OrderStatus }>(request);
     if (!body.estado) {
       throw new BadRequestError("estado is required.");
     }
@@ -58,10 +76,44 @@ export class CommerceController {
   };
 }
 
-async function readJson<T>(request: Request): Promise<T> {
+async function readJsonObject<T>(request: Request): Promise<T> {
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && Number.isFinite(Number(contentLength)) && Number(contentLength) > MAX_JSON_BODY_BYTES) {
+    throw new BadRequestError("Request body is too large.");
+  }
+  let body: unknown;
   try {
-    return (await request.json()) as T;
+    body = await request.json();
   } catch {
     throw new BadRequestError("Request body must be valid JSON.");
   }
+  if (!isPlainObject(body)) {
+    throw new BadRequestError("Request body must be a JSON object.");
+  }
+  return body as T;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function assertString(value: unknown, field: string): asserts value is string {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new BadRequestError(`${field} must be a non-empty string.`);
+  }
+}
+
+function assertNumber(value: unknown, field: string): asserts value is number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new BadRequestError(`${field} must be a number.`);
+  }
+}
+
+function assertProvinceObject(value: unknown): void {
+  if (!isPlainObject(value)) {
+    throw new BadRequestError("provincia must be an object.");
+  }
+  assertString(value.codigo, "provincia.codigo");
+  assertString(value.nombre, "provincia.nombre");
+  assertString(value.prefijo, "provincia.prefijo");
 }
