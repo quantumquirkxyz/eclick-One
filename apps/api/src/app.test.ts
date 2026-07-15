@@ -21,4 +21,31 @@ describe("API application", () => {
     expect(response.status).toBe(404);
     expect(await response.json()).toMatchObject({ error: { code: "NOT_FOUND" } });
   });
+
+  test("rejects non-object JSON bodies", async () => {
+    const response = await app.fetch(
+      new Request("http://localhost/api/v1/customers", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "\"oops\"",
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { code: "BAD_REQUEST" } });
+  });
+
+  test("rejects oversized JSON bodies before parsing", async () => {
+    const response = await app.fetch(
+      new Request("http://localhost/api/v1/customers", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": "70001",
+        },
+        body: JSON.stringify({ nombre: "A" }),
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { code: "BAD_REQUEST" } });
+  });
 });
