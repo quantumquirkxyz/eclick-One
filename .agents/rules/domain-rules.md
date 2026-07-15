@@ -1,108 +1,52 @@
 # Domain Business Rules
 
-## Order Lifecycle
+The domain layer contains entities, business rules, and repository interfaces. It has zero framework or database dependencies.
 
-```
-generado (created)
-    │
-    ├──► proceso (in process)
-    │       │
-    │       ├──► entregado (delivered)
-    │       │       │
-    │       │       ▼
-    │       │   facturado (invoiced)
-    │       │
-    │       ├──► facturado (invoiced, direct)
-    │       │
-    │       └──► cancelado (cancelled)
-    │
-    └──► cancelado (cancelled, immediate)
-```
+## Entity Design
 
-Valid transitions from `assertOrderTransitionAllowed()`:
-- `generado → proceso`
-- `generado → cancelado`
-- `proceso → entregado`
-- `proceso → cancelado`
-- `proceso → facturado`
-- `entregado → facturado`
+Entities use plain objects or classes with no external dependencies. Each entity captures the minimal set of fields needed for business rules.
 
-No other transitions are allowed. `facturado` and `cancelado` are terminal states.
+## Business Rules as Pure Functions
 
-## Client Standing
-
-`assertClientCanGenerateOrder(pazYSalvo: boolean)` — throws if `pazYSalvo !== true`.
+Rules are pure functions that throw typed errors on violation. They accept plain values, never infrastructure concerns.
 
 ```typescript
-// Actual Client entity
-interface Client {
-  codigo_cliente: number;
-  nombre: string;
-  apellido: string;
-  identificacion: string;
-  provincia: Province;
-  tipo_tarjeta: CardType;
-  paz_y_salvo: boolean;  // true = allowed to create orders
-  email?: string;
-  phone?: string;
+export class DomainRuleError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DomainRuleError";
+  }
 }
 ```
 
-## Payment Rules
+## State Machines
 
-- Payment must be recorded before an order can transition to `entregado`
-- `canDeliverOrder(isPaid: boolean)` returns `isPaid`
-- `assertOrderDeliveryAllowed(order)` checks `order.pagado` — throws if not paid
-- Payment amount must match order amount (`assertOrderPaymentAmount`)
-- Payment reference cannot be empty string when provided (`assertPaymentReference`)
-- In mock mode: payments blocked on cancelled orders and already-paid orders
-- Payment history is append-only (returns all records, no deletion)
-
-## monthlyRuleApplies
-
-`monthlyRuleApplies` is NOT a field on any entity. It is a boolean parameter to `canRemainInProcess()`:
+For entities with lifecycle states, encode transitions as explicit pure functions:
 
 ```typescript
-interface InProcessPolicyInput {
-  enteredInProcessAt: string;
-  evaluatedAt: string;
-  monthlyRuleApplies: boolean;
+function assertTransitionAllowed(current: Status, next: Status): void {
+  // explicit allowed transitions
+  // throw DomainRuleError for invalid transitions
 }
-
-// Returns true if monthlyRuleApplies is true OR elapsed time <= 48 hours
-function canRemainInProcess(input: InProcessPolicyInput): boolean
 ```
 
-When `true`, the 48-hour deadline for orders in `proceso` is waived. This is an explicit policy input — never silently invented.
+## Validation Rules
 
-Additionally, `isIncludedInMonthlyOrders(date)` excludes day 31 of any month (returns `false` for the 31st).
+Keep validation in the domain layer: date ranges, amount limits, required fields, format constraints. Controllers may do structural validation (required fields exist, types are correct) but business logic validation belongs in the domain.
 
-## Pricing Rules
+## Explicit Policy Inputs
 
-`amountForQuantity(quantity)`:
-- 1 unit → $50
-- 2 units → $70
-- 3+ units → $90
-
-## Delivery Date
-
-`calculateDeliveryDate(paymentDate)` — adds 48 hours to the payment/valid date.
-
-## Product Preference
-
-`selectProductPreference(requests)` — requires minimum 3 request events for the same product. Ties broken by total quantity, then product code. Returns `ProductPreference | null`.
-
-## Naming Conventions
-
-- Domain entities and status values use Spanish names matching the Panama business domain
-- Statuses: `generado`, `proceso`, `entregado`, `facturado`, `cancelado`
-- API routes use English (`/api/v1/customers`, `/api/v1/orders`) with Spanish alias (`/api/v1/clientes`)
-- Code identifiers (variables, functions) use English
+When a business policy may vary (e.g. time limits, fee calculations, exception rules), model it as an explicit input parameter. Never silently invent policy. Let the caller decide.
 
 ## Date Handling
 
-- All dates are ISO-8601 timestamps (e.g. `"2024-12-29T00:00:00.000Z"`)
-- Domain comparisons use `Date.parse()` on UTC instants
-- Minimum order date: `2024-12-29T00:00:00.000Z`
-- Future dates are rejected
-- Province prefixes: `PA` (Panama), `CH` (Chiriqui), `CO` (Colon), `OC` (Cocle)
+- All dates are ISO-8601 UTC
+- Domain comparisons use UTC instants
+- Future dates may be rejected depending on business rules
+- No timezone logic in domain — leave that to the presentation layer
+
+## Naming Conventions
+
+- Business status values may use the domain's native language
+- Code identifiers (variables, functions) use English
+- API routes use English

@@ -1,6 +1,6 @@
 ---
 name: autoplan
-description: "One-command full review pipeline for eclick One. Runs CEO → design → eng reviews automatically with encoded decision principles. Surfaces only taste decisions for user approval. Use for any significant feature to get a fully reviewed, consolidated plan in one command."
+description: "One-command full review pipeline. Runs CEO → design → eng reviews automatically with encoded decision principles. Surfaces only taste decisions for user approval. Use for any significant feature to get a fully reviewed, consolidated plan in one command."
 ---
 
 # /autoplan — Automated Review Pipeline

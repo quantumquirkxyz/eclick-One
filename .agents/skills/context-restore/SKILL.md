@@ -1,6 +1,6 @@
 ---
 name: context-restore
-description: "Restore a saved session context for eclick One. Lists available sessions from .context/sessions/, reads the selected one to understand previous work state (decisions, remaining work, failed approaches), checks current git state, and resumes from where the session was saved. Use when returning to a task after a context switch."
+description: "Restore a saved session context. Lists available sessions from .context/sessions/, reads the selected one to understand previous work state (decisions, remaining work, failed approaches), checks current git state, and resumes from where the session was saved. Use when returning to a task after a context switch."
 ---
 
 # /context-restore — Restore Session

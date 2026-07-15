@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Release engineering for eclick One. Runs typecheck and tests, invokes /review if not already done, audits coverage, commits, pushes, and opens a PR on GitHub. Bootstraps test framework if none exists. Use when ready to land changes to the main branch."
+description: "Release engineering. Runs typecheck and tests, invokes /review if not already done, audits coverage, commits, pushes, and opens a PR on GitHub. Bootstraps test framework if none exists. Use when ready to land changes to the main branch."
 ---
 
 # /ship — Release Engineering

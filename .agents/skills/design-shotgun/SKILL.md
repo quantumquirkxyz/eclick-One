@@ -1,6 +1,6 @@
 ---
 name: design-shotgun
-description: "Visual design exploration for eclick One. Generates 4-6 design variants for a component or page, presents them for feedback, and iterates based on user preferences. Collects taste preferences for future sessions. Use when you want to see multiple visual directions before committing to one."
+description: "Visual design exploration. Generates 4-6 design variants for a component or page, presents them for feedback, and iterates based on user preferences. Collects taste preferences for future sessions. Use when you want to see multiple visual directions before committing to one."
 ---
 
 # /design-shotgun — Design Exploration

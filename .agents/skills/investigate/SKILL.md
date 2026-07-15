@@ -1,6 +1,6 @@
 ---
 name: investigate
-description: "Systematic root-cause debugging for eclick One. Iron Law: no fixes without investigation. Traces data flow from HTTP request through route, controller, service, and repository. Forms hypotheses, tests them, fixes, and adds regression tests. Stops after 3 failed fix attempts and reports. Use when something is broken and the cause is not obvious."
+description: "Systematic root-cause debugging. Iron Law: no fixes without investigation. Traces data flow from HTTP request through route, controller, service, and repository. Forms hypotheses, tests them, fixes, and adds regression tests. Stops after 3 failed fix attempts and reports. Use when something is broken and the cause is not obvious."
 ---
 
 # /investigate — Debugging
@@ -19,9 +19,9 @@ bun test --grep "<test-name>"
 ### Step 2: Trace the Data Flow
 Follow the path: HTTP request → route → controller → service → repository (mock/turso)
 
-For API issues: route handler in `apps/api/src/routes/`, controller, service, repository.
+For API issues: route handler, controller, service, repository.
 
-For frontend issues: React component in `apps/web/src/`, API call, response handling, state rendering.
+For frontend issues: React component, API call, response handling, state rendering.
 
 ### Step 3: Form a Hypothesis
 State what you believe is happening. Example: "The repository method is returning null instead of an empty array, and the service does not handle null."

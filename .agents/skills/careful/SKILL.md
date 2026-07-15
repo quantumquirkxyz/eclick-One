@@ -1,6 +1,6 @@
 ---
 name: careful
-description: "Safety guardrails for eclick One. Warns before executing destructive commands: rm -rf, DROP TABLE, force-push, reset --hard, branch -D, and any command that modifies .env or credentials. Activate by saying 'be careful' or typing /careful."
+description: "Safety guardrails. Warns before executing destructive commands: rm -rf, DROP TABLE, force-push, reset --hard, branch -D, and any command that modifies .env or credentials. Activate by saying 'be careful' or typing /careful."
 ---
 
 # /careful — Safety Guardrails

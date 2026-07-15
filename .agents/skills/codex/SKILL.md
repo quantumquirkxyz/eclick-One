@@ -1,6 +1,6 @@
 ---
 name: codex
-description: "Second opinion code review for eclick One. Three modes: Review (pass/fail gate), Adversarial Challenge (actively find problems), Open Consultation (free-form analysis). Compares findings with any prior /review output. Use for complex or risky changes where an independent perspective adds confidence."
+description: "Second opinion code review. Three modes: Review (pass/fail gate), Adversarial Challenge (actively find problems), Open Consultation (free-form analysis). Compares findings with any prior /review output. Use for complex or risky changes where an independent perspective adds confidence."
 ---
 
 # /codex — Second Opinion

@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Pre-landing PR review for eclick One. Reviews every changed file for type safety, error handling, edge cases, mock/Turso parity, bilingual support, and domain isolation. Auto-fixes obvious issues. Flags completeness gaps. Use before every /ship to catch bugs that pass CI but break in production."
+description: "Pre-landing PR review. Reviews every changed file for type safety, error handling, edge cases, mock/SQL parity, bilingual support, and domain isolation. Auto-fixes obvious issues. Flags completeness gaps. Use before every /ship to catch bugs that pass CI but break in production."
 ---
 
 # /review — Code Review
@@ -20,16 +20,16 @@ For each changed file, check:
 - **Type safety** — any `any`, type assertions, or unchecked casts?
 - **Error handling** — every error path handled? No empty catches?
 - **Edge cases** — empty arrays, null values, undefined, boundary conditions?
-- **Mock/Turso parity** — does the change work in both modes?
+- **Mock/SQL parity** — does the change work in both modes?
 - **Bilingual** — are new UI strings in both EN and ES?
-- **Domain isolation** — does `packages/domain/` import anything outside domain?
-- **Repository contract** — do service tests pass with both mock and Turso adapters?
+- **Domain isolation** — does the domain layer import anything outside domain?
+- **Repository contract** — do service tests pass with both mock and SQL adapters?
 
 ### 3. Auto-Fix Threshold
 Fix these automatically:
 - Missing error handling
 - Missing types
-- Mock/Turso mode divergence
+- Mock/SQL mode divergence
 - Missing translations
 - Linting issues
 

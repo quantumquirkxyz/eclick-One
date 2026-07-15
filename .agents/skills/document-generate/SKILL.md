@@ -1,6 +1,6 @@
 ---
 name: document-generate
-description: "Documentation generator for eclick One. Reads source code and generates documentation using the Diataxis framework: tutorial (learning-oriented), how-to (task-oriented), reference (information-oriented), and explanation (understanding-oriented). Use when you need docs for a feature, module, or workflow that does not exist yet."
+description: "Documentation generator. Reads source code and generates documentation using the Diataxis framework: tutorial (learning-oriented), how-to (task-oriented), reference (information-oriented), and explanation (understanding-oriented). Use when you need docs for a feature, module, or workflow that does not exist yet."
 ---
 
 # /document-generate — Documentation Generator
@@ -15,7 +15,7 @@ Generate docs in four categories:
 Step-by-step walkthrough for a common task. Example: "How to add a new API endpoint"
 
 ### How-to Guide (task-oriented)
-Specific, practical steps for a goal. Example: "How to configure Turso mode"
+Specific, practical steps for a goal. Example: "How to configure SQL mode"
 
 ### Reference (information-oriented)
 Technical description of the system. Example: "API route reference" or "Domain entity reference"
@@ -31,9 +31,9 @@ Background, context, design decisions. Example: "Why we use the repository patte
 4. Generate the doc
 5. Ask the user where to save it (default: `docs/`)
 
-## eclick One-Specific Topics
+## Project-Specific Topics
 
-- Repository pattern (how mock and Turso modes work)
+- Repository pattern (how mock and SQL modes work)
 - Order state machine (status transitions and rules)
 - Bilingual architecture (how EN/ES works)
 - Customer standing rules

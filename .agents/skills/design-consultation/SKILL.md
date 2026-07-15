@@ -1,6 +1,6 @@
 ---
 name: design-consultation
-description: "Design system creation for eclick One. Builds a complete design system from scratch: researches the landscape, proposes creative risks, defines design tokens (colors, typography, spacing, layout, motion), and generates a DESIGN.md. Optionally builds component previews. Use when starting a new project or refreshing the visual identity."
+description: "Design system creation. Builds a complete design system from scratch: researches the landscape, proposes creative risks, defines design tokens (colors, typography, spacing, layout, motion), and generates a DESIGN.md. Optionally builds component previews. Use when starting a new project or refreshing the visual identity."
 ---
 
 # /design-consultation — Design System
@@ -13,7 +13,7 @@ Build a complete design system from scratch or refresh the existing one.
 What do similar e-commerce and operations apps look like? What design systems exist in the React ecosystem?
 
 ### 2. Propose Creative Risks
-What visual direction makes sense for an operations console in Panama? What distinguishes this from a generic admin template?
+What visual direction makes sense for an operations console in your domain? What distinguishes this from a generic admin template?
 
 ### 3. Define Design Tokens
 

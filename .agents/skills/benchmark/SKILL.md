@@ -1,6 +1,6 @@
 ---
 name: benchmark
-description: "Performance measurement for eclick One. Measures frontend page load times, bundle sizes, API response times, and resource payload sizes. Compares current branch against main to detect regressions. Any regression over 10% is flagged for user review. Use after performance-sensitive changes."
+description: "Performance measurement. Measures frontend page load times, bundle sizes, API response times, and resource payload sizes. Compares current branch against main to detect regressions. Any regression over 10% is flagged for user review. Use after performance-sensitive changes."
 ---
 
 # /benchmark — Performance Measurement

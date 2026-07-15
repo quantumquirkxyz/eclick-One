@@ -1,6 +1,6 @@
 ---
 name: land-and-deploy
-description: "Merge and deploy for eclick One. Merges an approved PR (squash + delete branch), then verifies the deploy is healthy by checking the health endpoint and running a quick smoke test. Use after a PR has been approved and is ready to land."
+description: "Merge and deploy. Merges an approved PR (squash + delete branch), then verifies the deploy is healthy by checking the health endpoint and running a quick smoke test. Use after a PR has been approved and is ready to land."
 ---
 
 # /land-and-deploy — Merge and Deploy

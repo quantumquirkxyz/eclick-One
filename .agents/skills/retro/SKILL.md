@@ -1,6 +1,6 @@
 ---
 name: retro
-description: "Engineering retrospective for eclick One. Analyzes git history from the past 7 days to understand what shipped, what broke, and what can improve. Produces a report with per-person breakdowns, shipping streaks, test health trends, and growth opportunities. Use weekly to track progress and identify improvement areas."
+description: "Engineering retrospective. Analyzes git history from the past 7 days to understand what shipped, what broke, and what can improve. Produces a report with per-person breakdowns, shipping streaks, test health trends, and growth opportunities. Use weekly to track progress and identify improvement areas."
 ---
 
 # /retro — Engineering Retrospective

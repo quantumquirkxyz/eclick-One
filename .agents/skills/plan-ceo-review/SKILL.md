@@ -1,6 +1,6 @@
 ---
 name: plan-ceo-review
-description: "CEO-level strategic review for eclick One. Reads the design doc and runs a 10-section strategic review across four scope modes: Expansion, Selective Expansion, Hold Scope, or Reduction. Each finding is a separate AskUserQuestion. Use after /office-hours and before implementation."
+description: "CEO-level strategic review. Reads the design doc and runs a 10-section strategic review across four scope modes: Expansion, Selective Expansion, Hold Scope, or Reduction. Each finding is a separate AskUserQuestion. Use after /office-hours and before implementation."
 ---
 
 # /plan-ceo-review — Strategic Product Review
@@ -31,12 +31,12 @@ One section at a time. Each finding = one AskUserQuestion. Never batch findings.
 9. **Team** — Who needs to be involved? What skills are needed?
 10. **Verdict** — Ship as-is, ship with changes, reconsider, or kill.
 
-## eclick One-Specific Considerations
+## Project Considerations
 
-- Does this affect both mock and Turso repository modes?
+- Does this affect both mock and SQL repository modes?
 - What changes are needed in the bilingual UI (EN + ES)?
 - Does this touch customer standing, order lifecycle, or payment rules?
-- Are there Panama-specific business rules involved?
+- Are there domain-specific business rules involved?
 - Does the domain model need new entities or just new services?
 - How does monthlyRuleApplies factor in?
 

@@ -1,6 +1,6 @@
 ---
 name: plan-design-review
-description: "Design dimension review for eclick One. Rates each design dimension (clarity, efficiency, feedback, consistency, bilingual, error states, empty states, mobile, loading, accessibility) from 0-10. Explains what a 10 looks like for each. One AskUserQuestion per dimension. Use before building UI features."
+description: "Design dimension review. Rates each design dimension (clarity, efficiency, feedback, consistency, bilingual, error states, empty states, mobile, loading, accessibility) from 0-10. Explains what a 10 looks like for each. One AskUserQuestion per dimension. Use before building UI features."
 ---
 
 # /plan-design-review — Design Review

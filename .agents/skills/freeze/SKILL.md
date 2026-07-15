@@ -1,6 +1,6 @@
 ---
 name: freeze
-description: "Edit lock for eclick One. Restricts file edits to a single directory to prevent accidental changes outside scope while debugging or working on a tightly scoped change. Reads are still allowed everywhere. Run /freeze with a directory path to lock edits to that directory."
+description: "Edit lock. Restricts file edits to a single directory to prevent accidental changes outside scope while debugging or working on a tightly scoped change. Reads are still allowed everywhere. Run /freeze with a directory path to lock edits to that directory."
 ---
 
 # /freeze — Edit Lock
@@ -10,9 +10,9 @@ Restrict file edits to a single directory. Prevents accidental changes outside s
 ## Usage
 
 ```
-/freeze apps/api          # Only edit files under apps/api/
-/freeze packages/domain   # Only edit files under packages/domain/
-/freeze apps/web/src      # Only edit files under apps/web/src/
+/freeze apps/api            # Only edit files under apps/api/
+/freeze packages/domain     # Only edit files under packages/domain/
+/freeze apps/web/src        # Only edit files under apps/web/src/
 ```
 
 ## Behavior

@@ -1,6 +1,6 @@
 ---
 name: guard
-description: "Maximum safety mode for eclick One. Combines /careful (destructive command warnings) and /freeze (edit boundary) in one command. Use for production work, database operations, or when maximum guardrails are needed. /guard <directory> activates both at once."
+description: "Maximum safety mode. Combines /careful (destructive command warnings) and /freeze (edit boundary) in one command. Use for production work, database operations, or when maximum guardrails are needed. /guard <directory> activates both at once."
 ---
 
 # /guard — Full Safety

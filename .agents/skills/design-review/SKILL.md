@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: "Live visual audit for eclick One. Visits every route in the running app, checks layout, typography, colors, bilingual rendering, responsive behavior, and state management. Finds issues and fixes them with atomic commits. Each fix includes before/after screenshots. Use before shipping any UI change."
+description: "Live visual audit. Visits every route in the running app, checks layout, typography, colors, bilingual rendering, responsive behavior, and state management. Finds issues and fixes them with atomic commits. Each fix includes before/after screenshots. Use before shipping any UI change."
 ---
 
 # /design-review — Visual Design Audit

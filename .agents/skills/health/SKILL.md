@@ -1,6 +1,6 @@
 ---
 name: health
-description: "Code quality dashboard for eclick One. Checks TypeScript health (typecheck), test health (bun test), dead code (unused exports, imports, files), dependency health (unused deps, version mismatches across workspaces), and build health (bun run build). Produces a summary table. Use regularly to keep the codebase healthy."
+description: "Code quality dashboard. Checks TypeScript health (typecheck), test health (bun test), dead code (unused exports, imports, files), dependency health (unused deps, version mismatches across workspaces), and build health (bun run build). Produces a summary table. Use regularly to keep the codebase healthy."
 ---
 
 # /health — Code Quality Dashboard

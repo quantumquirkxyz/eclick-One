@@ -1,6 +1,6 @@
 ---
 name: plan-eng-review
-description: "Engineering architecture review for eclick One. Locks in architecture, data flow diagrams, state machines, API contracts, test matrix, and failure modes before any code is written. One AskUserQuestion per finding. Use for all significant technical changes."
+description: "Engineering architecture review. Locks in architecture, data flow diagrams, state machines, API contracts, test matrix, and failure modes before any code is written. One AskUserQuestion per finding. Use for all significant technical changes."
 ---
 
 # /plan-eng-review — Architecture Review
@@ -38,15 +38,15 @@ If this touches orders, show the full order state machine and where the new feat
 
 ### 6. Repository Layer
 - Does mock mode need changes?
-- Does Turso mode need changes?
+- Does SQL mode need changes?
 - New stored procedures or queries?
 
 ### 7. Test Matrix
-| Test | Scope | Mock | Turso |
-|------|-------|------|-------|
+| Test | Scope | Mock | SQL |
+|------|-------|------|-----|
 | Unit test domain rules | domain/ | N/A | N/A |
 | Unit test service | api/ | yes | no |
-| Integration test | api/ | yes | yes (when Turso configured) |
+| Integration test | api/ | yes | yes (when SQL configured) |
 
 ### 8. Failure Modes
 - What if the DB is down?
@@ -57,7 +57,7 @@ If this touches orders, show the full order state machine and where the new feat
 ### 9. Security Concerns
 - Who can access this? Authentication?
 - Data validation — what are the bounds?
-- SQL injection prevention in Turso mode?
+- SQL injection prevention in SQL mode?
 
 ## Output
 

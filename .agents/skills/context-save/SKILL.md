@@ -1,6 +1,6 @@
 ---
 name: context-save
-description: "Save session context for eclick One. Captures current git state (branch, status, recent commits), decisions made, remaining work, failed approaches, and TODOs. Saves to .context/sessions/. Optionally commits the session file. Use before context switches, at the end of a session, or when switching to a different task."
+description: "Save session context. Captures current git state (branch, status, recent commits), decisions made, remaining work, failed approaches, and TODOs. Saves to .context/sessions/. Optionally commits the session file. Use before context switches, at the end of a session, or when switching to a different task."
 ---
 
 # /context-save — Save Session

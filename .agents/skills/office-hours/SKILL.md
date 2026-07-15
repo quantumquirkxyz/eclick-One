@@ -1,11 +1,11 @@
 ---
 name: office-hours
-description: "Product interrogation for eclick One. Pushes back on your framing, challenges premises, and generates implementation alternatives. Six forcing questions that reframe the product idea before any code is written. Use when starting a new feature, evaluating a product idea, or deciding what to build next."
+description: "Product interrogation. Pushes back on your framing, challenges premises, and generates implementation alternatives. Six forcing questions that reframe the product idea before any code is written. Use when starting a new feature, evaluating a product idea, or deciding what to build next."
 ---
 
 # /office-hours — Product Interrogation
 
-Start here for any new feature, product idea, or significant change on eclick One.
+Start here for any new feature, product idea, or significant change 
 
 ## The Six Forcing Questions
 
@@ -29,12 +29,12 @@ Force scope reduction. What is the smallest version that delivers value?
 ### Q6: What is the full vision?
 Now that you have narrowed scope, what is the 10-star version? The thing you would build if time and money were no object?
 
-## eclick One-Specific Considerations
+## Project Considerations
 
-- Does this affect both mock and Turso repository modes?
+- Does this affect both mock and SQL repository modes?
 - What changes are needed in the bilingual UI (EN + ES)?
 - Does this touch customer standing, order lifecycle, or payment rules?
-- Are there Panama-specific business rules involved?
+- Are there domain-specific business rules involved?
 - Does the domain model need new entities or just new services?
 
 ## Output

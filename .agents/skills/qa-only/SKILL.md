@@ -1,6 +1,6 @@
 ---
 name: qa-only
-description: "Report-only QA for eclick One. Same testing methodology as /qa but produces a bug report without modifying any code. Documents each bug with route, steps to reproduce, expected vs actual behavior, severity, and screenshot description. Use when you want to document issues without the agent fixing them automatically."
+description: "Report-only QA. Same testing methodology as /qa but produces a bug report without modifying any code. Documents each bug with route, steps to reproduce, expected vs actual behavior, severity, and screenshot description. Use when you want to document issues without the agent fixing them automatically."
 ---
 
 # /qa-only — QA Reporter

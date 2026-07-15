@@ -1,6 +1,6 @@
 ---
 name: qa
-description: "Quality assurance for eclick One. Tests the running application against business rules: customers, orders (full lifecycle with status transitions), payments, products, inventory, and reports. Finds bugs, fixes them with atomic commits, writes regression tests. Verifies bilingual support and responsive layout. Use after implementation is complete."
+description: "Quality assurance. Tests the running application against business rules: customers, orders (full lifecycle with status transitions), payments, products, inventory, and reports. Finds bugs, fixes them with atomic commits, writes regression tests. Verifies bilingual support and responsive layout. Use after implementation is complete."
 ---
 
 # /qa — Quality Assurance
@@ -37,7 +37,7 @@ For each bug found:
 
 ### 4. Cross-Cutting Checks
 - Switch to Spanish. Are all pages translated?
-- Switch to Turso mode (if configured). Do the same flows work?
+- Switch to SQL mode (if configured). Do the same flows work?
 - Check responsive layout at mobile width
 - Verify error states when API is unreachable
 

@@ -21,16 +21,16 @@ test: add regression test for customer standing check
 ## PR Checklist
 
 Before opening a PR:
-- [ ] `bun run typecheck` passes
-- [ ] `bun test` passes
+- [ ] Typecheck passes
+- [ ] Tests pass
 - [ ] New code has tests
 - [ ] `.env.example` updated if new env vars added
-- [ ] Both EN and ES translations added for new UI strings
+- [ ] Translations added if applicable
 - [ ] Error/loading/empty states implemented
-- [ ] Works in `REPOSITORY_MODE=mock` and `turso` (when both apply)
+- [ ] Works in both mock and SQL modes (when both apply)
 
 ## Code Review Standards
 
 - Every PR needs at least one review before merging
 - Review the diff, not just the summary
-- Check for: type safety, error handling, bilingual support, mock/Turso parity, domain isolation
+- Check for: type safety, error handling, bilingual support, mock/SQL parity, domain isolation
