@@ -1,6 +1,6 @@
 # eclick One
 
-eclick One is an academic/professional web application for e-commerce operations in Panama. It separates the public project presentation from the internal operations console, runs with clearly identified synthetic mock data, and remains prepared for a future Azure SQL Database backend.
+eclick One is an academic/professional web application for e-commerce operations in Panama. It separates the public project presentation from the internal operations console and supports both clearly identified synthetic mock data and the supplied Azure SQL Database backend.
 
 ## Architecture
 
@@ -108,7 +108,7 @@ bun install
 bun run dev
 ```
 
-The web application runs at `http://localhost:5173` and proxies `/api` to the API at `http://localhost:3000`. All initial records and dashboard metrics are synthetic.
+The web application runs at `http://localhost:5173` and proxies `/api` to the API at `http://localhost:3000`. The default example uses synthetic records; SQL mode uses the configured Azure SQL repository.
 
 Useful commands:
 
@@ -122,7 +122,7 @@ bun run build
 
 ## Azure SQL preparation
 
-Set `REPOSITORY_MODE=sql` and provide the `AZURE_SQL_*` variables from `.env.example`. The SQL adapter is intentionally read-only in this phase and queries the views defined in [docs/db-contract.md](docs/db-contract.md). It fails fast when required configuration is missing and opens the connection pool lazily.
+Set `REPOSITORY_MODE=sql` and provide the `AZURE_SQL_*` variables from `.env.example`. The adapter uses encrypted transport, disables trust of unverified server certificates, applies configurable 120-second connection/request timeouts, reads the supplied `dbo` tables/views, and delegates business writes to the documented stored procedures in [docs/db-contract.md](docs/db-contract.md). It fails fast when required configuration is missing and opens the connection pool lazily.
 
 The database owner must reconcile the proposed SQL names and columns before SQL mode is enabled. Do not commit real credentials or production/customer data.
 

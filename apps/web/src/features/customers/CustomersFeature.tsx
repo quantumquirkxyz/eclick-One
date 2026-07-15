@@ -99,6 +99,7 @@ export function CustomersFeature() {
             <Field label={t("customers.firstName")} value={form.nombre} onChange={(value) => setForm({ ...form, nombre: value })} />
             <Field label={t("customers.lastName")} value={form.apellido} onChange={(value) => setForm({ ...form, apellido: value })} />
             <Field label={t("customers.identification")} value={form.identificacion} onChange={(value) => setForm({ ...form, identificacion: value })} />
+            <Field label={t("customers.cardNumber")} value={form.numero_tarjeta ?? ""} onChange={(value) => setForm({ ...form, numero_tarjeta: value })} />
             <Select
               label={t("customers.province")}
               value={form.provincia.codigo}

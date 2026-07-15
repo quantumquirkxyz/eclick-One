@@ -11,7 +11,7 @@ export interface NavItem {
   end?: boolean;
 }
 
-type RepositoryMode = "mock" | "sql";
+type RepositoryMode = "mock" | "turso";
 
 export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
   const { t } = useI18n();
@@ -23,7 +23,7 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
   useEffect(() => {
     let mounted = true;
     void apiRequest<{ repositoryMode?: string }>("/api/v1/health").then((health) => {
-      if (mounted && health.repositoryMode === "sql") setRepositoryMode("sql");
+      if (mounted && health.repositoryMode === "turso") setRepositoryMode("turso");
     }).catch(() => { /* The mock fallback is intentional for demos without the API. */ });
     return () => { mounted = false; };
   }, []);
@@ -45,15 +45,15 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
             </NavLink>
           ))}
         </nav>
-        <div className="side-footer">{t("shell.sideFooterTitle")}<br /><span>{repositoryMode === "sql" ? t("shell.connectedSql") : t("shell.mockApi")}</span></div>
+        <div className="side-footer">{t("shell.sideFooterTitle")}<br /><span>{repositoryMode === "turso" ? t("shell.connectedSql") : t("shell.mockApi")}</span></div>
       </aside>
       <div className="workspace">
         <header>
           <button className="icon-button mobile" onClick={() => setMenuOpen((open) => !open)} aria-label={t("shell.openMenu")}><Menu /></button>
           <div><p className="eyebrow">{t("shell.eyebrow")}</p><h1>{currentItem?.label ?? t("shell.console")}</h1></div>
-          <div className="header-actions"><LanguageSelector /><span className={`synthetic ${repositoryMode === "sql" ? "connected" : ""}`}>{repositoryMode === "sql" ? t("common.azureSql") : t("common.syntheticData")}</span><span className="avatar">EO</span></div>
+          <div className="header-actions"><LanguageSelector /><span className={`synthetic ${repositoryMode === "turso" ? "connected" : ""}`}>{repositoryMode === "turso" ? t("common.azureSql") : t("common.syntheticData")}</span><span className="avatar">EO</span></div>
         </header>
-        <main className="content"><div className="demo-note">{repositoryMode === "sql" ? t("shell.demoSql") : t("shell.demoMock")}</div><Outlet /></main>
+        <main className="content"><div className="demo-note">{repositoryMode === "turso" ? t("shell.demoSql") : t("shell.demoMock")}</div><Outlet /></main>
       </div>
     </div>
   );

@@ -18,8 +18,8 @@ const messages = {
   en: {
     noRoute: "No route for {method} {pathname}.",
     internalError: "The service could not complete the request.",
-    dashboardMock: "Synthetic in-memory data. Real persistence will be enabled with Azure SQL.",
-    dashboardSql: "Connected to Azure SQL.",
+    dashboardMock: "Synthetic in-memory data. Real persistence will be enabled with Turso.",
+    dashboardSql: "Connected to Turso.",
     reportOrderStatus: "Orders by status",
     reportOrdersByMonth: "Orders by month",
     reportPaymentsByMonth: "Payments by month",
@@ -31,8 +31,8 @@ const messages = {
   es: {
     noRoute: "No hay ruta para {method} {pathname}.",
     internalError: "El servicio no pudo completar la solicitud.",
-    dashboardMock: "Datos sinteticos en memoria. La persistencia real se activara con Azure SQL.",
-    dashboardSql: "Conectado a Azure SQL.",
+    dashboardMock: "Datos sinteticos en memoria. La persistencia real se activara con Turso.",
+    dashboardSql: "Conectado a Turso.",
     reportOrderStatus: "Pedidos por estado",
     reportOrdersByMonth: "Pedidos por mes",
     reportPaymentsByMonth: "Pagos por mes",
@@ -59,9 +59,7 @@ const spanishMessageMap: Record<string, string> = {
   "Order is already paid.": "El pedido ya esta pagado.",
   "Cannot invoice an unpaid order.": "No se puede facturar un pedido sin pagar.",
   "provincia is required.": "provincia es obligatoria.",
-  "Operation unavailable until Azure SQL is integrated.": "Operacion no disponible hasta integrar Azure SQL.",
 };
 
 const englishMessageMap: Record<string, string> = {
-  "Operation unavailable until Azure SQL is integrated.": "Operation unavailable until Azure SQL is integrated.",
 };

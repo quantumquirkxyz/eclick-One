@@ -7,7 +7,7 @@ import { useI18n } from "../../i18n";
 type LoadState =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "success"; generatedAt: string; sections: readonly { key: string; title: string; rows: readonly unknown[] }[] };
+  | { status: "success"; synthetic: boolean; generatedAt: string; sections: readonly { key: string; title: string; rows: readonly unknown[] }[] };
 
 export function ReportsFeature() {
   const { t, date } = useI18n();
@@ -17,7 +17,7 @@ export function ReportsFeature() {
     setState({ status: "loading" });
     try {
       const report = await commerceApi.getReports();
-      setState({ status: "success", generatedAt: report.generatedAt, sections: report.sections });
+      setState({ status: "success", synthetic: report.synthetic, generatedAt: report.generatedAt, sections: report.sections });
     } catch (error) {
       setState({ status: "error", message: error instanceof Error ? error.message : t("reports.error") });
     }
@@ -36,10 +36,10 @@ export function ReportsFeature() {
       <div className="page-title">
         <div>
           <h2>{t("reports.title")}</h2>
-          <p>{t("reports.subtitle")}</p>
+          <p>{t(state.synthetic ? "reports.subtitleMock" : "reports.subtitleSql")}</p>
         </div>
       </div>
-      <div className="demo-note">{t("reports.generated", { date: date(state.generatedAt) })}</div>
+      <div className="demo-note">{t(state.synthetic ? "reports.generatedMock" : "reports.generatedSql", { date: date(state.generatedAt) })}</div>
       {state.sections.map((section) => (
         <section className="panel" key={section.key}>
           <h3>{section.title}</h3>
