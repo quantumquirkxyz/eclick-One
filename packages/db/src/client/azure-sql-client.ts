@@ -2,15 +2,32 @@ import sql, { type config as SqlConfig, type ConnectionPool } from "mssql";
 import { booleanEnv, integerEnv, requiredEnv, type Environment } from "@eclick-one/shared";
 
 export function azureSqlConfigFromEnv(env: Environment): SqlConfig {
+  const encrypt = booleanEnv(env, "AZURE_SQL_ENCRYPT", true);
+  const trustServerCertificate = booleanEnv(env, "AZURE_SQL_TRUST_SERVER_CERTIFICATE", false);
+  if (!encrypt) {
+    throw new Error("AZURE_SQL_ENCRYPT must remain true for Azure SQL connections.");
+  }
+  if (trustServerCertificate) {
+    throw new Error("AZURE_SQL_TRUST_SERVER_CERTIFICATE must remain false for Azure SQL connections.");
+  }
+
   return {
     server: requiredEnv(env, "AZURE_SQL_SERVER"),
     port: integerEnv(env, "AZURE_SQL_PORT", 1433, { min: 1, max: 65_535 }),
     database: requiredEnv(env, "AZURE_SQL_DATABASE"),
     user: requiredEnv(env, "AZURE_SQL_USER"),
     password: requiredEnv(env, "AZURE_SQL_PASSWORD"),
+    connectionTimeout: integerEnv(env, "AZURE_SQL_CONNECTION_TIMEOUT_MS", 120_000, {
+      min: 1_000,
+      max: 300_000,
+    }),
+    requestTimeout: integerEnv(env, "AZURE_SQL_REQUEST_TIMEOUT_MS", 120_000, {
+      min: 1_000,
+      max: 300_000,
+    }),
     options: {
-      encrypt: booleanEnv(env, "AZURE_SQL_ENCRYPT", true),
-      trustServerCertificate: booleanEnv(env, "AZURE_SQL_TRUST_SERVER_CERTIFICATE", false),
+      encrypt,
+      trustServerCertificate,
       enableArithAbort: true,
     },
     pool: {

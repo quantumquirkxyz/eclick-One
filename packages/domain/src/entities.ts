@@ -87,6 +87,8 @@ export interface NewClient {
   provincia: Province;
   tipo_tarjeta: CardType;
   paz_y_salvo: boolean;
+  /** Fictional/test card number used only when registering a card in SQL. */
+  numero_tarjeta?: string;
   email?: string;
   phone?: string;
 }

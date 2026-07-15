@@ -25,7 +25,6 @@ import {
   BadRequestError,
   ConflictError,
   NotFoundError,
-  ServiceUnavailableError,
 } from "../errors/app-error";
 import { apiText, type ApiLocale } from "../i18n";
 
@@ -124,15 +123,17 @@ export class CommerceService {
   async createOrder(input: NewOrder): Promise<Order> {
     const client = await this.ensureClient(input.codigo_cliente);
     await this.ensureProduct(input.codigo_producto);
-    assertClientCanGenerateOrder(client.paz_y_salvo);
-    assertOrderDateAllowed(input.fecha_pedido);
+    if (this.synthetic) {
+      assertClientCanGenerateOrder(client.paz_y_salvo);
+      assertOrderDateAllowed(input.fecha_pedido);
+    }
     assertPositiveText(input.direccion, "direccion");
     assertPositiveText(input.etiqueta, "etiqueta");
     assertPositiveText(input.tipo_duracion, "tipo_duracion");
     if (!Number.isInteger(input.cantidad) || input.cantidad < 1) {
       throw new BadRequestError("cantidad must be a positive integer.");
     }
-    if (input.fecha_entrega) {
+    if (input.fecha_entrega && this.synthetic) {
       assertIsoDate(input.fecha_entrega, "fecha_entrega");
       if (new Date(input.fecha_entrega).getTime() < new Date(input.fecha_pedido).getTime()) {
         throw new BadRequestError("fecha_entrega cannot be earlier than fecha_pedido.");
@@ -147,30 +148,34 @@ export class CommerceService {
     assertPositiveText(input.codigo_pedido, "codigo_pedido");
     assertPositiveMoney(input.monto_pagado, "monto_pagado");
     assertPaymentReference(input.referencia);
-    if (!isOrderStatus(order.estado)) {
-      throw new BadRequestError("Order status is not allowed.");
+    if (this.synthetic) {
+      if (!isOrderStatus(order.estado)) {
+        throw new BadRequestError("Order status is not allowed.");
+      }
+      if (order.estado === "cancelado") {
+        throw new ConflictError("Cannot register a payment for a cancelled order.");
+      }
+      if (order.pagado) {
+        throw new ConflictError("Order is already paid.");
+      }
+      assertOrderPaymentAmount(order.monto, input.monto_pagado);
     }
-    if (order.estado === "cancelado") {
-      throw new ConflictError("Cannot register a payment for a cancelled order.");
-    }
-    if (order.pagado) {
-      throw new ConflictError("Order is already paid.");
-    }
-    assertOrderPaymentAmount(order.monto, input.monto_pagado);
     return this.callRepository(() => this.repositories.recordPayment(input));
   }
 
   async transitionOrderStatus(input: { codigo_pedido: string; estado: OrderStatus }): Promise<Order> {
-    const order = await this.ensureOrder(input.codigo_pedido);
-    if (!isOrderStatus(input.estado)) {
-      throw new BadRequestError("Order status is not allowed.");
-    }
-    assertOrderTransitionAllowed(order, input.estado);
-    if (input.estado === "entregado") {
-      assertOrderDeliveryAllowed(order);
-    }
-    if (input.estado === "facturado" && !order.pagado) {
-      throw new ConflictError("Cannot invoice an unpaid order.");
+    if (this.synthetic) {
+      const order = await this.ensureOrder(input.codigo_pedido);
+      if (!isOrderStatus(input.estado)) {
+        throw new BadRequestError("Order status is not allowed.");
+      }
+      assertOrderTransitionAllowed(order, input.estado);
+      if (input.estado === "entregado") {
+        assertOrderDeliveryAllowed(order);
+      }
+      if (input.estado === "facturado" && !order.pagado) {
+        throw new ConflictError("Cannot invoice an unpaid order.");
+      }
     }
     return this.callRepository(() =>
       this.repositories.transitionOrderStatus({
@@ -345,8 +350,8 @@ export class CommerceService {
     try {
       return await operation();
     } catch (error) {
-      if (error instanceof Error && error.message === "Operation unavailable until Azure SQL is integrated.") {
-        throw new ServiceUnavailableError(error.message);
+      if (error instanceof Error && (error.name === "SqlProcedureError" || error.name === "TursoRepositoryError")) {
+        throw new ConflictError(error.message);
       }
       throw error;
     }
