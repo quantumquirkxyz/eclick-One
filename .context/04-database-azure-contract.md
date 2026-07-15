@@ -1,31 +1,31 @@
-# Contrato real de Azure SQL
+# Real Azure SQL Contract
 
-La aplicación consume la base `bd_eclick` en el servidor
-`eclick-server1.database.windows.net` mediante el usuario mínimo
-`app_eclick`. El detalle entregado por el propietario está consolidado en
+The application consumes the `bd_eclick` database on
+`eclick-server1.database.windows.net` through the least-privilege user
+`app_eclick`. The owner-provided details are consolidated in
 `docs/db-contract.md`.
 
-## Acceso
+## Access
 
 - `REPOSITORY_MODE=mock|sql`
-- Azure SQL Database, TCP 1433
+- Azure SQL Database over TCP 1433
 - `Encrypt=true`, `TrustServerCertificate=false`
-- El firewall debe autorizar la IP pública de salida del proceso API.
+- The firewall must allow the public outbound IP of the API process.
 
-## Objetos reales
+## Real Objects
 
-Tablas principales: `dbo.PROVINCIA`, `CLIENTE`, `TARJETA`, `PLAN_PEDIDO`,
+Main tables: `dbo.PROVINCIA`, `CLIENTE`, `TARJETA`, `PLAN_PEDIDO`,
 `CONTRATO`, `PRODUCTO`, `INVENTARIO`, `PEDIDO`, `DETALLE_PEDIDO`, `PAGO`,
-`ETIQUETA`, `HISTORIAL_PEDIDO` y `REPORTE_MENSUAL`.
+`ETIQUETA`, `HISTORIAL_PEDIDO`, and `REPORTE_MENSUAL`.
 
-Vistas: `dbo.vw_pedidos_actuales`, `dbo.vw_historial_pedidos` y
+Views: `dbo.vw_pedidos_actuales`, `dbo.vw_historial_pedidos`, and
 `dbo.vw_pagos_clientes`.
 
-Procedimientos: `dbo.p_registrar_o_buscar_cliente`, `p_registrar_tarjeta`,
+Procedures: `dbo.p_registrar_o_buscar_cliente`, `p_registrar_tarjeta`,
 `p_crear_contrato`, `p_crear_pedido`, `p_renovar_pedido`,
 `p_agregar_detalle_pedido`, `p_quitar_detalle_pedido`, `p_registrar_pago`,
 `p_cambiar_estado_pedido`, `p_preferencia_cliente`, `p_busqueda`,
-`p_cuenta_producto`, `p_reporte_mensual` y `p_control_pedidos_vencidos`.
+`p_cuenta_producto`, `p_reporte_mensual`, and `p_control_pedidos_vencidos`.
 
-El backend no calcula códigos provinciales, montos, inventario ni fechas de
-entrega. No ejecuta DDL ni modifica directamente tablas de negocio.
+The backend does not calculate provincial order codes, amounts, inventory, or
+delivery dates. It does not execute DDL or directly modify business tables.
