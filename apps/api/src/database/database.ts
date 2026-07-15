@@ -1,13 +1,13 @@
 import {
-  AzureSqlClient,
   MockCommerceRepository,
-  SqlCommerceRepository,
-  azureSqlConfigFromEnv,
+  TursoClient,
+  TursoCommerceRepository,
+  tursoConfigFromEnv,
 } from "@eclick-one/db";
 import type { CommerceRepositories } from "@eclick-one/domain";
 import type { Environment } from "@eclick-one/shared";
 
-export type RepositoryMode = "mock" | "sql";
+export type RepositoryMode = "mock" | "turso";
 
 export interface DatabaseContext {
   repositories: CommerceRepositories;
@@ -19,15 +19,15 @@ export interface DatabaseContext {
 export function createDatabase(env: Environment): DatabaseContext {
 
   const rawMode = env.REPOSITORY_MODE?.trim().toLowerCase() || "mock";
-  if (rawMode !== "mock" && rawMode !== "sql") {
-    throw new Error("REPOSITORY_MODE must be either mock or sql.");
+  if (rawMode !== "mock" && rawMode !== "turso") {
+    throw new Error("REPOSITORY_MODE must be either mock or turso.");
   }
 
   if (rawMode === "mock") {
     return createMockDatabase();
   }
 
-  return createSqlDatabase(env);
+  return createTursoDatabase(env);
 }
 
 function createMockDatabase(): DatabaseContext {
@@ -39,11 +39,11 @@ function createMockDatabase(): DatabaseContext {
   };
 }
 
-function createSqlDatabase(env: Environment): DatabaseContext {
-  const client = new AzureSqlClient(azureSqlConfigFromEnv(env));
+function createTursoDatabase(env: Environment): DatabaseContext {
+  const client = new TursoClient(tursoConfigFromEnv(env));
   return {
-    repositories: new SqlCommerceRepository(client),
-    mode: "sql",
+    repositories: new TursoCommerceRepository(client),
+    mode: "turso",
     ping: () => client.ping(),
     close: () => client.close(),
   };
