@@ -1,0 +1,6 @@
+import { Boxes, ClipboardList, CreditCard, Package, Users, Warehouse, type LucideIcon } from "lucide-react";
+import { useI18n } from "../../i18n";
+
+const modules: readonly [LucideIcon, "nav.customers" | "nav.orders" | "nav.payments" | "nav.products" | "nav.inventory" | "nav.reports", "landing.customersCopy" | "landing.ordersCopy" | "landing.paymentsCopy" | "landing.productsCopy" | "landing.inventoryCopy" | "landing.reportsCopy"][] = [[Users, "nav.customers", "landing.customersCopy"], [ClipboardList, "nav.orders", "landing.ordersCopy"], [CreditCard, "nav.payments", "landing.paymentsCopy"], [Package, "nav.products", "landing.productsCopy"], [Warehouse, "nav.inventory", "landing.inventoryCopy"], [Boxes, "nav.reports", "landing.reportsCopy"]];
+
+export function ModuleGrid() { const { t } = useI18n(); return <section className="landing-section" id="modulos"><div className="section-heading"><div><span className="section-kicker">{t("landing.capabilities")}</span><h2>{t("landing.modulesTitle")}</h2></div><p>{t("landing.modulesCopy")}</p></div><div className="module-grid">{modules.map(([Icon, title, copy]) => <article className="module-card" key={title}><Icon size={21} /><h3>{t(title)}</h3><p>{t(copy)}</p></article>)}</div></section>; }

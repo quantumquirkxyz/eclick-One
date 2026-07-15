@@ -1,74 +1,59 @@
 import { Menu } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
-import type { Vista } from "../../types/commerce";
+import { useEffect, useState, type ComponentType } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { LanguageSelector, useI18n } from "../../i18n";
+import { apiRequest } from "../../services/api/client";
 
 export interface NavItem {
-  vista: Vista;
-  etiqueta: string;
+  path: string;
+  label: string;
   icon: ComponentType<{ size?: number }>;
+  end?: boolean;
 }
 
-export function AppShell({
-  currentView,
-  onSelectView,
-  onToggleMenu,
-  menuOpen,
-  navItems,
-  children,
-}: {
-  currentView: Vista;
-  onSelectView(vista: Vista): void;
-  onToggleMenu(): void;
-  menuOpen: boolean;
-  navItems: readonly NavItem[];
-  children: ReactNode;
-}) {
+type RepositoryMode = "mock" | "sql";
+
+export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
+  const { t } = useI18n();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [repositoryMode, setRepositoryMode] = useState<RepositoryMode>("mock");
+  const location = useLocation();
+  const currentItem = navItems.find((item) => item.end ? location.pathname === item.path : location.pathname.startsWith(item.path));
+
+  useEffect(() => {
+    let mounted = true;
+    void apiRequest<{ repositoryMode?: string }>("/api/v1/health").then((health) => {
+      if (mounted && health.repositoryMode === "sql") setRepositoryMode("sql");
+    }).catch(() => { /* The mock fallback is intentional for demos without the API. */ });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
   return (
     <div className="app">
       <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
         <div className="brand">
-          <span className="brand-mark">e</span>
-          <div>
-            <strong>eclick One</strong>
-            <small>OPERATIONS</small>
-          </div>
-          <button className="close mobile" onClick={onToggleMenu} aria-label="Cerrar menú">
-            ×
-          </button>
+          <img className="brand-logo" src="/eclick-One-Logo-2.svg" alt="eclick One logo" />
+          <div><strong>eclick One</strong><small>{t("shell.operations")}</small></div>
+          <button className="close mobile" onClick={() => setMenuOpen(false)} aria-label={t("shell.closeMenu")}>×</button>
         </div>
-        <nav>
-          {navItems.map(({ vista, etiqueta, icon: Icon }) => (
-            <button
-              key={vista}
-              className={currentView === vista ? "active" : ""}
-              onClick={() => onSelectView(vista)}
-            >
-              <Icon size={18} />
-              {etiqueta}
-            </button>
+        <nav aria-label={t("shell.operationalNav")}>
+          {navItems.map(({ path, label, icon: Icon, end }) => (
+            <NavLink key={path} to={path} {...(end ? { end: true } : {})} className={({ isActive }) => isActive ? "active" : ""}>
+              <Icon size={18} />{label}
+            </NavLink>
           ))}
         </nav>
-        <div className="side-footer">
-          OPERACIÓN COMERCIAL
-          <br />
-          <span>Modo mock con API REST</span>
-        </div>
+        <div className="side-footer">{t("shell.sideFooterTitle")}<br /><span>{repositoryMode === "sql" ? t("shell.connectedSql") : t("shell.mockApi")}</span></div>
       </aside>
       <div className="workspace">
         <header>
-          <button className="icon-button mobile" onClick={onToggleMenu} aria-label="Abrir menú">
-            <Menu />
-          </button>
-          <div>
-            <p className="eyebrow">eclick One · Panamá</p>
-            <h1>{navItems.find((item) => item.vista === currentView)?.etiqueta}</h1>
-          </div>
-          <div className="header-actions">
-            <span className="synthetic">Modo mock</span>
-            <span className="avatar">EO</span>
-          </div>
+          <button className="icon-button mobile" onClick={() => setMenuOpen((open) => !open)} aria-label={t("shell.openMenu")}><Menu /></button>
+          <div><p className="eyebrow">{t("shell.eyebrow")}</p><h1>{currentItem?.label ?? t("shell.console")}</h1></div>
+          <div className="header-actions"><LanguageSelector /><span className={`synthetic ${repositoryMode === "sql" ? "connected" : ""}`}>{repositoryMode === "sql" ? t("common.azureSql") : t("common.syntheticData")}</span><span className="avatar">EO</span></div>
         </header>
-        <main className="content">{children}</main>
+        <main className="content"><div className="demo-note">{repositoryMode === "sql" ? t("shell.demoSql") : t("shell.demoMock")}</div><Outlet /></main>
       </div>
     </div>
   );

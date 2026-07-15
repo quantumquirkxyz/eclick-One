@@ -1,5 +1,6 @@
 import { AppError } from "../errors/app-error";
 import type { Controller } from "../controllers/controller";
+import { apiText, localeFromRequest, translateApiMessage, type ApiLocale } from "../i18n";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type RouteMatch = { controller: Controller; params: Record<string, string> };
@@ -14,9 +15,10 @@ export class Router {
   async handle(request: Request): Promise<Response> {
     const { pathname } = new URL(request.url);
     const match = this.matchRoute(request.method as Method, pathname);
+    const locale = localeFromRequest(request);
     if (!match) {
       return jsonResponse(
-        { error: { code: "NOT_FOUND", message: `No route for ${request.method} ${pathname}.` } },
+        { error: { code: "NOT_FOUND", message: apiText(locale, "noRoute").replace("{method}", request.method).replace("{pathname}", pathname) } },
         404,
       );
     }
@@ -25,7 +27,7 @@ export class Router {
       const result = await match.controller(request, match.params);
       return jsonResponse(result.body, result.status ?? 200);
     } catch (error) {
-      return errorResponse(error);
+      return errorResponse(error, locale);
     }
   }
 
@@ -46,10 +48,10 @@ export function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-function errorResponse(error: unknown): Response {
+function errorResponse(error: unknown, locale: ApiLocale = "en"): Response {
   if (error instanceof AppError) {
     return jsonResponse(
-      { error: { code: error.code, message: error.message, details: error.details } },
+      { error: { code: error.code, message: translateApiMessage(error.message, locale), details: error.details } },
       error.status,
     );
   }
@@ -57,7 +59,7 @@ function errorResponse(error: unknown): Response {
   // SQL/implementation details are logged server-side but never leaked to callers.
   console.error("Unhandled API error", error);
   return jsonResponse(
-    { error: { code: "INTERNAL_ERROR", message: "The service could not complete the request." } },
+    { error: { code: "INTERNAL_ERROR", message: apiText(locale, "internalError") } },
     500,
   );
 }

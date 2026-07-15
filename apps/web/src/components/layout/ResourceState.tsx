@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useI18n } from "../../i18n";
 
 export function ResourceState({
   status,
@@ -15,11 +16,12 @@ export function ResourceState({
   onRetry?: () => void;
   children?: ReactNode;
 }) {
+  const { t } = useI18n();
   if (status === "loading") {
     return (
       <section className="panel resource-state">
         <h3>{title}</h3>
-        <p>{description ?? "Cargando..."}</p>
+        <p>{description ?? t("common.loading")}</p>
       </section>
     );
   }
@@ -27,10 +29,10 @@ export function ResourceState({
     return (
       <section className="panel resource-state">
         <h3>{title}</h3>
-        <p>{error ?? description ?? "No se pudo cargar la información."}</p>
+        <p>{error ?? description ?? t("common.noRecords")}</p>
         {onRetry ? (
           <button className="primary-button" onClick={onRetry}>
-            Reintentar
+            {t("common.retry")}
           </button>
         ) : null}
       </section>
@@ -40,7 +42,7 @@ export function ResourceState({
     return (
       <section className="panel resource-state">
         <h3>{title}</h3>
-        <p>{description ?? "No hay registros para mostrar."}</p>
+        <p>{description ?? t("common.noRecords")}</p>
       </section>
     );
   }

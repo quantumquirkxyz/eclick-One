@@ -3,6 +3,7 @@ import { commerceApi, type DashboardSnapshot } from "../../services/api/commerce
 import { DataTable } from "../../components/tables/DataTable";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { StatusChart } from "../../components/charts/StatusChart";
+import { useI18n } from "../../i18n";
 
 type LoadState =
   | { status: "loading" }
@@ -10,6 +11,7 @@ type LoadState =
   | { status: "success"; data: DashboardSnapshot };
 
 export function DashboardFeature() {
+  const { t, money, productName } = useI18n();
   const [state, setState] = useState<LoadState>({ status: "loading" });
 
   const load = async (): Promise<void> => {
@@ -17,7 +19,7 @@ export function DashboardFeature() {
     try {
       setState({ status: "success", data: await commerceApi.getDashboard() });
     } catch (error) {
-      setState({ status: "error", message: error instanceof Error ? error.message : "No se pudo cargar el dashboard." });
+      setState({ status: "error", message: error instanceof Error ? error.message : t("dashboard.error") });
     }
   };
 
@@ -26,11 +28,11 @@ export function DashboardFeature() {
   }, []);
 
   if (state.status === "loading") {
-    return <ResourceState status="loading" title="Resumen" description="Cargando métricas operativas..." />;
+    return <ResourceState status="loading" title={t("nav.summary")} description={t("dashboard.loading")} />;
   }
 
   if (state.status === "error") {
-    return <ResourceState status="error" title="Resumen" error={state.message} onRetry={load} />;
+    return <ResourceState status="error" title={t("nav.summary")} error={state.message} onRetry={load} />;
   }
 
   const { data } = state;
@@ -40,68 +42,68 @@ export function DashboardFeature() {
     <section>
       <div className="page-title">
         <div>
-          <h2>Centro de operaciones</h2>
+          <h2>{t("dashboard.title")}</h2>
           <p>{data.notice}</p>
         </div>
       </div>
       <div className="metrics">
-        <Metric label="Clientes" value={String(data.metrics.clients)} note="Base activa" />
-        <Metric label="Pedidos actuales" value={String(data.metrics.currentOrders)} note="Generados o en proceso" />
-        <Metric label="Cobrado" value={money.format(data.metrics.collected)} note="Historial de pagos" />
-        <Metric label="No paz y salvo" value={String(data.metrics.notPazYSalvo)} note="Bloquea creación" />
+        <Metric label={t("nav.customers")} value={String(data.metrics.clients)} note={t("dashboard.activeBase")} />
+        <Metric label={t("dashboard.currentOrders")} value={String(data.metrics.currentOrders)} note={t("dashboard.generatedOrProcess")} />
+        <Metric label={t("dashboard.collected")} value={money(data.metrics.collected)} note={t("dashboard.paymentHistory")} />
+        <Metric label={t("dashboard.notCompliant")} value={String(data.metrics.notPazYSalvo)} note={t("dashboard.blocksCreation")} />
       </div>
       <div className="grid two">
-        <StatusChart title="Pedidos por estado" values={data.orderStatuses} />
+        <StatusChart title={t("dashboard.ordersByStatus")} values={data.orderStatuses} />
         <section className="panel">
-          <h3>Alertas operativas</h3>
+          <h3>{t("dashboard.alerts")}</h3>
           <ul className="alerts">
-            <li>{data.metrics.atRiskOrders} pedidos en proceso superan o se acercan a 48 horas.</li>
-            <li>{data.nonCompliantClients.length} clientes no están paz y salvo.</li>
-            <li>La persistencia real se mantiene preparada, pero la app corre sobre mock en memoria.</li>
+            <li>{data.metrics.atRiskOrders} {t("dashboard.atRisk")}</li>
+            <li>{data.nonCompliantClients.length} {t("dashboard.nonCompliant")}</li>
+            <li>{t("dashboard.mockPersistence")}</li>
           </ul>
         </section>
       </div>
       <div className="grid two">
         <section className="panel">
-          <h3>Pedidos por mes</h3>
+          <h3>{t("dashboard.ordersByMonth")}</h3>
           <DataTable
-            columns={["Mes", "Pedidos"]}
-            rows={data.ordersByMonth.length ? data.ordersByMonth.map((row) => [row.month, String(row.orders)]) : [["Sin datos", "0"]]}
+            columns={["Month", t("nav.orders")]}
+            rows={data.ordersByMonth.length ? data.ordersByMonth.map((row) => [row.month, String(row.orders)]) : [[t("common.noData"), "0"]]}
           />
         </section>
         <section className="panel">
-          <h3>Pagos por mes</h3>
+          <h3>{t("dashboard.paymentsByMonth")}</h3>
           <DataTable
-            columns={["Mes", "Pagos", "Monto"]}
+            columns={["Month", t("nav.payments"), t("common.amount")]}
             rows={
               data.paymentsByMonth.length
-                ? data.paymentsByMonth.map((row) => [row.month, String(row.payments), money.format(row.amount)])
-                : [["Sin datos", "-", "-"]]
+                ? data.paymentsByMonth.map((row) => [row.month, String(row.payments), money(row.amount)])
+                : [[t("common.noData"), "-", "-"]]
             }
           />
         </section>
         <section className="panel">
-          <h3>Preferencia por cliente</h3>
+          <h3>{t("dashboard.preferenceByCustomer")}</h3>
           <DataTable
-            columns={["Cliente", "Preferencia", "Estado"]}
+            columns={[t("common.customer"), t("customers.preference"), t("common.status")]}
             rows={
               data.preferencesByClient.length
                 ? data.preferencesByClient.map((row) => [
                     `${row.nombre} ${row.apellido}`,
-                    row.preference ? `Producto ${row.preference.codigo_producto}` : "Sin preferencia",
-                    row.preference ? "Calculada" : "Pendiente",
+                    row.preference ? `${t("common.product")} ${row.preference.codigo_producto}` : t("dashboard.noPreference"),
+                    row.preference ? t("common.calculated") : t("common.pending"),
                   ])
-                : [["Sin clientes", "-", "-"]]
+                : [[t("dashboard.noCustomers"), "-", "-"]]
             }
           />
         </section>
       </div>
       <section className="panel">
-        <h3>Inventario</h3>
+        <h3>{t("nav.inventory")}</h3>
         <DataTable
-          columns={["Producto", "Ventas", "Bodega", "Reservado", "Disponible"]}
+          columns={[t("common.product"), t("dashboard.sales"), t("dashboard.warehouse"), t("dashboard.reserved"), t("dashboard.available")]}
           rows={data.inventorySummary.map((item) => [
-            `${item.nombre} (${item.codigo_producto})`,
+            `${productName(item.codigo_producto, item.nombre)} (${item.codigo_producto})`,
             String(item.ventas),
             String(item.bodega),
             String(item.reservado),
@@ -110,17 +112,17 @@ export function DashboardFeature() {
         />
       </section>
       <section className="panel">
-        <h3>Productos más consumidos</h3>
+        <h3>{t("dashboard.topProducts")}</h3>
         <DataTable
-          columns={["Producto", "Cantidad", "Pedidos"]}
+          columns={[t("common.product"), t("dashboard.quantity"), t("nav.orders")]}
           rows={data.topProducts.map((item) => [
-            `${item.nombre} (${item.codigo_producto})`,
+            `${productName(item.codigo_producto, item.nombre)} (${item.codigo_producto})`,
             String(item.cantidad),
             String(item.pedidos),
           ])}
         />
       </section>
-      {!nonEmpty ? <ResourceState status="empty" title="Resumen" description="Todavía no hay pedidos registrados." onRetry={load} /> : null}
+      {!nonEmpty ? <ResourceState status="empty" title={t("nav.summary")} description={t("dashboard.empty")} onRetry={load} /> : null}
     </section>
   );
 }
@@ -134,5 +136,3 @@ function Metric({ label, value, note }: { label: string; value: string; note: st
     </article>
   );
 }
-
-const money = new Intl.NumberFormat("es-PA", { style: "currency", currency: "USD" });

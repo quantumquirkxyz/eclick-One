@@ -12,5 +12,5 @@ export function Chart({ option, height = 270 }: { option: EChartsOption; height?
     observer.observe(element.current);
     return () => { observer.disconnect(); chart.dispose(); };
   }, [option]);
-  return <div ref={element} style={{ height }} aria-label="Gráfico con datos sintéticos" />;
+  return <div ref={element} style={{ height }} aria-label="Synthetic data chart" />;
 }

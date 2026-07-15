@@ -1,3 +1,5 @@
+import { getCurrentLocale } from "../../i18n";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
 export class ApiError extends Error {
@@ -18,6 +20,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
+  headers.set("Accept-Language", getCurrentLocale());
   if (init.body) {
     headers.set("Content-Type", "application/json");
   }

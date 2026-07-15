@@ -85,7 +85,7 @@ describe("domain business rules", () => {
       cantidad: 1,
       monto: 50,
       etiqueta: "pedido-web",
-      direccion: "Dirección",
+      direccion: "Address",
       fecha_pedido: "2024-12-29T00:00:00.000Z",
       estado: "proceso" as const,
       tipo_duracion: "48h",

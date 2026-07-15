@@ -1,12 +1,13 @@
 import type { OrderStatus, NewClient, NewOrder, NewPayment } from "@eclick-one/domain";
 import { BadRequestError } from "../errors/app-error";
+import { localeFromRequest } from "../i18n";
 import type { CommerceService } from "../services/commerce-service";
 import type { ControllerResult } from "./controller";
 
 export class CommerceController {
   constructor(private readonly service: CommerceService) {}
 
-  dashboard = async (): Promise<ControllerResult> => ({ body: await this.service.getDashboard() });
+  dashboard = async (request: Request): Promise<ControllerResult> => ({ body: await this.service.getDashboard(localeFromRequest(request)) });
   provinces = async (): Promise<ControllerResult> => ({ body: await this.service.listProvinces() });
   clients = async (): Promise<ControllerResult> => ({ body: await this.service.listClients() });
   currentOrders = async (): Promise<ControllerResult> => ({ body: await this.service.listCurrentOrders() });
@@ -14,7 +15,7 @@ export class CommerceController {
   inventory = async (): Promise<ControllerResult> => ({ body: await this.service.listInventory() });
   orders = async (): Promise<ControllerResult> => ({ body: await this.service.listOrders() });
   payments = async (): Promise<ControllerResult> => ({ body: await this.service.listPayments() });
-  reports = async (): Promise<ControllerResult> => ({ body: await this.service.getReports() });
+  reports = async (request: Request): Promise<ControllerResult> => ({ body: await this.service.getReports(localeFromRequest(request)) });
 
   clientPreference = async (_request: Request, params: Record<string, string>): Promise<ControllerResult> => {
     const codigo = Number(params.codigo_cliente);

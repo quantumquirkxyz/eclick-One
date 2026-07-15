@@ -17,10 +17,10 @@ import {
 } from "@eclick-one/domain";
 
 const seedProvinces: Province[] = [
-  { id: "PA", codigo: "PA", nombre: "Panamá", prefijo: "PA" },
-  { id: "CH", codigo: "CH", nombre: "Chiriquí", prefijo: "CH" },
-  { id: "CO", codigo: "CO", nombre: "Colón", prefijo: "CO" },
-  { id: "OC", codigo: "OC", nombre: "Coclé", prefijo: "OC" },
+  { id: "PA", codigo: "PA", nombre: "Panama", prefijo: "PA" },
+  { id: "CH", codigo: "CH", nombre: "Chiriqui", prefijo: "CH" },
+  { id: "CO", codigo: "CO", nombre: "Colon", prefijo: "CO" },
+  { id: "OC", codigo: "OC", nombre: "Cocle", prefijo: "OC" },
 ];
 
 const seedClients: Client[] = [
@@ -36,7 +36,7 @@ const seedClients: Client[] = [
   {
     codigo_cliente: 2,
     nombre: "Carlos",
-    apellido: "Ríos",
+    apellido: "Rios",
     identificacion: "4-000-002",
     provincia: seedProvinces[1]!,
     tipo_tarjeta: "DB",
@@ -44,7 +44,7 @@ const seedClients: Client[] = [
   },
   {
     codigo_cliente: 3,
-    nombre: "Lucía",
+    nombre: "Lucia",
     apellido: "Castillo",
     identificacion: "3-000-003",
     provincia: seedProvinces[2]!,
@@ -54,10 +54,10 @@ const seedClients: Client[] = [
 ];
 
 const seedProducts: Product[] = [
-  { codigo_producto: 1000, nombre: "Laptop Académica", categoria: "Tecnología", activo: true },
-  { codigo_producto: 1001, nombre: "Silla Ergonómica", categoria: "Oficina", activo: true },
-  { codigo_producto: 1002, nombre: "Impresora Láser", categoria: "Tecnología", activo: true },
-  { codigo_producto: 1003, nombre: "Kit de Papelería", categoria: "Oficina", activo: true },
+  { codigo_producto: 1000, nombre: "Academic Laptop", categoria: "Technology", activo: true },
+  { codigo_producto: 1001, nombre: "Ergonomic Chair", categoria: "Office", activo: true },
+  { codigo_producto: 1002, nombre: "Laser Printer", categoria: "Technology", activo: true },
+  { codigo_producto: 1003, nombre: "Stationery Kit", categoria: "Office", activo: true },
 ];
 
 const seedInventory: Inventory[] = [
@@ -75,7 +75,7 @@ const seedOrders: Order[] = [
     cantidad: 2,
     monto: amountForQuantity(2),
     etiqueta: "pedido-web",
-    direccion: "Dirección sintética 101, Panamá",
+    direccion: "Synthetic address 101, Panama",
     fecha_pedido: "2024-12-29T14:00:00.000Z",
     fecha_entrega: "2024-12-31T15:00:00.000Z",
     estado: "facturado",
@@ -89,7 +89,7 @@ const seedOrders: Order[] = [
     cantidad: 1,
     monto: amountForQuantity(1),
     etiqueta: "pedido-web",
-    direccion: "Dirección sintética 102, Panamá",
+    direccion: "Synthetic address 102, Panama",
     fecha_pedido: "2024-12-30T10:00:00.000Z",
     fecha_entrega: "2025-01-01T11:00:00.000Z",
     estado: "entregado",
@@ -103,7 +103,7 @@ const seedOrders: Order[] = [
     cantidad: 3,
     monto: amountForQuantity(3),
     etiqueta: "pedido-web",
-    direccion: "Dirección sintética 103, Panamá",
+    direccion: "Synthetic address 103, Panama",
     fecha_pedido: "2024-12-31T12:00:00.000Z",
     estado: "proceso",
     tipo_duracion: "48h",
@@ -116,7 +116,7 @@ const seedOrders: Order[] = [
     cantidad: 1,
     monto: amountForQuantity(1),
     etiqueta: "pedido-web",
-    direccion: "Dirección sintética 202, Chiriquí",
+    direccion: "Synthetic address 202, Chiriqui",
     fecha_pedido: "2024-12-30T16:00:00.000Z",
     estado: "proceso",
     tipo_duracion: "48h",
@@ -129,7 +129,7 @@ const seedOrders: Order[] = [
     cantidad: 2,
     monto: amountForQuantity(2),
     etiqueta: "pedido-web",
-    direccion: "Dirección sintética 303, Colón",
+    direccion: "Synthetic address 303, Colon",
     fecha_pedido: "2024-12-31T18:00:00.000Z",
     fecha_entrega: "2025-01-02T18:00:00.000Z",
     estado: "generado",
@@ -145,7 +145,7 @@ const seedPayments: Payment[] = [
     monto_pagado: 70,
     tipo_tarjeta: "CR",
     fecha_pago: "2024-12-29T15:00:00.000Z",
-    referencia: "SYN-PAGO-001",
+    referencia: "SYN-PAY-001",
   },
   {
     id_pago: 2,
@@ -153,7 +153,7 @@ const seedPayments: Payment[] = [
     monto_pagado: 50,
     tipo_tarjeta: "DB",
     fecha_pago: "2024-12-30T11:00:00.000Z",
-    referencia: "SYN-PAGO-002",
+    referencia: "SYN-PAY-002",
   },
 ];
 

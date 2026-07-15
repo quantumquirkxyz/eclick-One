@@ -27,6 +27,7 @@ import {
   NotFoundError,
   ServiceUnavailableError,
 } from "../errors/app-error";
+import { apiText, type ApiLocale } from "../i18n";
 
 export interface DashboardSnapshot {
   readonly kind: "dashboard";
@@ -179,7 +180,7 @@ export class CommerceService {
     );
   }
 
-  async getDashboard(): Promise<DashboardSnapshot> {
+  async getDashboard(locale: ApiLocale = "en"): Promise<DashboardSnapshot> {
     const [clients, products, inventory, orders, payments, currentOrders] = await Promise.all([
       this.repositories.listClients(),
       this.repositories.listProducts(),
@@ -230,7 +231,7 @@ export class CommerceService {
         const product = products.find((item) => item.codigo_producto === stock.codigo_producto);
         return {
           codigo_producto: stock.codigo_producto,
-          nombre: product?.nombre ?? `Producto ${stock.codigo_producto}`,
+          nombre: product?.nombre ?? `Product ${stock.codigo_producto}`,
           ventas: stock.cant_ventas,
           bodega: stock.cant_bodega,
           reservado: stock.cant_reservado,
@@ -242,7 +243,7 @@ export class CommerceService {
     const topProducts = [...productTotals.entries()]
       .map(([codigo_producto, totals]) => ({
         codigo_producto,
-        nombre: products.find((item) => item.codigo_producto === codigo_producto)?.nombre ?? `Producto ${codigo_producto}`,
+        nombre: products.find((item) => item.codigo_producto === codigo_producto)?.nombre ?? `Product ${codigo_producto}`,
         cantidad: totals.cantidad,
         pedidos: totals.pedidos,
       }))
@@ -262,9 +263,7 @@ export class CommerceService {
     return {
       kind: "dashboard",
       synthetic: this.synthetic,
-      notice: this.synthetic
-        ? "Datos sintéticos en memoria. La persistencia real se activará con Azure SQL."
-        : "Conectado a Azure SQL.",
+      notice: this.synthetic ? apiText(locale, "dashboardMock") : apiText(locale, "dashboardSql"),
       metrics: {
         clients: clients.length,
         products: products.length,
@@ -293,13 +292,13 @@ export class CommerceService {
     };
   }
 
-  async getReports(): Promise<{
+  async getReports(locale: ApiLocale = "en"): Promise<{
     synthetic: boolean;
     generatedAt: string;
     sections: readonly { key: string; title: string; rows: readonly unknown[] }[];
   }> {
     const [dashboard, currentOrders, payments] = await Promise.all([
-      this.getDashboard(),
+      this.getDashboard(locale),
       this.listCurrentOrders(),
       this.listPayments(),
     ]);
@@ -307,13 +306,13 @@ export class CommerceService {
       synthetic: dashboard.synthetic,
       generatedAt: new Date().toISOString(),
       sections: [
-        { key: "order-status", title: "Pedidos por estado", rows: dashboard.orderStatuses },
-        { key: "orders-by-month", title: "Pedidos por mes", rows: dashboard.ordersByMonth },
-        { key: "payments-by-month", title: "Pagos por mes", rows: dashboard.paymentsByMonth },
-        { key: "inventory", title: "Inventario", rows: dashboard.inventorySummary },
-        { key: "top-products", title: "Productos más consumidos", rows: dashboard.topProducts },
-        { key: "current-orders", title: "Pedidos actuales", rows: currentOrders },
-        { key: "payments", title: "Historial de pagos", rows: payments },
+        { key: "order-status", title: apiText(locale, "reportOrderStatus"), rows: dashboard.orderStatuses },
+        { key: "orders-by-month", title: apiText(locale, "reportOrdersByMonth"), rows: dashboard.ordersByMonth },
+        { key: "payments-by-month", title: apiText(locale, "reportPaymentsByMonth"), rows: dashboard.paymentsByMonth },
+        { key: "inventory", title: apiText(locale, "reportInventory"), rows: dashboard.inventorySummary },
+        { key: "top-products", title: apiText(locale, "reportTopProducts"), rows: dashboard.topProducts },
+        { key: "current-orders", title: apiText(locale, "reportCurrentOrders"), rows: currentOrders },
+        { key: "payments", title: apiText(locale, "reportPayments"), rows: payments },
       ],
     };
   }
@@ -346,7 +345,7 @@ export class CommerceService {
     try {
       return await operation();
     } catch (error) {
-      if (error instanceof Error && error.message === "Operación no disponible hasta integrar Azure SQL") {
+      if (error instanceof Error && error.message === "Operation unavailable until Azure SQL is integrated.") {
         throw new ServiceUnavailableError(error.message);
       }
       throw error;

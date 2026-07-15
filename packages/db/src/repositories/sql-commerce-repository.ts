@@ -58,11 +58,11 @@ export class SqlCommerceRepository implements CommerceRepositories {
   }
 
   async createClient(_input: NewClient): Promise<Client> {
-    throw new Error("Operación no disponible hasta integrar Azure SQL");
+    throw new Error("Operation unavailable until Azure SQL is integrated.");
   }
 
   async getClientPreference(_code: number): Promise<import("@eclick-one/domain").ProductPreference | null> {
-    throw new Error("Operación no disponible hasta integrar Azure SQL");
+    throw new Error("Operation unavailable until Azure SQL is integrated.");
   }
 
   async listProducts(): Promise<readonly Product[]> {
@@ -119,11 +119,11 @@ export class SqlCommerceRepository implements CommerceRepositories {
   }
 
   async createOrder(_input: NewOrder): Promise<Order> {
-    throw new Error("Operación no disponible hasta integrar Azure SQL");
+    throw new Error("Operation unavailable until Azure SQL is integrated.");
   }
 
   async transitionOrderStatus(_input: OrderStatusTransition): Promise<Order> {
-    throw new Error("Operación no disponible hasta integrar Azure SQL");
+    throw new Error("Operation unavailable until Azure SQL is integrated.");
   }
 
   async listPayments(): Promise<readonly Payment[]> {
@@ -142,7 +142,7 @@ export class SqlCommerceRepository implements CommerceRepositories {
   }
 
   async recordPayment(_input: NewPayment): Promise<Payment> {
-    throw new Error("Operación no disponible hasta integrar Azure SQL");
+    throw new Error("Operation unavailable until Azure SQL is integrated.");
   }
 }
 

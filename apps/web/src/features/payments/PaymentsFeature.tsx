@@ -1,0 +1,199 @@
+import { useEffect, useMemo, useState } from "react";
+import { commerceApi, validatePayment } from "../../services/api/commerce";
+import { ResourceState } from "../../components/layout/ResourceState";
+import { DataTable } from "../../components/tables/DataTable";
+import { useI18n } from "../../i18n";
+import type { NewCommercePayment, CommercePayment, CommerceOrder } from "../../types/commerce";
+
+type LoadState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "success"; payments: readonly CommercePayment[]; orders: readonly CommerceOrder[] };
+
+type PaymentForm = Omit<NewCommercePayment, "referencia"> & { referencia?: string };
+
+const initialForm: PaymentForm = {
+  codigo_pedido: "",
+  monto_pagado: 0,
+  fecha_pago: toLocalInputValue(new Date()),
+  tipo_tarjeta: "DB",
+};
+
+export function PaymentsFeature() {
+  const { t, status, money } = useI18n();
+  const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [form, setForm] = useState<PaymentForm>(initialForm);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const load = async (): Promise<void> => {
+    setState({ status: "loading" });
+    try {
+      const [payments, orders] = await Promise.all([commerceApi.listPayments(), commerceApi.listOrders()]);
+      setState({ status: "success", payments, orders });
+      const paymentable = orders.find((order) => !order.pagado) ?? orders[0];
+      if (paymentable) {
+        setForm((current) => ({
+          ...current,
+          codigo_pedido: paymentable.codigo_pedido,
+          monto_pagado: paymentable.monto,
+        }));
+      }
+    } catch (error) {
+      setState({ status: "error", message: error instanceof Error ? error.message : t("payments.error") });
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const selectedOrder = useMemo(
+    () => (state.status === "success" ? state.orders.find((order) => order.codigo_pedido === form.codigo_pedido) : undefined),
+    [state, form.codigo_pedido],
+  );
+
+  if (state.status === "loading") return <ResourceState status="loading" title={t("payments.title")} description={t("payments.loading")} />;
+  if (state.status === "error") return <ResourceState status="error" title={t("payments.title")} error={state.message} onRetry={load} />;
+  if (state.payments.length === 0) return <ResourceState status="empty" title={t("payments.title")} description={t("payments.empty")} onRetry={load} />;
+
+  const recordPayment = async (): Promise<void> => {
+    try {
+      if (!selectedOrder) throw new Error(t("common.selectOrder"));
+      const request: NewCommercePayment = { ...form, ...(form.referencia ? { referencia: form.referencia } : {}) };
+      validatePayment(request, selectedOrder);
+      await commerceApi.recordPayment(request);
+      setNotice(t("payments.registered"));
+      await load();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : t("payments.registerError"));
+    }
+  };
+
+  return (
+    <section>
+      <div className="page-title">
+        <div>
+          <h2>{t("payments.title")}</h2>
+          <p>{t("payments.subtitle")}</p>
+        </div>
+      </div>
+      {notice ? <div className="demo-note">{notice}</div> : null}
+      <div className="grid two">
+        <section className="panel">
+          <h3>{t("payments.register")}</h3>
+          <div className="form-grid">
+            <Select
+              label={t("common.order")}
+              value={form.codigo_pedido}
+              options={state.orders.map((order) => ({ value: order.codigo_pedido, label: `${order.codigo_pedido} · ${status(order.estado)}` }))}
+              onChange={(value) => {
+                const order = state.orders.find((item) => item.codigo_pedido === value);
+                setForm({
+                  ...form,
+                  codigo_pedido: value,
+                  monto_pagado: order?.monto ?? form.monto_pagado,
+                });
+              }}
+            />
+            <Field label={t("common.amount")} value={String(form.monto_pagado)} onChange={(value) => setForm({ ...form, monto_pagado: Number(value) })} type="number" />
+            <Field label={t("payments.paymentDate")} value={form.fecha_pago} onChange={(value) => setForm({ ...form, fecha_pago: value })} type="datetime-local" />
+            <Select
+              label={t("payments.cardType")}
+              value={form.tipo_tarjeta}
+              options={[{ value: "DB", label: "DB" }, { value: "CR", label: "CR" }]}
+              onChange={(value) => setForm({ ...form, tipo_tarjeta: value as NewCommercePayment["tipo_tarjeta"] })}
+            />
+            <Field
+              label={t("common.reference")}
+              value={form.referencia ?? ""}
+              onChange={(value) =>
+                setForm(
+                  value.trim().length
+                    ? { ...form, referencia: value }
+                    : (() => {
+                        const next = { ...form };
+                        delete next.referencia;
+                        return next;
+                      })(),
+                )
+              }
+            />
+          </div>
+          <button className="primary-button" onClick={() => void recordPayment()}>{t("payments.register")}</button>
+        </section>
+        <section className="panel">
+          <h3>{t("payments.currentOrders")}</h3>
+          <DataTable
+            columns={[t("common.order"), t("common.status"), t("common.amount")]}
+            rows={state.orders
+              .filter((order) => order.estado === "generado" || order.estado === "proceso")
+              .map((order) => [order.codigo_pedido, status(order.estado), money(order.monto)])}
+          />
+        </section>
+      </div>
+      <section className="panel">
+        <h3>{t("payments.history")}</h3>
+        <DataTable
+          columns={["ID", t("common.order"), t("common.amount"), t("customers.card"), t("common.date"), t("common.reference")]}
+          rows={state.payments.map((payment) => [
+            String(payment.id_pago),
+            payment.codigo_pedido,
+            money(payment.monto_pagado),
+            payment.tipo_tarjeta,
+            payment.fecha_pago,
+            payment.referencia ?? t("payments.noReference"),
+          ])}
+        />
+      </section>
+    </section>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange(value: string): void;
+  type?: string;
+}) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  );
+}
+
+function Select({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange(value: string): void;
+}) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function toLocalInputValue(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}

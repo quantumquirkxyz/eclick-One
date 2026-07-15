@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   BarChart3,
   Boxes,
@@ -8,48 +7,47 @@ import {
   Receipt,
   Users,
 } from "lucide-react";
-import type { Vista } from "./types/commerce";
+import { Route, Routes } from "react-router-dom";
 import { AppShell, type NavItem } from "./components/layout/AppShell";
+import { PublicLayout } from "./components/layout/PublicLayout";
+import { LandingPage } from "./pages/LandingPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
+import { CustomersFeature } from "./features/customers/CustomersFeature";
 import { DashboardFeature } from "./features/dashboard/DashboardFeature";
-import { ClientesFeature } from "./features/clientes/ClientesFeature";
-import { ProductosFeature } from "./features/productos/ProductosFeature";
-import { InventarioFeature } from "./features/inventario/InventarioFeature";
-import { PedidosFeature } from "./features/pedidos/PedidosFeature";
-import { PagosFeature } from "./features/pagos/PagosFeature";
-import { ReportesFeature } from "./features/reportes/ReportesFeature";
-
-const NAV_ITEMS: readonly NavItem[] = [
-  { vista: "resumen", etiqueta: "Resumen", icon: LayoutDashboard },
-  { vista: "clientes", etiqueta: "Clientes", icon: Users },
-  { vista: "pedidos", etiqueta: "Pedidos", icon: ClipboardList },
-  { vista: "pagos", etiqueta: "Pagos", icon: Receipt },
-  { vista: "productos", etiqueta: "Productos", icon: Package },
-  { vista: "inventario", etiqueta: "Inventario", icon: Boxes },
-  { vista: "reportes", etiqueta: "Reportes", icon: BarChart3 },
-];
+import { InventoryFeature } from "./features/inventory/InventoryFeature";
+import { PaymentsFeature } from "./features/payments/PaymentsFeature";
+import { OrdersFeature } from "./features/orders/OrdersFeature";
+import { ProductsFeature } from "./features/products/ProductsFeature";
+import { ReportsFeature } from "./features/reports/ReportsFeature";
+import { useI18n } from "./i18n";
 
 export function App() {
-  const [vista, setVista] = useState<Vista>("resumen");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useI18n();
+  const navItems: readonly NavItem[] = [
+    { path: "/app", label: t("nav.summary"), icon: LayoutDashboard, end: true },
+    { path: "/app/customers", label: t("nav.customers"), icon: Users },
+    { path: "/app/orders", label: t("nav.orders"), icon: ClipboardList },
+    { path: "/app/payments", label: t("nav.payments"), icon: Receipt },
+    { path: "/app/products", label: t("nav.products"), icon: Package },
+    { path: "/app/inventory", label: t("nav.inventory"), icon: Boxes },
+    { path: "/app/reports", label: t("nav.reports"), icon: BarChart3 },
+  ];
 
   return (
-    <AppShell
-      currentView={vista}
-      onSelectView={(next) => {
-        setVista(next);
-        setMenuOpen(false);
-      }}
-      onToggleMenu={() => setMenuOpen((current) => !current)}
-      menuOpen={menuOpen}
-      navItems={NAV_ITEMS}
-    >
-      {vista === "resumen" ? <DashboardFeature /> : null}
-      {vista === "clientes" ? <ClientesFeature /> : null}
-      {vista === "productos" ? <ProductosFeature /> : null}
-      {vista === "inventario" ? <InventarioFeature /> : null}
-      {vista === "pedidos" ? <PedidosFeature /> : null}
-      {vista === "pagos" ? <PagosFeature /> : null}
-      {vista === "reportes" ? <ReportesFeature /> : null}
-    </AppShell>
+    <Routes>
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+      </Route>
+      <Route path="/app" element={<AppShell navItems={navItems} />}>
+        <Route index element={<DashboardFeature />} />
+        <Route path="customers" element={<CustomersFeature />} />
+        <Route path="orders" element={<OrdersFeature />} />
+        <Route path="payments" element={<PaymentsFeature />} />
+        <Route path="products" element={<ProductsFeature />} />
+        <Route path="inventory" element={<InventoryFeature />} />
+        <Route path="reports" element={<ReportsFeature />} />
+      </Route>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }

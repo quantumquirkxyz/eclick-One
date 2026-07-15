@@ -12,23 +12,14 @@ import type {
   Province,
 } from "@eclick-one/domain";
 
-export type EstadoPedido = OrderStatus;
-export type TipoTarjeta = CardType;
-export type Provincia = Province;
-export type Cliente = Client;
-export type Producto = Product;
-export type Inventario = Inventory;
-export type Pedido = Order;
-export type Pago = Payment;
-export type NewCliente = NewClient;
-export type NewPedido = NewOrder;
-export type NewPago = NewPayment;
-
-export type Vista =
-  | "resumen"
-  | "clientes"
-  | "productos"
-  | "inventario"
-  | "pedidos"
-  | "pagos"
-  | "reportes";
+export type CardKind = CardType;
+export type CommerceProvince = Province;
+export type CommerceClient = Client;
+export type CommerceProduct = Product;
+export type CommerceInventory = Inventory;
+export type CommerceOrder = Order;
+export type CommerceOrderStatus = OrderStatus;
+export type CommercePayment = Payment;
+export type NewCommerceClient = NewClient;
+export type NewCommerceOrder = NewOrder;
+export type NewCommercePayment = NewPayment;
