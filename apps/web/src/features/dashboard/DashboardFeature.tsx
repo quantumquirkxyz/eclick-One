@@ -3,6 +3,7 @@ import { commerceApi, type DashboardSnapshot } from "../../services/api/commerce
 import { DataTable } from "../../components/tables/DataTable";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { StatusChart } from "../../components/charts/StatusChart";
+import { AgentActivityPanel } from "../../components/agent/AgentActivityPanel";
 import { useI18n } from "../../i18n";
 
 type LoadState =
@@ -54,6 +55,9 @@ export function DashboardFeature() {
       </div>
       <div className="grid two">
         <StatusChart title={t("dashboard.ordersByStatus")} values={data.orderStatuses} />
+        <AgentActivityPanel />
+      </div>
+      <div className="grid two">
         <section className="panel">
           <h3>{t("dashboard.alerts")}</h3>
           <ul className="alerts">

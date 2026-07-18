@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { commerceApi, validateOrder, validateTransition } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { DataTable } from "../../components/tables/DataTable";
+import { OnChainStatusBadge } from "../../components/agent/OnChainStatusBadge";
 import { useI18n } from "../../i18n";
 import type { CommerceClient, CommerceOrderStatus, NewCommerceOrder, CommerceOrder, CommerceProduct } from "../../types/commerce";
 
@@ -154,26 +155,28 @@ export function OrdersFeature() {
       <section className="panel">
         <h3>{t("orders.current")}</h3>
         <DataTable
-          columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.date"), t("common.status")]}
+          columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.date"), t("common.status"), t("dashboard.onChain")]}
           rows={state.currentOrders.map((order) => [
             order.codigo_pedido,
             customerLabel(state.clients, order.codigo_cliente),
             productLabel(state.products, order.codigo_producto, productName),
             order.fecha_pedido,
             status(order.estado),
+            <OnChainStatusBadge key={order.codigo_pedido} orderCode={order.codigo_pedido} />,
           ])}
         />
       </section>
       <section className="panel">
         <h3>{t("orders.history")}</h3>
         <DataTable
-          columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.amount"), t("common.status")]}
+          columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.amount"), t("common.status"), t("dashboard.onChain")]}
           rows={state.orders.map((order) => [
             order.codigo_pedido,
             customerLabel(state.clients, order.codigo_cliente),
             productLabel(state.products, order.codigo_producto, productName),
             String(order.monto),
             status(order.estado),
+            <OnChainStatusBadge key={order.codigo_pedido} orderCode={order.codigo_pedido} />,
           ])}
         />
       </section>
