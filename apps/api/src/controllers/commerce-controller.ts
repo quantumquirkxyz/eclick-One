@@ -58,6 +58,14 @@ export class CommerceController {
     return { status: 201, body: await this.service.recordPayment(body) };
   };
 
+  orderOnChainStatus = async (_request: Request, params: Record<string, string>): Promise<ControllerResult> => {
+    const codigoPedido = params.codigo_pedido;
+    if (!codigoPedido) {
+      throw new BadRequestError("codigo_pedido is required.");
+    }
+    return { body: await this.service.getOrderOnChainStatus(codigoPedido) };
+  };
+
   transitionOrderStatus = async (request: Request, params: Record<string, string>): Promise<ControllerResult> => {
     const body = await readJsonObject<{ estado: OrderStatus }>(request);
     if (!body.estado) {
