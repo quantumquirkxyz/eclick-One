@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
+
 export function DataTable({
   columns,
   rows,
 }: {
   columns: readonly string[];
-  rows: readonly (readonly string[])[];
+  rows: readonly (readonly ReactNode[])[];
 }) {
   return (
     <div className="table-panel">
@@ -17,7 +19,7 @@ export function DataTable({
         </thead>
         <tbody>
           {rows.map((row, rowIndex) => (
-            <tr key={`${row[0] ?? "row"}-${rowIndex}`}>
+            <tr key={`${String(row[0] ?? "row")}-${rowIndex}`}>
               {row.map((cell, cellIndex) => (
                 <td key={cellIndex}>{cellIndex === row.length - 1 ? <span className="status">{cell}</span> : cell}</td>
               ))}
