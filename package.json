@@ -4,13 +4,19 @@
   "private": true,
   "packageManager": "bun@1.3.14",
   "workspaces": [
-    "apps/*",
+    "apps/api",
+    "apps/web",
+    "apps/agents",
     "packages/*"
   ],
   "scripts": {
     "dev": "sh -c 'bun --cwd apps/api dev & api=$!; trap \"kill $api 2>/dev/null\" EXIT INT TERM; bun --cwd apps/web dev'",
     "dev:web": "bun --cwd apps/web dev",
     "dev:api": "bun --cwd apps/api dev",
+    "dev:full": "sh -c '~/.foundry/bin/anvil --silent & anvil=$!; sleep 2; DEPLOYER_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 ~/.foundry/bin/forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545 2>&1 | tail -3; ~/.foundry/bin/cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3 \"addCollector(address)\" 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 --rpc-url http://localhost:8545 2>&1 | tail -1; sleep 1; bun --cwd apps/api dev & api=$!; bun --cwd apps/agents dev & collector=$!; bun --cwd apps/agents dev:compliance & compliance=$!; trap \"kill $anvil $api $collector $compliance 2>/dev/null\" EXIT INT TERM; bun --cwd apps/web dev'",
+    "dev:agents": "bun --cwd apps/agents dev",
+    "dev:anvil": "anvil",
+    "dev:deploy": "forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545",
     "build": "bun --filter '*' build",
     "typecheck": "bun --filter '*' typecheck",
     "test": "bun test"
