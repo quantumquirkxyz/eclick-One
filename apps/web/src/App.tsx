@@ -6,12 +6,14 @@ import {
   Package,
   Receipt,
   Users,
+  Globe,
 } from "lucide-react";
 import { Route, Routes } from "react-router-dom";
 import { AppShell, type NavItem } from "./components/layout/AppShell";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { LandingPage } from "./pages/LandingPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { Web3Feature } from "./features/web3/Web3Feature";
 import { CustomersFeature } from "./features/customers/CustomersFeature";
 import { DashboardFeature } from "./features/dashboard/DashboardFeature";
 import { InventoryFeature } from "./features/inventory/InventoryFeature";
@@ -31,6 +33,7 @@ export function App() {
     { path: "/app/products", label: t("nav.products"), icon: Package },
     { path: "/app/inventory", label: t("nav.inventory"), icon: Boxes },
     { path: "/app/reports", label: t("nav.reports"), icon: BarChart3 },
+    { path: "/app/web3", label: t("nav.web3"), icon: Globe },
   ];
 
   return (
@@ -46,6 +49,7 @@ export function App() {
         <Route path="products" element={<ProductsFeature />} />
         <Route path="inventory" element={<InventoryFeature />} />
         <Route path="reports" element={<ReportsFeature />} />
+        <Route path="web3" element={<Web3Feature />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

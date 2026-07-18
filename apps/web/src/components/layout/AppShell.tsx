@@ -3,6 +3,7 @@ import { useEffect, useState, type ComponentType } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { LanguageSelector, useI18n } from "../../i18n";
 import { apiRequest } from "../../services/api/client";
+import { collectorApi } from "../../services/agent/agent";
 
 export interface NavItem {
   path: string;
@@ -17,6 +18,7 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
   const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const [repositoryMode, setRepositoryMode] = useState<RepositoryMode>("mock");
+  const [web3Online, setWeb3Online] = useState(false);
   const location = useLocation();
   const currentItem = navItems.find((item) => item.end ? location.pathname === item.path : location.pathname.startsWith(item.path));
 
@@ -26,6 +28,17 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
       if (mounted && health.repositoryMode === "turso") setRepositoryMode("turso");
     }).catch(() => { /* The mock fallback is intentional for demos without the API. */ });
     return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      const health = await collectorApi.health();
+      if (mounted) setWeb3Online(health !== null && health.status === "ok");
+    };
+    void check();
+    const interval = setInterval(check, 10000);
+    return () => { mounted = false; clearInterval(interval); };
   }, []);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
@@ -51,7 +64,12 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
         <header>
           <button className="icon-button mobile" onClick={() => setMenuOpen((open) => !open)} aria-label={t("shell.openMenu")}><Menu /></button>
           <div><p className="eyebrow">{t("shell.eyebrow")}</p><h1>{currentItem?.label ?? t("shell.console")}</h1></div>
-          <div className="header-actions"><LanguageSelector /><span className={`synthetic ${repositoryMode === "turso" ? "connected" : ""}`}>{repositoryMode === "turso" ? t("common.azureSql") : t("common.syntheticData")}</span><span className="avatar">EO</span></div>
+          <div className="header-actions">
+            <LanguageSelector />
+            <span className={`synthetic ${repositoryMode === "turso" ? "connected" : ""}`}>{repositoryMode === "turso" ? t("common.azureSql") : t("common.syntheticData")}</span>
+            <span className={`synthetic ${web3Online ? "connected" : ""}`}>{web3Online ? t("dashboard.web3Connected") : t("dashboard.web3Disconnected")}</span>
+            <span className="avatar">EO</span>
+          </div>
         </header>
         <main className="content"><div className="demo-note">{repositoryMode === "turso" ? t("shell.demoSql") : t("shell.demoMock")}</div><Outlet /></main>
       </div>
