@@ -12,6 +12,7 @@
   "dependencies": {
     "@eclick-one/db": "workspace:*",
     "@eclick-one/domain": "workspace:*",
-    "@eclick-one/shared": "workspace:*"
+    "@eclick-one/shared": "workspace:*",
+    "viem": "^2.55.2"
   }
 }
