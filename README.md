@@ -1,139 +1,188 @@
-# eclick One
+# eclick One — Agentic Commerce Network
 
-eclick One is an academic/professional web application for e-commerce operations in Panama. It separates the public project presentation from the internal operations console and supports both clearly identified synthetic mock data and the supplied Azure SQL Database backend.
+eclick One es una plataforma de operaciones de comercio electrónico para Panamá que ha evolucionado de una aplicación académica centralizada a una **Agentic Commerce Network**: una red descentralizada donde agentes de IA autónomos gestionan operaciones comerciales, con smart contracts como fuente de verdad inmutable.
 
-## Architecture
+## Arquitectura
 
-```text
+```
 apps/
-  api/       Bun REST API: routes -> controllers -> services -> repositories
-  web/       React + Vite single-page application (the runnable frontend)
+  api/          Bun REST API: routes → controllers → services → repositories + dual-write on-chain
+  web/          React + Vite SPA con Web3 dashboard y on-chain status
+  agents/       AI agents autónomos (Collector, Compliance) con wallet propio
+  contracts/    Smart contracts Solidity (Foundry): OrderManager, PaymentLedger
 packages/
-  domain/    Entities, pure business rules, and repository contracts
-  db/        Mock repositories and an Azure SQL adapter using mssql
-  shared/    Environment and shared utility helpers
+  domain/       Entidades, reglas de negocio puras, contratos de repositorio (cero dependencias)
+  db/           Repositorios Mock, Turso, Azure SQL
+  shared/       Helpers de entorno y utilidades compartidas
 docs/
-  db-contract.md  Expected external SQL surface
+  db-contract.md  Contrato de superficie SQL esperada
 ```
 
-The dependency direction is inward: applications and database adapters depend on `@eclick-one/domain`; the domain package has no framework or database dependency. Services consume repository interfaces, so changing `REPOSITORY_MODE=mock` to `sql` does not change service code.
+El flujo de dependencias es hacia adentro: las aplicaciones y adaptadores dependen de `@eclick-one/domain`; el paquete domain no tiene dependencias externas.
 
-`apps/web` renders a public landing page and an internal operations console through Vite. React Router owns the URL, while the console keeps the existing API-backed features and `/api` development proxy. The landing page is static and does not require the database or API to load.
+### Diagrama de Arquitectura
 
 ```mermaid
 flowchart LR
-  Browser[Browser] --> Web[React + Vite frontend]
+  Browser[Browser] --> Web[React + Vite SPA]
   Web -->|/api/v1/*| Api[Bun REST API]
-  Api --> Services[Domain services]
+  Api --> Services[Commerce Service]
   Services --> Domain[Pure domain rules]
-  Services --> Repositories{Repository mode}
-  Repositories -->|REPOSITORY_MODE=mock| Mock[In-memory mock repository]
-  Repositories -->|REPOSITORY_MODE=sql| Sql[Azure SQL adapter]
-  Sql --> Azure[(Azure SQL Database)]
+  Services --> Repos{Repository}
+  Repos -->|mock| Mock[In-memory mock]
+  Repos -->|turso| Turso[Turso DB]
+  Services --> OnChain[OnChainClient]
+  OnChain -->|Dual-write| Contract[Smart Contracts<br/>OrderManager / PaymentLedger]
+  Contract --> Anvil[Anvil &#40;Local Chain 31337&#41;]
+  Agents[AI Agents] -->|Listen / Write| Contract
+  Agents -->|Status Sync| Api
+  Agents -->|HTTP API| Web
 ```
 
-## Frontend routes
+## Stack Tecnológico
+
+| Capa | Tecnología |
+|------|-----------|
+| Runtime | Bun 1.3 |
+| Frontend | React 19, Vite 8, Tailwind CSS 4, Apache ECharts 6 |
+| Backend | Bun HTTP server (router propio) |
+| Smart Contracts | Solidity 0.8.28 + Foundry (forge, anvil, cast) |
+| Web3 Client | viem 2.x |
+| AI Agents | Bun processes autónomos con wallet propia |
+| DB (mock) | In-memory JavaScript |
+| DB (real) | Turso (libSQL) / Azure SQL (mssql) |
+| Testing | Bun test + Forge test |
+
+## Smart Contracts
+
+### OrderManager.sol
+Maneja la máquina de estados de órdenes on-chain:
+
+```
+None → Generated → InProcess → Delivered → Invoiced
+                        ↘ Cancelled
+```
+
+**Eventos**: `OrderCreated`, `OrderStatusTransitioned`, `PaymentRecorded`
+**Roles**: Owner (admin), Collector (agente autorizado)
+
+### PaymentLedger.sol
+Ledger append-only de pagos vinculados a órdenes on-chain.
+
+**Contratos deployados** (Anvil local):
+- `OrderManager`: `0x5FbDB2315678afecb367f032d93F642f64180aa3`
+- `PaymentLedger`: `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512`
+
+## AI Agents
+
+### Collector Agent
+- **Rol**: Monitorea eventos `PaymentRecorded` en el contrato
+- **Acción**: Cuando detecta un pago en una orden en estado `InProcess`, transiciona a `Delivered` on-chain y sincroniza con la API off-chain
+- **Wallet**: Account #1 de Anvil (`0x7099797...`)
+- **Puerto**: 3100
+
+### Compliance Agent
+- **Rol**: Monitorea eventos `OrderStatusTransitioned` y valida contra las reglas de negocio
+- **Acción**: Verifica que cada transición de estado sea válida según la máquina de estados. Reporta violaciones y discrepancias on-chain vs off-chain
+- **Puerto**: 3101 (read-only, sin firma de txs)
+
+## Frontend Routes
 
 | Route | Purpose |
-| --- | --- |
-| `/` | Public landing page for eclick One |
-| `/app` | Internal operations home (dashboard) |
-| `/app/customers` | Customer management and preferences |
-| `/app/orders` | Order creation and status transitions |
-| `/app/payments` | Payment registration and history |
+|-------|---------|
+| `/` | Public landing page |
+| `/app` | Operations dashboard (with Agent Activity panel) |
+| `/app/customers` | Customer management |
+| `/app/orders` | Orders (with on-chain status badges) |
+| `/app/payments` | Payment registration |
 | `/app/products` | Product catalog |
-| `/app/inventory` | Stock and replenishment view |
+| `/app/inventory` | Stock view |
 | `/app/reports` | Operational reports |
+| `/app/web3` | **Web3 dashboard**: agent status, metrics, contract info, on-chain lookup |
 
-The landing page is independent of persistence and presents the product scope, architecture, business rules, and Azure SQL readiness. The internal console consumes the REST API; each feature exposes a clear loading, empty, error, and retry state. The UI is English-first, detects the browser language on first load, persists the user's manual language choice, and provides a Spanish option. The shell displays `Synthetic data` / `Not connected to Azure SQL` in mock mode and changes to `Connected to Azure SQL` when the API health endpoint reports SQL repositories.
+## Requisitos
 
-```mermaid
-flowchart TD
-  Root[/ /] --> Landing[Public Landing Page]
-  Landing --> AppEntry[/app]
-  AppEntry --> Dashboard[Operations Dashboard]
-  Dashboard --> Customers[/app/customers]
-  Dashboard --> Orders[/app/orders]
-  Dashboard --> Payments[/app/payments]
-  Dashboard --> Products[/app/products]
-  Dashboard --> Inventory[/app/inventory]
-  Dashboard --> Reports[/app/reports]
-  Unknown[Unknown route] --> NotFound[Not Found Page]
-```
+- [Bun](https://bun.sh/) 1.3+
+- [Foundry](https://book.getfoundry.sh/) (forge, anvil, cast)
+- Turso o Azure SQL solo si no se usa modo mock
 
-## Localization flow
+## Desarrollo Local
 
-```mermaid
-flowchart TD
-  Start[App starts] --> Saved{Saved language in localStorage?}
-  Saved -->|yes| UseSaved[Use saved locale]
-  Saved -->|no| BrowserLang{Browser language starts with es?}
-  BrowserLang -->|yes| UseSpanish[Use Spanish]
-  BrowserLang -->|no| UseEnglish[Use English]
-  UseSaved --> Provider[LanguageProvider]
-  UseSpanish --> Provider
-  UseEnglish --> Provider
-  Provider --> HtmlLang[Update html lang]
-  Provider --> UiText[Render translated UI labels]
-  Provider --> ApiHeader[Send Accept-Language to API]
-  ApiHeader --> ApiMessages[Localized API notices and errors]
-```
-
-## Operations flow
-
-```mermaid
-flowchart TD
-  Customer[Create or select customer] --> Standing{Customer in good standing?}
-  Standing -->|no| BlockOrder[Block order creation]
-  Standing -->|yes| CreateOrder[Create order]
-  CreateOrder --> Generated[Status: generado]
-  Generated --> InProcess[Status: proceso]
-  InProcess --> Paid{Payment recorded?}
-  Paid -->|no| HoldDelivery[Delivery and invoice blocked]
-  Paid -->|yes| Delivered[Status: entregado]
-  Delivered --> Invoiced[Status: facturado]
-  InProcess --> Cancelled[Status: cancelado]
-```
-
-## Requirements
-
-- [Bun](https://bun.sh/) 1.3 or later
-- Azure SQL Database credentials only when using the SQL repository mode
-
-## Local development
+### Rápido (solo mock, sin Web3)
 
 ```bash
 cp .env.example .env
 bun install
 bun run dev
+# Web: http://localhost:5173 | API: http://localhost:3000
 ```
 
-The web application runs at `http://localhost:5173` and proxies `/api` to the API at `http://localhost:3000`. The default example uses synthetic records; SQL mode uses the configured Azure SQL repository.
-
-Useful commands:
+### Completo (con Web3 + AI Agents)
 
 ```bash
-bun run dev:web
-bun run dev:api
-bun run typecheck
-bun test
-bun run build
+# Opción 1: Todo en un comando
+bun run dev:full
+
+# Opción 2: Paso a paso
+bun run dev:anvil                          # Terminal 1: blockchain local
+source ~/.foundry/bin/foundryup
+forge script script/Deploy.s.sol \
+  --broadcast --rpc-url http://localhost:8545 \
+  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3 \
+  "addCollector(address)" 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 \
+  --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
+  --rpc-url http://localhost:8545
+bun run dev:api                            # Terminal 2: API
+bun --cwd apps/agents dev                  # Terminal 3: Collector Agent
+bun --cwd apps/agents dev:compliance       # Terminal 4: Compliance Agent
+bun run dev:web                            # Terminal 5: Frontend
 ```
 
-## Azure SQL preparation
+### Comandos útiles
 
-Set `REPOSITORY_MODE=sql` and provide the `AZURE_SQL_*` variables from `.env.example`. The adapter uses encrypted transport, disables trust of unverified server certificates, applies configurable 120-second connection/request timeouts, reads the supplied `dbo` tables/views, and delegates business writes to the documented stored procedures in [docs/db-contract.md](docs/db-contract.md). It fails fast when required configuration is missing and opens the connection pool lazily.
+```bash
+bun run dev:web              # Solo frontend
+bun run dev:api              # Solo API
+bun run dev:anvil           # Blockchain local (Anvil)
+bun run dev:deploy           # Deploy contratos a Anvil
+bun --cwd apps/agents dev           # Collector Agent
+bun --cwd apps/agents dev:compliance # Compliance Agent
+bun run typecheck            # TypeScript type checking
+bun test                     # Tests Bun (API + domain)
+forge test                   # Tests Solidity (contratos)
+bun run build                # Build de producción
+```
 
-The database owner must reconcile the proposed SQL names and columns before SQL mode is enabled. Do not commit real credentials or production/customer data.
+## Flujo End-to-End (PoC)
 
-## Technical reference for development agents
+```mermaid
+sequenceDiagram
+  participant User
+  participant UI as React SPA
+  participant API as Bun API
+  participant DB as Database
+  participant Contract as OrderManager.sol
+  participant Agent as Collector Agent
 
-The `.context/` directory at the project root contains the complete technical and functional reference for this project. It is intended for Codex, OpenCode, or any other development agent to quickly understand the system architecture, business rules, domain model, API contracts, and development roadmap. Read the files in that directory before making changes.
+  User->>UI: Create order
+  UI->>API: POST /api/v1/orders
+  API->>DB: Save order (off-chain)
+  API->>Contract: createOrder() (dual-write)
+  Contract-->>API: tx hash
+  API-->>UI: Order created
+  User->>UI: Record payment
+  UI->>API: POST /api/v1/payments
+  API->>DB: Save payment
+  API->>Contract: recordPayment()
+  Contract-->>Agent: PaymentRecorded event
+  Agent->>Contract: transitionToDelivered()
+  Agent->>API: PATCH /orders/:code/status
+  UI->>API: GET /orders/:code/onchain
+  API-->>UI: { status: "Delivered", onChain: true }
+  UI-->>User: Order badge: "On-chain: Delivered ✓"
+```
 
-## Current scope and limitations
+## Licencia
 
-- CRUD workflows, authentication, authorization, migrations, and complete business transactions are deferred.
-- SQL identifiers are database-generated; mock identifiers simulate the same minimum ranges.
-- The exact meaning of the stated "monthly rule" exception is not available. The domain exposes an explicit `monthlyRuleApplies` input instead of silently inventing the policy.
-- Dates are ISO-8601 timestamps. The domain compares instants in UTC; a future localization layer should explicitly apply Panama (`America/Panama`) business-day semantics where required.
-- Optional Mastra/OpenRouter settings are isolated from the primary execution path.
+MIT © 2026 Jhuomar Boskoll Quintero
