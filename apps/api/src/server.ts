@@ -2,7 +2,7 @@ import { createApiApplication } from "./app";
 import { loadApiConfig } from "./config";
 
 const config = loadApiConfig(Bun.env);
-const app = createApiApplication(Bun.env, config.corsOrigins);
+const app = createApiApplication(Bun.env, config);
 
 const server = Bun.serve({
   hostname: config.host,

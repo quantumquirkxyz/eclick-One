@@ -6,6 +6,8 @@ import { withCors } from "./http/cors";
 import { createRouter } from "./routes";
 import { CommerceService } from "./services/commerce-service";
 import { HealthService } from "./services/health-service";
+import { OnChainClient } from "./onchain/OnChainClient";
+import type { ApiConfig } from "./config";
 
 export interface ApiApplication {
   fetch(request: Request): Promise<Response>;
@@ -14,16 +16,17 @@ export interface ApiApplication {
 
 export function createApiApplication(
   env: Environment,
-  allowedOrigins: readonly string[],
+  config: ApiConfig,
   database = createDatabase(env),
 ): ApiApplication {
-  const commerce = new CommerceService(database.repositories, database.mode === "mock");
+  const onchain = config.onchain ? new OnChainClient(config.onchain) : null;
+  const commerce = new CommerceService(database.repositories, database.mode === "mock", onchain);
   const router = createRouter(
     new HealthController(new HealthService(database)),
     new CommerceController(commerce),
   );
   return {
-    fetch: withCors((request) => router.handle(request), allowedOrigins),
+    fetch: withCors((request) => router.handle(request), config.corsOrigins),
     database,
   };
 }

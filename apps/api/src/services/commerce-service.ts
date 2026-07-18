@@ -20,6 +20,7 @@ import {
   assertOrderTransitionAllowed,
   assertPaymentReference,
   isOrderStatus,
+  amountForQuantity,
 } from "@eclick-one/domain";
 import {
   BadRequestError,
@@ -27,6 +28,7 @@ import {
   NotFoundError,
 } from "../errors/app-error";
 import { apiText, type ApiLocale } from "../i18n";
+import type { OnChainClient } from "../onchain/OnChainClient";
 
 export interface DashboardSnapshot {
   readonly kind: "dashboard";
@@ -77,6 +79,7 @@ export class CommerceService {
   constructor(
     private readonly repositories: CommerceRepositories,
     private readonly synthetic: boolean,
+    private readonly onchain: OnChainClient | null,
   ) {}
 
   listProvinces(): Promise<readonly Province[]> {
@@ -139,7 +142,14 @@ export class CommerceService {
         throw new BadRequestError("fecha_entrega cannot be earlier than fecha_pedido.");
       }
     }
-    return this.callRepository(() => this.repositories.createOrder(input));
+    const order = await this.callRepository(() => this.repositories.createOrder(input));
+    if (this.onchain) {
+      const amount = amountForQuantity(input.cantidad);
+      await this.onchain.createOrderOnChain(order.codigo_pedido, order.codigo_cliente, order.codigo_producto, order.cantidad, amount).catch((error) => {
+        console.error("On-chain createOrder failed (non-fatal):", error);
+      });
+    }
+    return order;
   }
 
   async recordPayment(input: NewPayment): Promise<Payment> {
@@ -160,7 +170,13 @@ export class CommerceService {
       }
       assertOrderPaymentAmount(order.monto, input.monto_pagado);
     }
-    return this.callRepository(() => this.repositories.recordPayment(input));
+    const payment = await this.callRepository(() => this.repositories.recordPayment(input));
+    if (this.onchain) {
+      await this.onchain.recordPaymentOnChain(order.codigo_pedido, input.monto_pagado).catch((error) => {
+        console.error("On-chain recordPayment failed (non-fatal):", error);
+      });
+    }
+    return payment;
   }
 
   async transitionOrderStatus(input: { codigo_pedido: string; estado: OrderStatus }): Promise<Order> {
@@ -177,12 +193,43 @@ export class CommerceService {
         throw new ConflictError("Cannot invoice an unpaid order.");
       }
     }
-    return this.callRepository(() =>
+    const updatedOrder = await this.callRepository(() =>
       this.repositories.transitionOrderStatus({
         codigo_pedido: input.codigo_pedido,
         estado: input.estado,
       }),
     );
+    if (this.onchain) {
+      const onChainMethod = this.getOnChainTransitionMethod(input.estado);
+      if (onChainMethod) {
+        await onChainMethod(input.codigo_pedido).catch((error) => {
+          console.error(`On-chain status transition to ${input.estado} failed (non-fatal):`, error);
+        });
+      }
+    }
+    return updatedOrder;
+  }
+
+  async getOrderOnChainStatus(codigoPedido: string): Promise<{ onChain: boolean; status: number | null; txHash?: string }> {
+    if (!this.onchain) {
+      return { onChain: false, status: null };
+    }
+    try {
+      const status = await this.onchain.getOrderStatusOnChain(codigoPedido);
+      return { onChain: true, status };
+    } catch {
+      return { onChain: false, status: null };
+    }
+  }
+
+  private getOnChainTransitionMethod(estado: OrderStatus): ((orderCode: string) => Promise<string>) | null {
+    switch (estado) {
+      case "proceso": return (code) => this.onchain!.transitionToInProcess(code);
+      case "entregado": return (code) => this.onchain!.transitionToDelivered(code);
+      case "facturado": return (code) => this.onchain!.transitionToInvoiced(code);
+      case "cancelado": return (code) => this.onchain!.cancelOrderOnChain(code);
+      default: return null;
+    }
   }
 
   async getDashboard(locale: ApiLocale = "en"): Promise<DashboardSnapshot> {
