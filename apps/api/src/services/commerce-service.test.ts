@@ -3,7 +3,7 @@ import { MockCommerceRepository } from "@eclick-one/db";
 import { CommerceService } from "./commerce-service";
 
 function createService(): CommerceService {
-  return new CommerceService(new MockCommerceRepository(), true);
+  return new CommerceService(new MockCommerceRepository(), true, null);
 }
 
 describe("commerce service", () => {

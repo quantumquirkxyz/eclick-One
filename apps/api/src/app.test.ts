@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { createApiApplication } from "./app";
 
-const app = createApiApplication({ REPOSITORY_MODE: "mock" }, ["http://localhost:5173"]);
+const app = createApiApplication(
+  { REPOSITORY_MODE: "mock" },
+  { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null },
+);
 
 describe("API application", () => {
   test("returns a shallow health check", async () => {
