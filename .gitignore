@@ -8,3 +8,5 @@ dist/
 coverage/
 *.tsbuildinfo
 :Zone.Identifier
+.skill-state.json
+skill-execution.log
