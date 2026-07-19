@@ -44,4 +44,21 @@ Dependency flows inward:
 - Packages/db implements domain repository interfaces
 - Packages/domain has zero framework or database dependencies
 
-When you violate this, you create technical debt. Do not.
+## 6. Agentic Commerce
+
+This project is an **Agentic Commerce Network**. Smart contracts provide trust.
+AI agents provide autonomy. The human stays in the loop for governance.
+
+- On-chain state machines are the source of truth for critical operations
+- AI agents react to on-chain events, never bypass contracts
+- Dual-write is additive — existing functionality works without Web3
+- Agents are permissioned — they must be authorized by contract owners
+- Every agent action is observable via structured logging and HTTP endpoints
+
+## 7. Fail Gracefully, Recover Autonomously
+
+- Dual-write failures never break the core app
+- Agents retry with exponential backoff, never deadlock
+- Idempotent operations are the default
+- Every component has a health endpoint
+- Missing RPC = degraded mode, not broken mode
