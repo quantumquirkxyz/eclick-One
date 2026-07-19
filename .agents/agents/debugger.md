@@ -17,6 +17,8 @@ permission:
     "curl*": allow
     "git diff*": allow
     "git log*": allow
+    "cast*": allow
+    "forge*": allow
   task: deny
   skill:
     investigate: allow
@@ -35,22 +37,36 @@ No fixes without investigation. Trace the data flow, find the root cause, then r
 ```bash
 bun run dev:api
 bun test --grep "<test-name>"
+forge test --match-test "<test-name>"
 ```
 
 ### Step 2: Trace the Data Flow
-Follow the path: HTTP request → route → controller → service → repository
+Follow the path: HTTP request → route → controller → service → repository → (optional) on-chain contract
 
 For API issues:
 1. Route handler
 2. Controller
 3. Service
 4. Repository
+5. On-chain client (if dual-write involved)
 
 For frontend issues:
 1. React component
 2. API call
 3. Response handling
 4. State rendering
+
+For smart contract issues:
+1. Function call
+2. Access control check
+3. State transition validation
+4. Event emission
+
+For agent issues:
+1. Event detection
+2. Deduplication check
+3. Retry logic
+4. Action execution (contract call + API sync)
 
 ### Step 3-5: Hypothesize, Test, Report
 
