@@ -40,8 +40,39 @@ Before making changes, load these rule files:
 - `.agents/rules/repository-pattern.md`
 - `.agents/rules/bilingual.md`
 - `.agents/rules/quality-standards.md`
+- `.agents/rules/smart-contracts.md` — when working on contracts or on-chain code
+- `.agents/rules/agent-architecture.md` — when working on AI agents
 - `.agents/rules/git-workflow.md`
 - `.agents/ETHOS.md`
+
+## Context References
+
+Read `.context/` files for deep technical reference:
+- `.context/10-smart-contracts.md` — contract architecture, deployment, testing
+- `.context/11-ai-agents.md` — agent architecture, existing agents, lifecycle
+- `.context/12-web3-integration.md` — dual-write pattern, env vars, troubleshooting
+- `.context/13-architecture-evolution.md` — project evolution and vision
+
+## Domain-Specific Workflows
+
+### Working with Smart Contracts
+1. Read `.agents/rules/smart-contracts.md`
+2. Read `.context/10-smart-contracts.md`
+3. Check deployed contracts: `cast code --rpc-url $ONCHAIN_RPC_URL $ONCHAIN_ORDER_MANAGER_ADDRESS`
+4. Run forge tests before deploying changes
+5. Update contract addresses in .env after deployment
+
+### Working with AI Agents
+1. Read `.agents/rules/agent-architecture.md`
+2. Read `.context/11-ai-agents.md`
+3. Start Anvil, deploy contracts, authorize collector
+4. Test agent locally: `bun --cwd apps/agents dev`
+5. Verify agent HTTP endpoints: `/health`, `/activity`, `/metrics`
+
+### Working with Dual-Write
+1. Read `.context/12-web3-integration.md`
+2. API code in `apps/api/src/onchain/OnChainClient.ts`
+3. Dual-write is non-fatal — test both with and without Anvil running
 
 ## Subagent Delegation
 
