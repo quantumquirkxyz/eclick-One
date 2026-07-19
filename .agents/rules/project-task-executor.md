@@ -1,6 +1,6 @@
 # Project Task Executor Rules
 
-Apply these rules while using `/project-task-executor` or `@project-task-executor`.
+Apply these rules while using `/project-task-executor` or `@project-task-executor`. These rules are hard constraints. If a rule conflicts with `SKILL.md`, the rule wins.
 
 ## Security And Repository Safety
 
@@ -11,23 +11,6 @@ Apply these rules while using `/project-task-executor` or `@project-task-executo
 - Keep `.skill-state.json` and `skill-execution.log` local unless the user explicitly asks to version audit artifacts.
 - Do not use destructive Git operations unless the user explicitly requested them.
 
-## Scanner Rules
-
-- Include only open issues.
-- Include only issues with `status:ready-to-start`.
-- Include only issues with `priority:high`, `priority:medium`, or `priority:low`.
-- Exclude issues with `blocked`, `wontfix`, or `duplicate`.
-- Use API pagination.
-- Capture dependencies from linked issues, project metadata, and issue-body dependency checklists when available.
-- If dependency state cannot be determined confidently, mark the issue as blocked for clarification instead of silently skipping it.
-
-## Prioritization Rules
-
-- Resolve dependencies before dependents.
-- Sort priority descending: `high`, then `medium`, then `low`.
-- For equal priority, select the oldest `created_at` first.
-- Treat dependency cycles as blockers.
-
 ## Implementation Rules
 
 - Read the issue, relevant code, tests, package scripts, lint/typecheck settings, and repository docs before editing.
@@ -36,6 +19,7 @@ Apply these rules while using `/project-task-executor` or `@project-task-executo
 - Add external libraries only when existing dependencies or local helpers cannot meet the requirement.
 - Update dependency manifests when adding libraries.
 - Ask for clarification before implementation when acceptance criteria are ambiguous or internally inconsistent.
+- Do not implement more than the issue requires. Keep changes minimal.
 
 ## Git And PR/MR Rules
 
