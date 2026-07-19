@@ -1,15 +1,13 @@
 import { createClient } from "@libsql/client";
-import { requiredEnv } from "@eclick-one/shared";
+import { tursoConfigFromEnv } from "../client/turso-client";
+import { loadMigrationFiles, migrateUp } from "../migrations/runner";
 
-const url = requiredEnv(Bun.env, "TURSO_DATABASE_URL");
-const authToken = requiredEnv(Bun.env, "TURSO_AUTH_TOKEN");
-const schema = await Bun.file(new URL("../sql/turso-schema.sql", import.meta.url)).text();
-
-const client = createClient({ url, authToken });
+const client = createClient({ ...tursoConfigFromEnv(Bun.env), intMode: "number" });
+const files = await loadMigrationFiles(new URL("../../migrations", import.meta.url).pathname);
 
 try {
-  await client.executeMultiple(schema);
-  console.info("Turso schema applied successfully.");
+  const result = await migrateUp(client, files, { includeSeeds: true });
+  console.info(`Turso migrations applied successfully: ${result.applied.length ? result.applied.join(", ") : "nothing"}.`);
 } finally {
   client.close();
 }

@@ -8,6 +8,10 @@
   },
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target bun --external mssql",
+    "migrate:status": "bun src/scripts/migrate.ts status",
+    "migrate:up": "bun src/scripts/migrate.ts up",
+    "migrate:down": "bun src/scripts/migrate.ts down",
+    "migrate:seed": "bun src/scripts/migrate.ts seed",
     "turso:schema": "bun src/scripts/turso-sync-schema.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "dev": "tsc --noEmit -p tsconfig.json --watch"
