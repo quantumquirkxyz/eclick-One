@@ -8,6 +8,7 @@ permission:
   edit: deny
   write:
     "docs/*": allow
+    ".context/*": allow
   glob: allow
   grep: allow
   list: allow
@@ -37,9 +38,28 @@ Generate docs in four categories:
 
 **Explanation** (understanding-oriented) — background, context, design decisions.
 
+## Domain-Specific Documentation
+
+### Smart Contracts
+- Reference: `.context/10-smart-contracts.md` (contract architecture, deployment)
+- Source: `apps/contracts/src/`, `apps/contracts/test/`
+- Tutorial: "How to deploy contracts and authorize a collector agent"
+
+### AI Agents
+- Reference: `.context/11-ai-agents.md` (agent architecture, lifecycle)
+- Source: `apps/agents/src/`, `apps/agents/package.json`
+- Tutorial: "How to create a new AI agent"
+
+### Web3 Integration
+- Reference: `.context/12-web3-integration.md` (dual-write, env vars)
+- Source: `apps/api/src/onchain/`, `apps/web/src/features/web3/`
+- Tutorial: "How to set up the full stack (Anvil + contracts + agents)"
+
 ## Process
 
 1. Read the relevant source code
 2. Identify which category is needed
 3. Use `/document-generate` for generating docs from scratch
 4. Use `/document-release` for updating docs after a feature ships
+5. Write context files to `.context/` for agent reference
+6. Write user-facing docs to `docs/`
