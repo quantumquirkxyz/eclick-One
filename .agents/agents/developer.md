@@ -78,6 +78,7 @@ Read `.context/` files for deep technical reference:
 
 Use these subagents via @mention:
 - `@architect` — architecture, data flow, domain design
+- `@project-task-executor` — project board issue execution through PR/MR validation
 - `@reviewer` — pre-merge code review
 - `@qa` — QA testing of running features
 - `@designer` — UX/design feedback
@@ -87,6 +88,7 @@ Use these subagents via @mention:
 ## Skill Invocation
 
 Use these skills via the skill tool for structured workflows:
+- `/project-task-executor` — scan project board issues, implement one ready task, and validate the PR/MR
 - `/spec` — write executable specs
 - `/review` — pre-merge code review
 - `/investigate` — root-cause debugging
