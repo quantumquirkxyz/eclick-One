@@ -33,7 +33,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   constructor(private readonly client: TursoClient) {}
 
   async listProvinces(): Promise<readonly Province[]> {
-    const result = await this.client.connection.execute(
+    const result = await this.client.execute(
       "SELECT id_provincia, nombre, prefijo FROM PROVINCIA ORDER BY nombre",
     );
     return result.rows.map((row) => ({
@@ -45,12 +45,12 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async listClients(): Promise<readonly Client[]> {
-    const result = await this.client.connection.execute(CLIENTS_QUERY);
+    const result = await this.client.execute(CLIENTS_QUERY);
     return result.rows.map(mapClient);
   }
 
   async findClientByCode(code: number): Promise<Client | null> {
-    const result = await this.client.connection.execute({
+    const result = await this.client.execute({
       sql: `${CLIENTS_QUERY} WHERE c.id_cliente = ?`,
       args: [code],
     });
@@ -58,7 +58,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async createClient(input: NewClient): Promise<Client> {
-    const tx = await this.client.connection.transaction("write");
+    const tx = await this.client.transaction("write");
     try {
       const provinceId = parseProvinceId(input.provincia);
       const existing = await tx.execute({
@@ -102,7 +102,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async getClientPreference(code: number): Promise<ProductPreference | null> {
-    const result = await this.client.connection.execute({
+    const result = await this.client.execute({
       sql: `SELECT d.id_producto, d.cantidad
         FROM DETALLE_PEDIDO d
         JOIN PEDIDO p ON p.id_pedido = d.id_pedido
@@ -119,7 +119,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async listProducts(): Promise<readonly Product[]> {
-    const result = await this.client.connection.execute(
+    const result = await this.client.execute(
       "SELECT id_producto, nombre, activo FROM PRODUCTO ORDER BY id_producto",
     );
     return result.rows.map((row) => ({
@@ -131,7 +131,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async listInventory(): Promise<readonly Inventory[]> {
-    const result = await this.client.connection.execute(
+    const result = await this.client.execute(
       "SELECT id_producto, cantidad_ventas, cantidad_bodega, cantidad_reservada FROM INVENTARIO ORDER BY id_producto",
     );
     return result.rows.map((row) => ({
@@ -143,19 +143,19 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async listOrders(): Promise<readonly Order[]> {
-    const result = await this.client.connection.execute(ORDERS_QUERY);
+    const result = await this.client.execute(ORDERS_QUERY);
     return result.rows.map(mapOrder);
   }
 
   async listCurrentOrders(): Promise<readonly Order[]> {
-    const result = await this.client.connection.execute({
+    const result = await this.client.execute({
       sql: `${ORDERS_QUERY} WHERE p.estado IN ('GENERADO', 'PROCESO')`,
     });
     return result.rows.map(mapOrder);
   }
 
   async createOrder(input: NewOrder): Promise<Order> {
-    const tx = await this.client.connection.transaction("write");
+    const tx = await this.client.transaction("write");
     try {
       const client = await this.requireClient(input.codigo_cliente);
       const product = await tx.execute({
@@ -222,7 +222,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async transitionOrderStatus(input: OrderStatusTransition): Promise<Order> {
-    const tx = await this.client.connection.transaction("write");
+    const tx = await this.client.transaction("write");
     try {
       const orderRow = await this.requireOrderRow(tx, input.codigo_pedido);
       const previous = String(required(orderRow, "estado"));
@@ -256,14 +256,14 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   async listPayments(): Promise<readonly Payment[]> {
-    const result = await this.client.connection.execute(
+    const result = await this.client.execute(
       "SELECT id_pago, codigo_pedido, monto, fecha_pago, tipo_tarjeta FROM vw_pagos_clientes ORDER BY fecha_pago DESC, id_pago DESC",
     );
     return result.rows.map(mapPayment);
   }
 
   async recordPayment(input: NewPayment): Promise<Payment> {
-    const tx = await this.client.connection.transaction("write");
+    const tx = await this.client.transaction("write");
     try {
       const orderRow = await this.requireOrderRow(tx, input.codigo_pedido);
       const orderId = numberValue(orderRow, ["id_pedido"]);
@@ -329,7 +329,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   private async requireOrder(code: string): Promise<Order> {
-    const result = await this.client.connection.execute({
+    const result = await this.client.execute({
       sql: `${ORDERS_QUERY} WHERE p.codigo_pedido = ? LIMIT 1`,
       args: [code],
     });
@@ -338,7 +338,7 @@ export class TursoCommerceRepository implements CommerceRepositories {
   }
 
   private async requirePayment(id: number): Promise<Payment> {
-    const result = await this.client.connection.execute({
+    const result = await this.client.execute({
       sql: `SELECT id_pago, codigo_pedido, monto, fecha_pago, tipo_tarjeta
         FROM vw_pagos_clientes
         WHERE id_pago = ?`,
