@@ -86,6 +86,7 @@ Primary agents (switch via Tab key):
 - **architect** (Plan mode) — architecture analysis, read-only by default.
 
 Subagents (invoke via @mention):
+- `@project-task-executor` — project board issue execution through PR/MR validation.
 - `@reviewer` — pre-merge code review. Read-only.
 - `@qa` — QA testing of running features. Writes reports only.
 - `@designer` — design and UX review. Read-only.
@@ -101,6 +102,7 @@ review → QA → security → ship → deploy → docs → retro.
 ## Subagent Invocation Rules
 
 - Primary agents delegate to subagents via @mention for specialized tasks.
+- `@project-task-executor` handles ready project-board issues from prioritization through PR/MR validation.
 - `@architect` handles architecture and planning before implementation.
 - `@reviewer` reviews all code before shipping.
 - `@qa` tests all UI and flow changes after implementation.
