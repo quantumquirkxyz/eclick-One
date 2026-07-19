@@ -1,9 +1,11 @@
 import type { Environment } from "@eclick-one/shared";
+import { AuthController } from "./controllers/auth-controller";
 import { CommerceController } from "./controllers/commerce-controller";
 import { HealthController } from "./controllers/health-controller";
 import { createDatabase, type DatabaseContext } from "./database/database";
 import { withCors } from "./http/cors";
 import { createRouter } from "./routes";
+import { AuthSessionService } from "./services/auth-session-service";
 import { CommerceService } from "./services/commerce-service";
 import { HealthService } from "./services/health-service";
 import { OnChainClient } from "./onchain/OnChainClient";
@@ -21,9 +23,11 @@ export function createApiApplication(
 ): ApiApplication {
   const onchain = config.onchain ? new OnChainClient(config.onchain) : null;
   const commerce = new CommerceService(database.repositories, database.mode === "mock", onchain);
+  const authSessions = new AuthSessionService(config.auth);
   const router = createRouter(
     new HealthController(new HealthService(database)),
     new CommerceController(commerce),
+    new AuthController(authSessions),
   );
   return {
     fetch: withCors((request) => router.handle(request), config.corsOrigins),
