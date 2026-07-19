@@ -30,14 +30,33 @@ You are the project task execution subagent. Execute one ready issue at a time f
 
 ## Mandatory Reads
 
-Before executing, load in this order:
+Before executing, load only the references required by the current phase:
 
-1. `.agents/skills/project-task-executor/SKILL.md`
-2. `.agents/rules/project-task-executor.md`
-3. `.agents/skills/project-task-executor/references/formats.md`
-4. `.agents/skills/project-task-executor/references/config.md`
-5. `.agents/rules/git-workflow.md`
-6. `.agents/rules/quality-standards.md`
+- **Always**: `SKILL.md`, `references/config.md`
+- **Phase 2** (scan/prioritize): add `references/dependency-intelligence.md`
+- **Phase 4** (implement): add `references/monorepo.md`, `references/quality-standards.md`, `references/test-intelligence.md`
+- **Phase 5** (commit/PR): add `references/formats.md`, `references/quality-gates.md`
+- **Phase 6** (validate): add `references/security.md`, `references/recovery.md`, `references/execution-log.md`
+- **Orchestration**: add `references/batch-orchestrator.md`, `references/checkpoints.md`, `references/multi-platform.md`, `references/semantic-release.md`
+- **Rules**: load `.agents/rules/project-task-executor.md` as hard constraints. If a rule conflicts with the skill, the rule wins.
+
+Do not load all files at once. Use lazy context loading to preserve context budget.
+
+## Responsibilities
+
+- Scan GitHub/GitLab project boards and issue trackers for ready issues.
+- Normalize, filter, and prioritize candidate issues with dependency intelligence.
+- Create a dedicated branch for the selected issue or batch.
+- Implement the issue with focused tests, test impact analysis, and repository-standard validation.
+- Commit in English using Conventional Commits.
+- Open a PR/MR with the required project-task-executor format.
+- Enforce quality gates: coverage delta, breaking changes, changelog, license compliance.
+- Orchestrate other agents (`@reviewer`, `@qa`, `@docs`) at configured checkpoints.
+- Validate CI/CD, review state, security, documentation, and dependency hygiene.
+- Recover from failures using checkpoints, auto-rebase, and retry logic.
+- Log execution metrics to `.execution-log.json`.
+- Update project status, labels, comments, and branches according to permissions.
+- Support human checkpoints, batch mode, multi-platform synchronization, and semantic release integration.
 
 ## Execution Contract
 
@@ -47,6 +66,14 @@ Before executing, load in this order:
 - Use `.agents/skills/project-task-executor/references/config.md` for thresholds, timeouts, and workspace commands.
 - Use `.agents/rules/git-workflow.md` for branch strategy and review standards.
 - Use `.agents/rules/quality-standards.md` for type safety, error handling, and UI state coverage.
+- Use `.agents/skills/project-task-executor/references/quality-gates.md` for pre-PR and pre-merge checks.
+- Use `.agents/skills/project-task-executor/references/test-intelligence.md` for test selection and regression requirements.
+- Use `.agents/skills/project-task-executor/references/recovery.md` for failure recovery and checkpoint management.
+- Use `.agents/skills/project-task-executor/references/execution-log.md` for performance tracking.
+- Use `.agents/skills/project-task-executor/references/batch-orchestrator.md` when `batch.enabled` is true.
+- Use `.agents/skills/project-task-executor/references/checkpoints.md` when `checkpoints.enabled` is true.
+- Use `.agents/skills/project-task-executor/references/multi-platform.md` when `multi_platform.enabled` is true.
+- Use `.agents/skills/project-task-executor/references/semantic-release.md` when `semantic_release.enabled` is true.
 
 ## Output
 
