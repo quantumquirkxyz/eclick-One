@@ -29,6 +29,38 @@ Use `.project-task-executor-config.json` in the repository root when invocation 
   "pr_template": {
     "title": "[Issue #{issue_id}] {issue_title}",
     "description": "## Summary\n{changes_summary}\n\n## Changes\n{file_changes}\n\n## Validation Checklist\n- [ ] Code follows repository standards.\n- [ ] All tests pass.\n- [ ] Documentation updated or not required.\n\nCloses #{issue_id}"
+  },
+  "retry": {
+    "max_attempts": 3,
+    "initial_delay_ms": 1000,
+    "backoff_multiplier": 2,
+    "rate_limit_wait_ms": 60000
+  },
+  "ci_poll_timeout_minutes": 10,
+  "pr_size_warning_loc": 300,
+  "pr_size_block_loc": 500,
+  "coverage_threshold": 0.80,
+  "workspaces": {
+    "apps/api": {
+      "typecheck": "bun run typecheck",
+      "lint": "bun run lint",
+      "test": "bun test"
+    },
+    "apps/web": {
+      "typecheck": "bun run typecheck",
+      "lint": "bun run lint",
+      "test": "bun test"
+    },
+    "apps/agents": {
+      "typecheck": "bun run typecheck",
+      "lint": "bun run lint",
+      "test": "bun test"
+    },
+    "contracts": {
+      "typecheck": "forge build",
+      "lint": "forge fmt --check",
+      "test": "forge test"
+    }
   }
 }
 ```
