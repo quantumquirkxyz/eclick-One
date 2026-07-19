@@ -44,13 +44,22 @@ Rate each 0-10:
 | Typography | Font sizes consistent, readable, proper hierarchy? |
 | Color | Correct palette, sufficient contrast, semantic colors used? |
 
+## Web3-Specific Design Checks
+
+- On-chain status badge renders correctly in both languages
+- Agent activity panel shows real-time updates
+- Web3 dashboard handles RPC unavailable state gracefully
+- Contract addresses are displayed in a copyable format
+- On-chain vs off-chain status differences are visually clear
+
 ## Process
 
-1. Start the app
-2. Visit every route
+1. Start the app (full stack mode for Web3 features)
+2. Visit every route including Web3 dashboard (`/web3`)
 3. Check each design dimension
 4. Toggle languages and re-check multilingual-specific issues
 5. Resize browser and check responsive behavior
+6. Check error states: kill Anvil and verify graceful degradation
 
 ## Output
 
