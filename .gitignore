@@ -10,3 +10,4 @@ coverage/
 :Zone.Identifier
 .skill-state.json
 skill-execution.log
+.execution-log.json
