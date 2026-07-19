@@ -1,4 +1,5 @@
 import { getCurrentLocale } from "../../i18n";
+import { getAccessToken, getCsrfToken, refreshSession } from "./session";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
@@ -16,20 +17,42 @@ export class ApiError extends Error {
 
 export async function apiRequest<T>(
   path: string,
-  init: RequestInit = {},
+  init: AuthRequestInit = {},
 ): Promise<T> {
+  const { skipAuthRefresh, ...requestInit } = init as AuthRequestInit;
+  const response = await sendRequest(path, requestInit);
+  if (response.status === 401 && !skipAuthRefresh) {
+    await refreshSession();
+    return parseResponse<T>(await sendRequest(path, requestInit));
+  }
+  return parseResponse<T>(response);
+}
+
+interface AuthRequestInit extends RequestInit {
+  skipAuthRefresh?: boolean;
+}
+
+async function sendRequest(path: string, init: RequestInit): Promise<Response> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
   headers.set("Accept-Language", getCurrentLocale());
+  const accessToken = getAccessToken();
+  const csrfToken = getCsrfToken();
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  if (csrfToken) headers.set("X-CSRF-Token", csrfToken);
   if (init.body) {
     headers.set("Content-Type", "application/json");
   }
-  const response = await fetch(joinUrl(path), {
+  return fetch(joinUrl(path), {
     ...init,
     headers,
+    credentials: "include",
   });
+}
+
+async function parseResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    let payload: any = null;
+    let payload: { error?: { message?: string; code?: string; details?: unknown } } | null = null;
     try {
       payload = await response.json();
     } catch {
@@ -42,6 +65,7 @@ export async function apiRequest<T>(
       payload?.error?.details,
     );
   }
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 

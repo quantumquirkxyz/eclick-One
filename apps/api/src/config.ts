@@ -1,11 +1,13 @@
 import { commaSeparatedEnv, integerEnv, type Environment } from "@eclick-one/shared";
 import type { OnChainConfig } from "./onchain/OnChainClient";
+import type { SessionConfig } from "./services/session-service";
 
 export interface ApiConfig {
   host: string;
   port: number;
   corsOrigins: readonly string[];
   onchain: OnChainConfig | null;
+  session: SessionConfig;
 }
 
 export function loadApiConfig(env: Environment): ApiConfig {
@@ -28,5 +30,14 @@ export function loadApiConfig(env: Environment): ApiConfig {
         }
       : null;
 
-  return { host, port, corsOrigins, onchain };
+  const session: SessionConfig = {
+    jwtSecret: env.AUTH_JWT_SECRET?.trim() || "development-only-change-me",
+    accessTokenTtlSeconds: integerEnv(env, "AUTH_ACCESS_TOKEN_TTL_SECONDS", 900, { min: 60, max: 86_400 }),
+    refreshTokenTtlSeconds: integerEnv(env, "AUTH_REFRESH_TOKEN_TTL_SECONDS", 604_800, { min: 300, max: 2_592_000 }),
+    rateLimitWindowSeconds: integerEnv(env, "AUTH_RATE_LIMIT_WINDOW_SECONDS", 60, { min: 1, max: 3_600 }),
+    rateLimitMaxAttempts: integerEnv(env, "AUTH_RATE_LIMIT_MAX_ATTEMPTS", 5, { min: 1, max: 100 }),
+    secureCookies: env.NODE_ENV === "production",
+  };
+
+  return { host, port, corsOrigins, onchain, session };
 }

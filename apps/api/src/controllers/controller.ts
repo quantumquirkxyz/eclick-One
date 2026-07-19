@@ -1,5 +1,6 @@
 export interface ControllerResult<T = unknown> {
   status?: number;
+  headers?: HeadersInit;
   body: T;
 }
 

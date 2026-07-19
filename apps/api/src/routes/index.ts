@@ -1,3 +1,4 @@
+import type { AuthController } from "../controllers/auth-controller";
 import type { CommerceController } from "../controllers/commerce-controller";
 import type { HealthController } from "../controllers/health-controller";
 import { Router } from "./router";
@@ -5,9 +6,13 @@ import { Router } from "./router";
 export function createRouter(
   healthController: HealthController,
   commerceController: CommerceController,
+  authController: AuthController,
 ): Router {
   const router = new Router();
   router.register("GET", "/api/v1/health", healthController.check);
+  router.register("POST", "/api/v1/auth/login", authController.login);
+  router.register("POST", "/api/v1/auth/refresh", authController.refresh);
+  router.register("POST", "/api/v1/auth/logout", authController.logout);
   router.register("GET", "/api/v1/dashboard", commerceController.dashboard);
   router.register("GET", "/api/v1/provinces", commerceController.provinces);
   router.register("GET", "/api/v1/customers", commerceController.clients);

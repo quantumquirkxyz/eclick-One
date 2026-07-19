@@ -25,7 +25,7 @@ export class Router {
 
     try {
       const result = await match.controller(request, match.params);
-      return jsonResponse(result.body, result.status ?? 200);
+      return jsonResponse(result.body, result.status ?? 200, result.headers);
     } catch (error) {
       return errorResponse(error, locale);
     }
@@ -41,10 +41,16 @@ export class Router {
   }
 }
 
-export function jsonResponse(body: unknown, status = 200): Response {
+export function jsonResponse(body: unknown, status = 200, headers?: HeadersInit): Response {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("Cache-Control", "no-store");
+  if (status === 204) {
+    return new Response(null, { status, headers: responseHeaders });
+  }
+  responseHeaders.set("Content-Type", "application/json");
   return Response.json(body, {
     status,
-    headers: { "Cache-Control": "no-store" },
+    headers: responseHeaders,
   });
 }
 
