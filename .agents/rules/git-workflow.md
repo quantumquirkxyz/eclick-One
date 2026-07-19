@@ -3,8 +3,8 @@
 ## Branch Strategy
 
 - `main` — stable, deployable at all times
-- Feature branches: `feat/<short-description>`
-- Bug fix branches: `fix/<short-description>`
+- Feature branches: `feature/<id>-<slug>`
+- Bug fix branches: `fix/<id>-<slug>`
 - Chore branches: `chore/<short-description>`
 
 ## Commit Messages
