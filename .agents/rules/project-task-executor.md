@@ -51,9 +51,10 @@ Apply these rules while using `/project-task-executor` or `@project-task-executo
 ## Project Update Rules
 
 - Move an issue to in-progress when implementation begins and permissions allow.
-- If validation passes and autonomous merge is configured, merge, close the issue, delete the feature branch, and move the project item to done.
+- If validation passes and autonomous merge is configured, automatically merge, close the issue, delete the feature branch, and move the project item to done. Do not stop between merge and issue closure.
 - If validation passes but human merge is required, report the PR/MR URL and required human action.
 - If validation fails, comment on the issue with the failure summary and keep the issue out of done.
+- Always close the issue after merge, even if autonomous merge is disabled and a human performed the merge.
 
 ## Orchestration Rules
 

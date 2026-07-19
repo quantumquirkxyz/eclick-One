@@ -469,25 +469,46 @@ Use this log to:
 - Identify frequently failing areas and suggest additional test coverage.
 - Track command success rates.
 
-### 6.7 If the PR/MR is correct
+### 6.7 Automatic merge, cleanup, and issue closure
 
-Merge the PR/MR into the main branch, close the issue, delete the feature branch, and move the project item to done.
+When CI passes, all required reviews are satisfied, and no quality gates block the PR/MR:
 
-#### GitHub merge and cleanup
+1. **Merge** the PR/MR into the main branch with squash and delete-branch.
+2. **Delete the remote branch** if the platform did not auto-delete it.
+3. **Close the issue** immediately after merge.
+4. **Update project status** to done if the issue belongs to a project board.
+
+This sequence is automatic when `autonomous_merge` is true or when human approval has been granted. Do not stop between merge and issue closure.
+
+#### GitHub merge, cleanup, and issue closure
 
 ```bash
 gh pr merge <pr-id> --repo owner/repo --squash --delete-branch
+git push origin --delete feature/42-short-description 2>/dev/null || true
 gh issue close <issue-id> --repo owner/repo
 ```
 
-#### GitLab merge and cleanup
+Verify deletion:
+
+```bash
+git ls-remote --exit-code origin feature/42-short-description 2>/dev/null && echo "branch still exists" || echo "branch deleted"
+```
+
+#### GitLab merge, cleanup, and issue closure
 
 ```bash
 glab mr merge <mr-id> --project-id <id> --squash --delete-branch
+git push origin --delete feature/42-short-description 2>/dev/null || true
 glab issue close <iid> --project-id <id>
 ```
 
-If autonomous merge is not configured, stop here and report the PR/MR URL with instructions for the human to merge.
+Verify deletion:
+
+```bash
+git ls-remote --exit-code origin feature/42-short-description 2>/dev/null && echo "branch still exists" || echo "branch deleted"
+```
+
+If autonomous merge is not configured, stop after merge and report the PR/MR URL with instructions for the human to close the issue and delete the branch.
 
 ### 6.8 Failure recovery
 
