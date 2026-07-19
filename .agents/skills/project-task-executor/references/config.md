@@ -1,8 +1,49 @@
 # Project Task Executor Configuration
 
-Use `.project-task-executor-config.json` in the repository root when invocation arguments are missing or repository-specific defaults are needed.
+The agent reads configuration from multiple sources with this precedence (highest wins):
+1. **Environment variables** (set in the shell or IDE)
+2. **Repository conventions** (inferred from the repo itself)
+3. **Default values** (documented below)
 
-## Recommended Shape
+A `.project-task-executor-config.json` file is completely optional. If present, it overrides defaults but not environment variables.
+
+## Environment Variables
+
+| Variable | Purpose | Default |
+|----------|---------|--------|
+| `PROJECT_TASK_REPO_URL` | Repository URL (owner/repo or full URL) | inferred from `git remote` |
+| `PROJECT_TASK_PROJECT_ID` | GitHub project number or GitLab project ID | `1` |
+| `PROJECT_TASK_MAIN_BRANCH` | Default branch name | inferred from `git symbolic-ref` |
+| `PROJECT_TASK_GIT_TOKEN_ENV` | Name of env var containing the API token | `GITHUB_TOKEN` |
+| `PROJECT_TASK_PLATFORM` | Force platform: `github` or `gitlab` | inferred from remote URL |
+| `PROJECT_TASK_AUTONOMOUS_MERGE` | Allow automatic merge without human approval | `false` |
+| `PROJECT_TASK_CODE_REVIEW_REQUIRED` | Require PR review before merge | `true` |
+| `PROJECT_TASK_CI_REQUIRED` | Require CI pass before merge | `true` |
+
+## Repository Convention Inference
+
+If no config is provided, the agent infers settings from the repository:
+
+1. **Main branch**: `git symbolic-ref refs/remotes/origin/HEAD` → `main` or `master`
+2. **Platform**: inspect `git remote -v` URL pattern:
+   - `github.com` → GitHub
+   - `gitlab.com` → GitLab
+3. **Repo URL**: from `git remote get-url origin`
+4. **Default labels**: use the project-standard labels:
+   - ready: `status:ready-to-start`
+   - in_progress: `status:in-progress`
+   - under_review: `status:under-review`
+   - done: `status:done`
+   - exclude: `blocked`, `wontfix`, `duplicate`
+   - priority: `priority:high`, `priority:medium`, `priority:low`
+5. **Validation commands**: detect from `package.json`, `foundry.toml`, `Makefile`, or CI config:
+   - TypeScript/Bun: `bun run typecheck`, `bun run lint`, `bun test`
+   - Forge: `forge build`, `forge fmt --check`, `forge test`
+6. **Linter config**: from `.eslintrc`, `biome.json`, `ruff.toml`, etc.
+
+## Optional Config File
+
+If you want explicit control, create `.project-task-executor-config.json` in the repository root. This is the shape it supports:
 
 ```json
 {
@@ -30,7 +71,7 @@ Use `.project-task-executor-config.json` in the repository root when invocation 
     "title": "[Issue #{issue_id}] {issue_title}",
     "description": "## Summary\n{changes_summary}\n\n## Changes\n{file_changes}\n\n## Validation Checklist\n- [ ] Code follows repository standards.\n- [ ] All tests pass.\n- [ ] Documentation updated or not required.\n\nCloses #{issue_id}"
   },
-   "retry": {
+  "retry": {
     "max_attempts": 3,
     "initial_delay_ms": 1000,
     "backoff_multiplier": 2,
@@ -112,7 +153,7 @@ Use `.project-task-executor-config.json` in the repository root when invocation 
 
 - Prefer `git_token_env` over `git_token`; read the token from the named environment variable only when an authenticated CLI is unavailable.
 - If an existing config contains `git_token`, do not print it, do not commit it, and recommend replacing it with `git_token_env`.
-- Keep `.skill-state.json` and `skill-execution.log` uncommitted unless the user explicitly asks for audit artifacts to be versioned.
+- Keep `.skill-state.json` and `.execution-log.json` local unless explicitly asked to version audit artifacts.
 
 ## State File
 

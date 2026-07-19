@@ -10,7 +10,7 @@ When a repository contains multiple workspaces or packages, determine which area
 
 ## Validation Commands Per Workspace
 
-Run the validation commands for every workspace touched by the change. Use the workspace map in `.project-task-executor-config.json` when available; otherwise use the defaults below.
+Run the validation commands for every workspace touched by the change. Use the workspace map in `.project-task-executor-config.json` when available; otherwise use the defaults in `references/config.md` or detect commands from `package.json`, `foundry.toml`, or CI config.
 
 | Workspace | Typecheck | Lint | Test |
 |-----------|-----------|------|------|

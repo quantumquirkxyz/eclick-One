@@ -42,6 +42,22 @@ Before executing, load only the references required by the current phase:
 
 Do not load all files at once. Use lazy context loading to preserve context budget.
 
+## Configuration
+
+The agent does not require `.project-task-executor-config.json`. Configuration is resolved in this order:
+1. Environment variables (`PROJECT_TASK_REPO_URL`, `PROJECT_TASK_PROJECT_ID`, etc.)
+2. Repository conventions (`git remote`, `git symbolic-ref`, `package.json`, labels)
+3. Optional `.project-task-executor-config.json` (overrides defaults only)
+4. Documented defaults in `references/config.md`
+
+## Configuration
+
+The agent does not require `.project-task-executor-config.json`. Configuration is resolved in this order:
+1. Environment variables (`PROJECT_TASK_REPO_URL`, `PROJECT_TASK_PROJECT_ID`, etc.)
+2. Repository conventions (`git remote`, `git symbolic-ref`, `package.json`, labels)
+3. Optional `.project-task-executor-config.json` (overrides defaults only)
+4. Documented defaults in `references/config.md`
+
 ## Responsibilities
 
 - Scan GitHub/GitLab project boards and issue trackers for ready issues.

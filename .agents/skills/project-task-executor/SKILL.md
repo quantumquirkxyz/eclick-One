@@ -9,17 +9,28 @@ Execute the full workflow now. Do not ask for confirmation. Do not describe the 
 
 ## 1. Prepare
 
-### 1.1 Recovery-first state loading
+### 1.1 Configuration resolution (no config file required)
+
+Resolve configuration in this order, first match wins:
+
+1. **Environment variables**: check `PROJECT_TASK_REPO_URL`, `PROJECT_TASK_PROJECT_ID`, `PROJECT_TASK_MAIN_BRANCH`, `PROJECT_TASK_GIT_TOKEN_ENV`, `PROJECT_TASK_PLATFORM`, `PROJECT_TASK_AUTONOMOUS_MERGE`, `PROJECT_TASK_CODE_REVIEW_REQUIRED`, `PROJECT_TASK_CI_REQUIRED`.
+2. **Repository conventions**: infer from `git remote`, `git symbolic-ref`, `package.json`, `foundry.toml`, CI config, and existing issue labels.
+3. **Optional config file**: if `.project-task-executor-config.json` exists in the repo root, read it. It overrides defaults but not environment variables.
+4. **Defaults**: use the values documented in `references/config.md`.
+
+Do not fail if no config file exists. Proceed with inferred or default values.
+
+### 1.2 Recovery-first state loading
 
 Load `.skill-state.json` if present. If the recorded issue/branch/PR is still valid, resume from that state using the `recovery_zone` fields. If the state was interrupted mid-phase, restore the `partial_diff` and `checkpoint_files` before resuming implementation.
 
-### 1.2 Repository setup
+### 1.3 Repository setup
 
 1. If the target repo is not already present locally, clone it.
 2. Fetch the default branch. Determine if it is `main`, `master`, or the configured branch.
 3. Verify API access: run `gh auth status`. If it fails, run `glab auth status`. If both fail, check for `GITHUB_TOKEN`, `GITLAB_TOKEN`, or `GIT_TOKEN` environment variables. If none work, report BLOCKED.
 
-### 1.3 Lazy context loading
+### 1.4 Lazy context loading
 
 Load references only when the current phase requires them:
 
