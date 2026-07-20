@@ -1,4 +1,5 @@
 export * from "./client/azure-sql-client";
+export * from "./client/resilience";
 export * from "./client/turso-client";
 export * from "./migrations/runner";
 export * from "./repositories/mock-commerce-repository";

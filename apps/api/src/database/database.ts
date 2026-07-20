@@ -1,4 +1,5 @@
 import {
+  type DbResilienceMetrics,
   MockCommerceRepository,
   MockUserRepository,
   TursoClient,
@@ -16,6 +17,7 @@ export interface DatabaseContext {
   mode: RepositoryMode;
   ping(): Promise<void>;
   close(): Promise<void>;
+  metrics(): DbResilienceMetrics | null;
 }
 
 export function createDatabase(env: Environment): DatabaseContext {
@@ -39,6 +41,7 @@ function createMockDatabase(): DatabaseContext {
     mode: "mock",
     async ping() {},
     async close() {},
+    metrics: () => null,
   };
 }
 
@@ -57,5 +60,6 @@ function createTursoDatabase(env: Environment): DatabaseContext {
     mode: "turso",
     ping: () => client.ping(),
     close: () => client.close(),
+    metrics: () => client.metrics(),
   };
 }
