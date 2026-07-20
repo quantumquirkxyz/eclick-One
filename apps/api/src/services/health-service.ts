@@ -5,6 +5,7 @@ export interface HealthCheckResult {
   service: string;
   repositoryMode: string;
   database: string;
+  databaseMetrics: ReturnType<DatabaseContext["metrics"]>;
   responseTimeMs: number;
   timestamp: string;
   uptime: number;
@@ -23,6 +24,7 @@ export class HealthService {
       service: "eclick-one-api",
       repositoryMode: this.database.mode,
       database: deep ? "reachable" : "not_checked",
+      databaseMetrics: this.database.metrics(),
       responseTimeMs: Math.round((performance.now() - startedAt) * 100) / 100,
       timestamp: new Date().toISOString(),
       uptime: Math.floor((Date.now() - this.startedAt) / 1000),

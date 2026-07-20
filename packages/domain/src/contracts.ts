@@ -4,12 +4,15 @@ import type {
   NewClient,
   NewOrder,
   NewPayment,
+  NewUser,
   Order,
   OrderStatusTransition,
   Payment,
   Product,
   ProductPreference,
   Province,
+  RefreshTokenRecord,
+  User,
 } from "./entities";
 
 export interface ProvinceRepository {
@@ -42,6 +45,15 @@ export interface PaymentRepository {
   /** Implementations must return history; they must not collapse payments by order. */
   listPayments(): Promise<readonly Payment[]>;
   recordPayment(input: NewPayment): Promise<Payment>;
+}
+
+export interface UserRepository {
+  findByEmail(email: string): Promise<User | null>;
+  findById(id: number): Promise<User | null>;
+  createUser(input: NewUser): Promise<User>;
+  saveRefreshToken(userId: number, tokenHash: string, expiresAt: string): Promise<RefreshTokenRecord>;
+  findRefreshToken(tokenHash: string): Promise<RefreshTokenRecord | null>;
+  revokeRefreshToken(tokenHash: string): Promise<void>;
 }
 
 export type CommerceRepositories = ProvinceRepository &

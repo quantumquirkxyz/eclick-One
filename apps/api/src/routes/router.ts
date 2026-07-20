@@ -1,15 +1,17 @@
 import { AppError } from "../errors/app-error";
 import type { Controller } from "../controllers/controller";
+import { assertAcceptLanguage } from "../http/validation";
 import { apiText, localeFromRequest, translateApiMessage, type ApiLocale } from "../i18n";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-type RouteMatch = { controller: Controller; params: Record<string, string> };
+export type Middleware = (request: Request) => Promise<Response | undefined>;
+type RouteMatch = { controller: Controller; params: Record<string, string>; middlewares: Middleware[] };
 
 export class Router {
-  private readonly routes: { method: Method; pattern: string; controller: Controller }[] = [];
+  private readonly routes: { method: Method; pattern: string; controller: Controller; middlewares: Middleware[] }[] = [];
 
-  register(method: Method, path: string, controller: Controller): void {
-    this.routes.push({ method, pattern: path, controller });
+  register(method: Method, path: string, controller: Controller, middlewares: Middleware[] = []): void {
+    this.routes.push({ method, pattern: path, controller, middlewares });
   }
 
   async handle(request: Request): Promise<Response> {
@@ -23,7 +25,17 @@ export class Router {
       );
     }
 
+    for (const middleware of match.middlewares) {
+      try {
+        const response = await middleware(request);
+        if (response) return response;
+      } catch (error) {
+        return errorResponse(error, locale);
+      }
+    }
+
     try {
+      assertAcceptLanguage(request);
       const result = await match.controller(request, match.params);
       return jsonResponse(result.body, result.status ?? 200);
     } catch (error) {
@@ -35,7 +47,7 @@ export class Router {
     for (const route of this.routes) {
       if (route.method !== method) continue;
       const params = matchPath(route.pattern, pathname);
-      if (params) return { controller: route.controller, params };
+      if (params) return { controller: route.controller, params, middlewares: route.middlewares };
     }
     return null;
   }
@@ -51,17 +63,42 @@ export function jsonResponse(body: unknown, status = 200): Response {
 function errorResponse(error: unknown, locale: ApiLocale = "en"): Response {
   if (error instanceof AppError) {
     return jsonResponse(
-      { error: { code: error.code, message: translateApiMessage(error.message, locale), details: error.details } },
+      {
+        error: {
+          code: error.code,
+          message: translateApiMessage(error.message, locale),
+          details: translateErrorDetails(error.details, locale),
+        },
+      },
       error.status,
     );
   }
 
-  // SQL/implementation details are logged server-side but never leaked to callers.
   console.error("Unhandled API error", error);
   return jsonResponse(
     { error: { code: "INTERNAL_ERROR", message: apiText(locale, "internalError") } },
     500,
   );
+}
+
+function translateErrorDetails(details: unknown, locale: ApiLocale): unknown {
+  if (locale === "en" || !details || typeof details !== "object" || !("fields" in details)) {
+    return details;
+  }
+  const fields = (details as { fields?: unknown }).fields;
+  if (!Array.isArray(fields)) return details;
+  return {
+    ...details,
+    fields: fields.map((field) => {
+      if (!field || typeof field !== "object" || !("message" in field) || typeof (field as { message?: unknown }).message !== "string") {
+        return field;
+      }
+      return {
+        ...field,
+        message: translateApiMessage((field as { message: string }).message, locale),
+      };
+    }),
+  };
 }
 
 function matchPath(pattern: string, pathname: string): Record<string, string> | null {

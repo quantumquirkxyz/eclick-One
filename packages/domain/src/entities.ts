@@ -1,6 +1,9 @@
 export const CARD_TYPES = ["DB", "CR"] as const satisfies readonly string[];
 export type CardType = (typeof CARD_TYPES)[number];
 
+export const ROLES = ["admin", "operator", "viewer", "agent"] as const satisfies readonly string[];
+export type Role = (typeof ROLES)[number];
+
 export const ORDER_STATUSES = [
   "generado",
   "proceso",
@@ -131,4 +134,53 @@ export interface ProductPreference {
   codigo_producto: number;
   cant_solicitudes: number;
   cantidad_total: number;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  nombre: string;
+  apellido: string;
+  passwordHash: string;
+  role: Role;
+  activo: boolean;
+  createdAt: string;
+}
+
+export interface NewUser {
+  email: string;
+  nombre: string;
+  apellido: string;
+  password: string;
+  role?: Role;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  nombre: string;
+  apellido: string;
+  password: string;
+}
+
+export interface RefreshRequest {
+  refreshToken: string;
+}
+
+export interface RefreshTokenRecord {
+  id: number;
+  userId: number;
+  tokenHash: string;
+  expiresAt: string;
+  revoked: boolean;
 }
