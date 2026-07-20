@@ -6,6 +6,8 @@ dist/
 *.log
 .DS_Store
 coverage/
+apps/web/playwright-report/
+apps/web/test-results/
 *.tsbuildinfo
 :Zone.Identifier
 .skill-state.json

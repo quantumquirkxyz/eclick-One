@@ -19,7 +19,7 @@ export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const response = await sendApiRequest(path, init, await sessionManager.getAccessToken());
+  const response = await sendApiRequest(path, init, await getRequestAccessToken());
   if (response.status === 401) {
     const refreshedAccessToken = await sessionManager.refreshAfterUnauthorized();
     if (refreshedAccessToken) {
@@ -37,6 +37,10 @@ export function setApiSession(tokens: AuthTokenPair): void {
 
 export function clearApiSession(): void {
   sessionManager.clearSession();
+}
+
+async function getRequestAccessToken(): Promise<string | null> {
+  return (await sessionManager.getAccessToken()) ?? readStoredAccessToken();
 }
 
 async function sendApiRequest(
@@ -86,6 +90,13 @@ const sessionManager = new SessionManager(async () =>
     body: JSON.stringify({}),
   }),
 );
+
+function readStoredAccessToken(): string | null {
+  if (typeof localStorage === "undefined") {
+    return null;
+  }
+  return localStorage.getItem("eclick-one-access-token");
+}
 
 async function rawApiRequest<T>(path: string, init: RequestInit): Promise<T> {
   return parseApiResponse(await sendApiRequest(path, init, null));
