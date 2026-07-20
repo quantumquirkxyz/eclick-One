@@ -1,6 +1,7 @@
 import type {
   Client,
   Inventory,
+  JwtPayload,
   NewClient,
   NewOrder,
   NewPayment,
