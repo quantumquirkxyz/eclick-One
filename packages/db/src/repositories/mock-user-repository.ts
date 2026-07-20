@@ -26,6 +26,7 @@ export class MockUserRepository implements UserRepository {
       nombre: input.nombre.trim(),
       apellido: input.apellido.trim(),
       passwordHash: input.password,
+      role: input.role ?? "operator",
       activo: true,
       createdAt: new Date().toISOString(),
     };

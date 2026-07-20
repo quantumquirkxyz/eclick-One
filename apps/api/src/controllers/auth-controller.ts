@@ -2,6 +2,7 @@ import type { AuthTokens, LoginRequest, RegisterRequest, RefreshRequest } from "
 import type { ControllerResult } from "./controller";
 import { BadRequestError } from "../errors/app-error";
 import type { AuthService } from "../services/auth-service";
+import type { AuthenticatedRequest } from "../middleware/auth.middleware";
 
 export class AuthController {
   constructor(private readonly service: AuthService) {}
@@ -43,6 +44,18 @@ export class AuthController {
     }
     await this.service.logout(body.refreshToken);
     return { status: 204, body: null };
+  };
+
+  verify = async (request: AuthenticatedRequest): Promise<ControllerResult<{ user: { id: number; email: string; nombre: string; apellido: string; role: string } }>> => {
+    const user = request.user;
+    if (!user) throw new BadRequestError("Not authenticated.");
+    const fullUser = await this.service.validateUser(user.id);
+    if (!fullUser) throw new BadRequestError("User not found.");
+    return {
+      body: {
+        user: { id: fullUser.id, email: fullUser.email, nombre: fullUser.nombre, apellido: fullUser.apellido, role: fullUser.role },
+      },
+    };
   };
 }
 

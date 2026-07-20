@@ -3,19 +3,12 @@ import type {
   LoginRequest,
   NewUser,
   RefreshRequest,
-  RefreshTokenRecord,
   RegisterRequest,
   User,
   UserRepository,
 } from "@eclick-one/domain";
-import {
-  BadRequestError,
-  ConflictError,
-  NotFoundError,
-  UnauthorizedError,
-} from "../errors/app-error";
-import type { AuthConfig } from "@eclick-one/shared";
-import { issueTokens as sharedIssueTokens } from "@eclick-one/shared";
+import { issueTokens as sharedIssueTokens, type AuthConfig } from "@eclick-one/shared";
+import { ConflictError, UnauthorizedError } from "../errors/app-error";
 
 export class AuthService {
   constructor(
@@ -82,7 +75,7 @@ export class AuthService {
   }
 
   private async issueTokens(user: User): Promise<AuthTokens> {
-    const tokens = await sharedIssueTokens(user.id, user.email, this.auth);
+    const tokens = await sharedIssueTokens(user.id, user.email, user.role, this.auth);
     const tokenHash = await hashToken(tokens.refreshToken);
     await this.users.saveRefreshToken(user.id, tokenHash, new Date(Date.now() + this.auth.refreshTokenTtlSeconds * 1000).toISOString());
     return tokens;

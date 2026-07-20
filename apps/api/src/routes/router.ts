@@ -1,5 +1,6 @@
 import { AppError } from "../errors/app-error";
 import type { Controller } from "../controllers/controller";
+import { assertAcceptLanguage } from "../http/validation";
 import { apiText, localeFromRequest, translateApiMessage, type ApiLocale } from "../i18n";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -34,6 +35,7 @@ export class Router {
     }
 
     try {
+      assertAcceptLanguage(request);
       const result = await match.controller(request, match.params);
       return jsonResponse(result.body, result.status ?? 200);
     } catch (error) {
@@ -61,7 +63,13 @@ export function jsonResponse(body: unknown, status = 200): Response {
 function errorResponse(error: unknown, locale: ApiLocale = "en"): Response {
   if (error instanceof AppError) {
     return jsonResponse(
-      { error: { code: error.code, message: translateApiMessage(error.message, locale), details: error.details } },
+      {
+        error: {
+          code: error.code,
+          message: translateApiMessage(error.message, locale),
+          details: translateErrorDetails(error.details, locale),
+        },
+      },
       error.status,
     );
   }
@@ -71,6 +79,26 @@ function errorResponse(error: unknown, locale: ApiLocale = "en"): Response {
     { error: { code: "INTERNAL_ERROR", message: apiText(locale, "internalError") } },
     500,
   );
+}
+
+function translateErrorDetails(details: unknown, locale: ApiLocale): unknown {
+  if (locale === "en" || !details || typeof details !== "object" || !("fields" in details)) {
+    return details;
+  }
+  const fields = (details as { fields?: unknown }).fields;
+  if (!Array.isArray(fields)) return details;
+  return {
+    ...details,
+    fields: fields.map((field) => {
+      if (!field || typeof field !== "object" || !("message" in field) || typeof (field as { message?: unknown }).message !== "string") {
+        return field;
+      }
+      return {
+        ...field,
+        message: translateApiMessage((field as { message: string }).message, locale),
+      };
+    }),
+  };
 }
 
 function matchPath(pattern: string, pathname: string): Record<string, string> | null {

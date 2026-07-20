@@ -1,7 +1,12 @@
 import sql, { type config as SqlConfig, type ConnectionPool } from "mssql";
 import { booleanEnv, integerEnv, requiredEnv, type Environment } from "@eclick-one/shared";
+import { dbResilienceConfigFromEnv, DbResiliencePolicy, type DbResilienceConfig, type DbResilienceMetrics } from "./resilience";
 
-export function azureSqlConfigFromEnv(env: Environment): SqlConfig {
+export interface AzureSqlConfig extends SqlConfig {
+  resilience: DbResilienceConfig;
+}
+
+export function azureSqlConfigFromEnv(env: Environment): AzureSqlConfig {
   const encrypt = booleanEnv(env, "AZURE_SQL_ENCRYPT", true);
   const trustServerCertificate = booleanEnv(env, "AZURE_SQL_TRUST_SERVER_CERTIFICATE", false);
   if (!encrypt) {
@@ -11,50 +16,51 @@ export function azureSqlConfigFromEnv(env: Environment): SqlConfig {
     throw new Error("AZURE_SQL_TRUST_SERVER_CERTIFICATE must remain false for Azure SQL connections.");
   }
 
+  const resilience = dbResilienceConfigFromEnv(env, "AZURE_SQL");
   return {
     server: requiredEnv(env, "AZURE_SQL_SERVER"),
     port: integerEnv(env, "AZURE_SQL_PORT", 1433, { min: 1, max: 65_535 }),
     database: requiredEnv(env, "AZURE_SQL_DATABASE"),
     user: requiredEnv(env, "AZURE_SQL_USER"),
     password: requiredEnv(env, "AZURE_SQL_PASSWORD"),
-    connectionTimeout: integerEnv(env, "AZURE_SQL_CONNECTION_TIMEOUT_MS", 120_000, {
-      min: 1_000,
-      max: 300_000,
-    }),
-    requestTimeout: integerEnv(env, "AZURE_SQL_REQUEST_TIMEOUT_MS", 120_000, {
-      min: 1_000,
-      max: 300_000,
-    }),
+    connectionTimeout: resilience.connectionTimeoutMs,
+    requestTimeout: resilience.queryTimeoutMs,
     options: {
       encrypt,
       trustServerCertificate,
       enableArithAbort: true,
     },
     pool: {
-      max: integerEnv(env, "AZURE_SQL_POOL_MAX", 10, { min: 1, max: 100 }),
-      min: integerEnv(env, "AZURE_SQL_POOL_MIN", 0, { min: 0, max: 100 }),
+      max: resilience.poolMax,
+      min: resilience.poolMin,
       idleTimeoutMillis: integerEnv(env, "AZURE_SQL_POOL_IDLE_TIMEOUT_MS", 30_000, {
         min: 1_000,
         max: 600_000,
       }),
     },
+    resilience,
   };
 }
 
 /** Owns one lazy, reusable pool and clears failed connection attempts for retry. */
 export class AzureSqlClient {
   private poolPromise: Promise<ConnectionPool> | null = null;
+  private readonly resilience: DbResiliencePolicy;
 
-  constructor(private readonly configuration: SqlConfig) {}
+  constructor(private readonly configuration: AzureSqlConfig) {
+    this.resilience = new DbResiliencePolicy(configuration.resilience);
+  }
 
   getPool(): Promise<ConnectionPool> {
-    if (!this.poolPromise) {
-      this.poolPromise = new sql.ConnectionPool(this.configuration).connect().catch((error) => {
-        this.poolPromise = null;
-        throw error;
-      });
-    }
-    return this.poolPromise;
+    return this.resilience.run(() => {
+      if (!this.poolPromise) {
+        this.poolPromise = new sql.ConnectionPool(this.configuration).connect().catch((error) => {
+          this.poolPromise = null;
+          throw error;
+        });
+      }
+      return this.poolPromise;
+    });
   }
 
   async ping(): Promise<void> {
@@ -67,5 +73,9 @@ export class AzureSqlClient {
     const pool = await this.poolPromise;
     this.poolPromise = null;
     await pool.close();
+  }
+
+  metrics(): DbResilienceMetrics {
+    return this.resilience.snapshot();
   }
 }
