@@ -19,7 +19,9 @@
     "dev:deploy": "forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545",
     "build": "bun --filter '*' build",
     "typecheck": "bun --filter '*' typecheck",
-    "test": "bun test"
+    "test": "bun test apps/api apps/agents packages apps/contracts",
+    "lint": "echo \"Linting not yet configured\"",
+    "test:web": "bun --cwd apps/web test"
   },
   "devDependencies": {
     "@types/bun": "^1.2.19",
