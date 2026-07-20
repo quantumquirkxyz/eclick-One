@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import { createAuthConfig } from "@eclick-one/shared";
 import { createApiApplication } from "../../app";
 
+const auth = createAuthConfig({ JWT_SECRET: "test-secret-that-must-be-at-least-32-characters-long!!" });
 function createApp() {
   return createApiApplication(
     { REPOSITORY_MODE: "mock" },
-    { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null },
+    { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null, auth },
   );
 }
 

@@ -3,13 +3,14 @@ import type { Controller } from "../controllers/controller";
 import { apiText, localeFromRequest, translateApiMessage, type ApiLocale } from "../i18n";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-type RouteMatch = { controller: Controller; params: Record<string, string> };
+export type Middleware = (request: Request) => Promise<Response | undefined>;
+type RouteMatch = { controller: Controller; params: Record<string, string>; middlewares: Middleware[] };
 
 export class Router {
-  private readonly routes: { method: Method; pattern: string; controller: Controller }[] = [];
+  private readonly routes: { method: Method; pattern: string; controller: Controller; middlewares: Middleware[] }[] = [];
 
-  register(method: Method, path: string, controller: Controller): void {
-    this.routes.push({ method, pattern: path, controller });
+  register(method: Method, path: string, controller: Controller, middlewares: Middleware[] = []): void {
+    this.routes.push({ method, pattern: path, controller, middlewares });
   }
 
   async handle(request: Request): Promise<Response> {
@@ -21,6 +22,15 @@ export class Router {
         { error: { code: "NOT_FOUND", message: apiText(locale, "noRoute").replace("{method}", request.method).replace("{pathname}", pathname) } },
         404,
       );
+    }
+
+    for (const middleware of match.middlewares) {
+      try {
+        const response = await middleware(request);
+        if (response) return response;
+      } catch (error) {
+        return errorResponse(error, locale);
+      }
     }
 
     try {
@@ -35,7 +45,7 @@ export class Router {
     for (const route of this.routes) {
       if (route.method !== method) continue;
       const params = matchPath(route.pattern, pathname);
-      if (params) return { controller: route.controller, params };
+      if (params) return { controller: route.controller, params, middlewares: route.middlewares };
     }
     return null;
   }
@@ -56,7 +66,6 @@ function errorResponse(error: unknown, locale: ApiLocale = "en"): Response {
     );
   }
 
-  // SQL/implementation details are logged server-side but never leaked to callers.
   console.error("Unhandled API error", error);
   return jsonResponse(
     { error: { code: "INTERNAL_ERROR", message: apiText(locale, "internalError") } },

@@ -1,6 +1,7 @@
-import { Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useEffect, useState, type ComponentType } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import { LanguageSelector, useI18n } from "../../i18n";
 import { apiRequest } from "../../services/api/client";
 import { collectorApi } from "../../services/agent/agent";
@@ -16,6 +17,8 @@ type RepositoryMode = "mock" | "turso";
 
 export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
   const { t } = useI18n();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [repositoryMode, setRepositoryMode] = useState<RepositoryMode>("mock");
   const [web3Online, setWeb3Online] = useState(false);
@@ -43,6 +46,11 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="app">
       <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
@@ -68,7 +76,10 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
             <LanguageSelector />
             <span className={`synthetic ${repositoryMode === "turso" ? "connected" : ""}`}>{repositoryMode === "turso" ? t("common.azureSql") : t("common.syntheticData")}</span>
             <span className={`synthetic ${web3Online ? "connected" : ""}`}>{web3Online ? t("dashboard.web3Connected") : t("dashboard.web3Disconnected")}</span>
-            <span className="avatar">EO</span>
+            {user && <span className="avatar">{user.nombre.charAt(0)}{user.apellido.charAt(0)}</span>}
+            <button className="icon-button" onClick={handleLogout} title={t("auth.logout")} style={{ border: 0, background: "none", cursor: "pointer", color: "#64748b", display: "inline-flex", alignItems: "center" }}>
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
         <main className="content"><div className="demo-note">{repositoryMode === "turso" ? t("shell.demoSql") : t("shell.demoMock")}</div><Outlet /></main>

@@ -1,18 +1,29 @@
-import { describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
+import { createAuthConfig, signAccessToken } from "@eclick-one/shared";
 import { createApiApplication } from "../../app";
 
+const auth = createAuthConfig({ JWT_SECRET: "test-secret-that-must-be-at-least-32-characters-long!!" });
+async function authHeader(): Promise<{ Authorization: string }> {
+  const token = await signAccessToken(
+    { sub: "0", email: "test@example.com", type: "access" },
+    auth,
+  );
+  return { Authorization: `Bearer ${token}` };
+}
 function createApp() {
   return createApiApplication(
     { REPOSITORY_MODE: "mock" },
-    { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null },
+    { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null, auth },
   );
 }
 
-describe("orders routes", () => {
+describe("orders routes", async () => {
+  let headers: Record<string, string> = {};
+  beforeAll(async () => { headers = await authHeader(); });
   const app = createApp();
 
   test("lists all orders", async () => {
-    const response = await app.fetch(new Request("http://localhost/api/v1/orders"));
+    const response = await app.fetch(new Request("http://localhost/api/v1/orders", { headers }));
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(Array.isArray(body)).toBe(true);
@@ -20,7 +31,7 @@ describe("orders routes", () => {
   });
 
   test("lists current orders", async () => {
-    const response = await app.fetch(new Request("http://localhost/api/v1/orders/current"));
+    const response = await app.fetch(new Request("http://localhost/api/v1/orders/current", { headers }));
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(Array.isArray(body)).toBe(true);
@@ -30,7 +41,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
           codigo_cliente: 1,
           codigo_producto: 1000,
@@ -52,7 +63,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
           codigo_cliente: 99999,
           codigo_producto: 1000,
@@ -71,7 +82,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
           codigo_cliente: 1,
           codigo_producto: 99999,
@@ -90,7 +101,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({ direccion: "Test" }),
       }),
     );
@@ -101,7 +112,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
           codigo_cliente: 1,
           codigo_producto: 1000,
@@ -120,7 +131,7 @@ describe("orders routes", () => {
     const createResponse = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
           codigo_cliente: 1,
           codigo_producto: 1000,
@@ -138,7 +149,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request(`http://localhost/api/v1/orders/${order.codigo_pedido}/status`, {
         method: "PATCH",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({ estado: "proceso" }),
       }),
     );
@@ -151,7 +162,7 @@ describe("orders routes", () => {
     const createResponse = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
           codigo_cliente: 1,
           codigo_producto: 1000,
@@ -168,7 +179,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request(`http://localhost/api/v1/orders/${order.codigo_pedido}/status`, {
         method: "PATCH",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({ estado: "invalid_status" }),
       }),
     );
@@ -179,7 +190,7 @@ describe("orders routes", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders/NONEXISTENT/status", {
         method: "PATCH",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({ estado: "proceso" }),
       }),
     );

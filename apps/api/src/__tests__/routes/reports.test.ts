@@ -1,18 +1,29 @@
-import { describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
+import { createAuthConfig, signAccessToken } from "@eclick-one/shared";
 import { createApiApplication } from "../../app";
 
+const auth = createAuthConfig({ JWT_SECRET: "test-secret-that-must-be-at-least-32-characters-long!!" });
+async function authHeader(): Promise<{ Authorization: string }> {
+  const token = await signAccessToken(
+    { sub: "0", email: "test@example.com", type: "access" },
+    auth,
+  );
+  return { Authorization: `Bearer ${token}` };
+}
 function createApp() {
   return createApiApplication(
     { REPOSITORY_MODE: "mock" },
-    { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null },
+    { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null, auth },
   );
 }
 
-describe("reports routes", () => {
+describe("reports routes", async () => {
+  let headers: Record<string, string> = {};
+  beforeAll(async () => { headers = await authHeader(); });
   const app = createApp();
 
   test("returns reports in English", async () => {
-    const response = await app.fetch(new Request("http://localhost/api/v1/reports"));
+    const response = await app.fetch(new Request("http://localhost/api/v1/reports", { headers }));
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.synthetic).toBe(true);
@@ -24,7 +35,7 @@ describe("reports routes", () => {
   test("returns reports in Spanish", async () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/reports", {
-        headers: { "accept-language": "es" },
+        headers: { ...headers, "accept-language": "es" },
       }),
     );
     expect(response.status).toBe(200);
@@ -33,7 +44,7 @@ describe("reports routes", () => {
   });
 
   test("includes generatedAt timestamp", async () => {
-    const response = await app.fetch(new Request("http://localhost/api/v1/reports"));
+    const response = await app.fetch(new Request("http://localhost/api/v1/reports", { headers }));
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.generatedAt).toBeDefined();
@@ -41,7 +52,7 @@ describe("reports routes", () => {
   });
 
   test("includes inventory section", async () => {
-    const response = await app.fetch(new Request("http://localhost/api/v1/reports"));
+    const response = await app.fetch(new Request("http://localhost/api/v1/reports", { headers }));
     expect(response.status).toBe(200);
     const body = await response.json();
     const inventorySection = body.sections.find((s: any) => s.key === "inventory");

@@ -9,9 +9,12 @@ import {
   Globe,
 } from "lucide-react";
 import { Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AppShell, type NavItem } from "./components/layout/AppShell";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { Web3Feature } from "./features/web3/Web3Feature";
 import { CustomersFeature } from "./features/customers/CustomersFeature";
@@ -41,7 +44,9 @@ export function App() {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<LandingPage />} />
       </Route>
-      <Route path="/app" element={<AppShell navItems={navItems} />}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/app" element={<ProtectedRoute><AppShell navItems={navItems} /></ProtectedRoute>}>
         <Route index element={<DashboardFeature />} />
         <Route path="customers" element={<CustomersFeature />} />
         <Route path="orders" element={<OrdersFeature />} />
