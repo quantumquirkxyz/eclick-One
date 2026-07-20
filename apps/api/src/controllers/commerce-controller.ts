@@ -7,7 +7,8 @@ import {
   readPaymentBody,
   readStatusTransitionBody,
 } from "../http/validation";
-import type { CommerceService } from "../services/commerce-service";
+import { BadRequestError } from "../errors/app-error";
+import type { CommerceService, ComplianceReport } from "../services/commerce-service";
 import type { ControllerResult } from "./controller";
 
 export class CommerceController {
@@ -58,4 +59,31 @@ export class CommerceController {
       }),
     };
   };
+
+  reportCompliance = async (request: Request): Promise<ControllerResult> => {
+    const body = await readJsonObject<ComplianceReport>(request);
+    if (!body.orderCode || !body.status || !body.message) {
+      throw new BadRequestError("orderCode, status, and message are required.");
+    }
+    return {
+      body: await this.service.reportCompliance(body),
+    };
+  };
+}
+
+async function readJsonObject<T>(request: Request): Promise<T> {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    throw new BadRequestError("Request body must be valid JSON.");
+  }
+  if (!isPlainObject(body)) {
+    throw new BadRequestError("Request body must be a JSON object.");
+  }
+  return body as T;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

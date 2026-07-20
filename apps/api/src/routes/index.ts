@@ -34,6 +34,7 @@ export function createRouter(
   router.register("POST", "/api/v1/customers", commerceController.createClient, [authMiddleware, operatorOrAbove]);
   router.register("POST", "/api/v1/orders", commerceController.createOrder, [authMiddleware, operatorOrAbove]);
   router.register("POST", "/api/v1/payments", commerceController.recordPayment, [authMiddleware, operatorOrAbove]);
+  router.register("POST", "/api/v1/compliance/report", commerceController.reportCompliance, [authMiddleware, operatorOrAbove]);
   router.register("PATCH", "/api/v1/orders/:codigo_pedido/status", commerceController.transitionOrderStatus, [authMiddleware, operatorOrAbove]);
   router.register("GET", "/api/v1/orders/:codigo_pedido/onchain", commerceController.orderOnChainStatus, [authMiddleware, viewerOrAbove]);
   return router;

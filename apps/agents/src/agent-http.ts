@@ -31,8 +31,23 @@ export function startAgentServer(port: number, info: AgentInfo): void {
       }
 
       if (url.pathname === "/metrics") {
-        return new Response(JSON.stringify(agentActivity.getMetrics()), {
-          headers: { "Content-Type": "application/json" },
+        const metrics = agentActivity.getMetrics();
+        const prometheusLines = [
+          `# HELP agent_total_actions Total actions performed`,
+          `# TYPE agent_total_actions counter`,
+          `agent_total_actions{agent="${info.name}"} ${metrics.totalActions}`,
+          `# HELP agent_total_errors Total errors encountered`,
+          `# TYPE agent_total_errors counter`,
+          `agent_total_errors{agent="${info.name}"} ${metrics.totalErrors}`,
+          `# HELP agent_orders_processed Total orders processed`,
+          `# TYPE agent_orders_processed counter`,
+          `agent_orders_processed{agent="${info.name}"} ${metrics.ordersProcessed}`,
+          `# HELP agent_uptime_seconds Agent uptime in seconds`,
+          `# TYPE agent_uptime_seconds gauge`,
+          `agent_uptime_seconds{agent="${info.name}"} ${metrics.uptimeSeconds}`,
+        ];
+        return new Response(prometheusLines.join("\n"), {
+          headers: { "Content-Type": "text/plain; version=0.0.4" },
         });
       }
 

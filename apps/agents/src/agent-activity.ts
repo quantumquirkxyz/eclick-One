@@ -1,6 +1,6 @@
 export interface AgentActivityEntry {
   timestamp: string;
-  type: "info" | "action" | "error";
+  type: "info" | "action" | "warn" | "error";
   message: string;
   details?: Record<string, unknown>;
 }
@@ -36,7 +36,7 @@ class AgentActivity {
       timestamp: new Date().toISOString(),
       type,
       message,
-      details,
+      ...(details !== undefined && { details }),
     };
     this.entries.unshift(entry);
     if (this.entries.length > this.maxEntries) {
@@ -44,10 +44,10 @@ class AgentActivity {
     }
 
     if (type === "action") this.metrics.totalActions++;
-    else if (type === "error") this.metrics.totalErrors++;
+    else if (type === "error" || type === "warn") this.metrics.totalErrors++;
     else this.metrics.totalInfo++;
 
-    const prefix = type === "error" ? "✗" : type === "action" ? "→" : "ℹ";
+    const prefix = type === "error" ? "✗" : type === "warn" ? "⚠" : type === "action" ? "→" : "ℹ";
     console.log(`[${entry.timestamp}] [${prefix}] ${message}`);
   }
 
