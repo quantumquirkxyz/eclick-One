@@ -1,9 +1,10 @@
-import { apiRequest } from "./client";
+import { apiRequest, clearApiSession, setApiSession } from "./client";
 
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  tokenType?: "Bearer";
 }
 
 export interface LoginInput {
@@ -85,6 +86,7 @@ export function getStoredUser(): StoredUser | null {
 export function saveTokens(tokens: AuthTokens): void {
   localStorage.setItem(STORAGE_ACCESS_KEY, tokens.accessToken);
   localStorage.setItem(STORAGE_REFRESH_KEY, tokens.refreshToken);
+  setApiSession({ ...tokens, tokenType: tokens.tokenType ?? "Bearer" });
 }
 
 export function saveUser(user: StoredUser): void {
@@ -92,6 +94,7 @@ export function saveUser(user: StoredUser): void {
 }
 
 export function clearAuth(): void {
+  clearApiSession();
   localStorage.removeItem(STORAGE_ACCESS_KEY);
   localStorage.removeItem(STORAGE_REFRESH_KEY);
   localStorage.removeItem(STORAGE_USER_KEY);

@@ -14,10 +14,8 @@ test.describe("Web3 Dashboard Flow", () => {
     await page.getByText("Web3").first().click();
     await page.waitForURL("**/app/web3");
 
-    await expect(
-      page.getByText(/Connected|Disconnected|Conectado|Desconectado/i),
-    ).toBeVisible({ timeout: 5000 }).catch(() => {
-      // connection status may show or not depending on Anvil availability
+    await expect(page.getByText(/Connected|Disconnected|Conectado|Desconectado/i).first()).toBeVisible({
+      timeout: 5000,
     });
   });
 

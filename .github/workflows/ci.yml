@@ -107,6 +107,8 @@ jobs:
       - name: Run Playwright E2E tests
         run: bun run test:e2e --project=chromium
         working-directory: apps/web
+        env:
+          JWT_SECRET: ci-test-secret-that-is-at-least-32-characters-long
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
