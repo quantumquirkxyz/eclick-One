@@ -63,12 +63,14 @@ jobs:
 
       - uses: foundry-rs/foundry-toolchain@v1
         with:
-          foundry-version: nightly
+          foundry-version: 1.7.1
 
       - name: Cache Foundry dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.foundry/cache
+          path: |
+            ~/.foundry/cache
+            apps/contracts/lib
           key: ${{ runner.os }}-foundry-${{ hashFiles('apps/contracts/foundry.lock') }}
           restore-keys: |
             ${{ runner.os }}-foundry-
