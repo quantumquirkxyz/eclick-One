@@ -1,9 +1,16 @@
-import { describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
+import { createAuthConfig, signAccessToken } from "@eclick-one/shared";
 import { createApiApplication } from "./app";
 
+const auth = createAuthConfig({ JWT_SECRET: "test-secret-that-must-be-at-least-32-characters-long!!" });
+let headers: Record<string, string> = {};
+beforeAll(async () => {
+  const token = await signAccessToken({ sub: "0", email: "test@example.com", type: "access", role: "admin" }, auth);
+  headers = { Authorization: `Bearer ${token}` };
+});
 const app = createApiApplication(
   { REPOSITORY_MODE: "mock" },
-  { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null },
+  { host: "0.0.0.0", port: 3000, corsOrigins: ["http://localhost:5173"], onchain: null, auth },
 );
 
 describe("API application", () => {
@@ -14,7 +21,7 @@ describe("API application", () => {
   });
 
   test("marks dashboard data as synthetic", async () => {
-    const response = await app.fetch(new Request("http://localhost/api/v1/dashboard"));
+    const response = await app.fetch(new Request("http://localhost/api/v1/dashboard", { headers }));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ synthetic: true });
   });
@@ -29,7 +36,7 @@ describe("API application", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/customers", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: "\"oops\"",
       }),
     );
@@ -42,6 +49,7 @@ describe("API application", () => {
       new Request("http://localhost/api/v1/customers", {
         method: "POST",
         headers: {
+          ...headers,
           "content-type": "application/json",
           "content-length": "70001",
         },

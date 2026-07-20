@@ -25,5 +25,4 @@
     "@types/bun": "^1.2.19",
     "@types/node": "^24.0.0",
     "typescript": "^6.0.0"
-  }
 }

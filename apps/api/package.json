@@ -13,6 +13,7 @@
     "@eclick-one/db": "workspace:*",
     "@eclick-one/domain": "workspace:*",
     "@eclick-one/shared": "workspace:*",
+    "jose": "^6.2.3",
     "viem": "^2.55.2"
   }
 }

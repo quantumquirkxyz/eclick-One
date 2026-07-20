@@ -1,4 +1,4 @@
-import { commaSeparatedEnv, integerEnv, type Environment } from "@eclick-one/shared";
+import { commaSeparatedEnv, createAuthConfig, integerEnv, type Environment } from "@eclick-one/shared";
 import type { OnChainConfig } from "./onchain/OnChainClient";
 
 export interface ApiConfig {
@@ -6,6 +6,7 @@ export interface ApiConfig {
   port: number;
   corsOrigins: readonly string[];
   onchain: OnChainConfig | null;
+  auth: ReturnType<typeof createAuthConfig>;
 }
 
 export function loadApiConfig(env: Environment): ApiConfig {
@@ -28,5 +29,5 @@ export function loadApiConfig(env: Environment): ApiConfig {
         }
       : null;
 
-  return { host, port, corsOrigins, onchain };
+  return { host, port, corsOrigins, onchain, auth: createAuthConfig(env) };
 }
