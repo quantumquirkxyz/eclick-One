@@ -71,6 +71,7 @@ The agent does not require `.project-task-executor-config.json`. Configuration i
 - Validate CI/CD, review state, security, documentation, and dependency hygiene.
 - Recover from failures using checkpoints, auto-rebase, and retry logic.
 - Log execution metrics to `.execution-log.json`.
+- When CI passes and all gates are green, automatically merge the PR/MR, delete the feature branch, and close the issue.
 - Update project status, labels, comments, and branches according to permissions.
 - Support human checkpoints, batch mode, multi-platform synchronization, and semantic release integration.
 

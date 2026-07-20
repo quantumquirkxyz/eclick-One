@@ -11,7 +11,7 @@ export function apiText(locale: ApiLocale, key: keyof typeof messages.en): strin
 
 export function translateApiMessage(message: string, locale: ApiLocale): string {
   if (locale === "en") return englishMessageMap[message] ?? message;
-  return spanishMessageMap[message] ?? message;
+  return spanishMessageMap[message] ?? translateSpanishPattern(message);
 }
 
 const messages = {
@@ -27,6 +27,12 @@ const messages = {
     reportTopProducts: "Most consumed products",
     reportCurrentOrders: "Current orders",
     reportPayments: "Payment history",
+    invalidCredentials: "Invalid credentials.",
+    emailAlreadyRegistered: "Email is already registered.",
+    passwordTooShort: "password must be at least 8 characters.",
+    missingToken: "Missing or invalid authorization token.",
+    invalidToken: "Invalid or expired token.",
+    refreshTokenRevoked: "Refresh token has been revoked.",
   },
   es: {
     noRoute: "No hay ruta para {method} {pathname}.",
@@ -40,6 +46,12 @@ const messages = {
     reportTopProducts: "Productos mas consumidos",
     reportCurrentOrders: "Pedidos actuales",
     reportPayments: "Historial de pagos",
+    invalidCredentials: "Credenciales invalidas.",
+    emailAlreadyRegistered: "El correo ya esta registrado.",
+    passwordTooShort: "la contrasena debe tener al menos 8 caracteres.",
+    missingToken: "Falta el token de autorizacion o no es valido.",
+    invalidToken: "Token invalido o expirado.",
+    refreshTokenRevoked: "El token de actualizacion ha sido revocado.",
   },
 } as const;
 
@@ -52,19 +64,11 @@ const spanishMessageMap: Record<string, string> = {
   "estado is required.": "estado es obligatorio.",
   "codigo_pedido is required.": "codigo_pedido es obligatorio.",
   "Request body must be valid JSON.": "El cuerpo de la solicitud debe ser JSON valido.",
+  "Validation failed.": "La validacion fallo.",
+  "Request body is too large.": "El cuerpo de la solicitud es demasiado grande.",
   "Request body must be a JSON object.": "El cuerpo de la solicitud debe ser un objeto JSON.",
-  "Authentication is required.": "Autenticacion requerida.",
-  "Invalid email or password.": "Correo o contrasena invalidos.",
-  "Refresh token has been revoked.": "El token de renovacion fue revocado.",
-  "Refresh token is invalid or expired.": "El token de renovacion es invalido o expiro.",
-  "Too many authentication attempts.": "Demasiados intentos de autenticacion.",
-  "email must be valid.": "email debe ser valido.",
-  "password must be at least 8 characters.": "password debe tener al menos 8 caracteres.",
-  "name is required.": "name es obligatorio.",
-  "email must be a non-empty string.": "email debe ser texto no vacio.",
-  "password must be a non-empty string.": "password debe ser texto no vacio.",
-  "name must be a non-empty string.": "name debe ser texto no vacio.",
-  "refreshToken must be a non-empty string.": "refreshToken debe ser texto no vacio.",
+  "Content-Type must be application/json.": "Content-Type debe ser application/json.",
+  "Accept-Language must be en or es.": "Accept-Language debe ser en o es.",
   "cantidad must be a positive integer.": "cantidad debe ser un entero positivo.",
   "fecha_entrega cannot be earlier than fecha_pedido.": "fecha_entrega no puede ser anterior a fecha_pedido.",
   "Order status is not allowed.": "El estado del pedido no esta permitido.",
@@ -72,7 +76,35 @@ const spanishMessageMap: Record<string, string> = {
   "Order is already paid.": "El pedido ya esta pagado.",
   "Cannot invoice an unpaid order.": "No se puede facturar un pedido sin pagar.",
   "provincia is required.": "provincia es obligatoria.",
+  "Invalid credentials.": "Credenciales invalidas.",
+  "Email is already registered.": "El correo ya esta registrado.",
+  "password must be at least 8 characters.": "la contrasena debe tener al menos 8 caracteres.",
+  "Missing or invalid authorization token.": "Falta el token de autorizacion o no es valido.",
+  "Invalid or expired token.": "Token invalido o expirado.",
+  "Refresh token has been revoked.": "El token de actualizacion ha sido revocado.",
 };
 
 const englishMessageMap: Record<string, string> = {
+  "Credenciales invalidas.": "Invalid credentials.",
+  "El correo ya esta registrado.": "Email is already registered.",
+  "la contrasena debe tener al menos 8 caracteres.": "password must be at least 8 characters.",
+  "Falta el token de autorizacion o no es valido.": "Missing or invalid authorization token.",
+  "Token invalido o expirado.": "Invalid or expired token.",
+  "El token de actualizacion ha sido revocado.": "Refresh token has been revoked.",
 };
+
+function translateSpanishPattern(message: string): string {
+  const nonEmpty = message.match(/^(.+) must be a non-empty string\.$/);
+  if (nonEmpty) return `${nonEmpty[1]} debe ser texto no vacio.`;
+  const stringValue = message.match(/^(.+) must be a string\.$/);
+  if (stringValue) return `${stringValue[1]} debe ser texto.`;
+  const integer = message.match(/^(.+) must be an integer greater than or equal to (\d+)\.$/);
+  if (integer) return `${integer[1]} debe ser un entero mayor o igual a ${integer[2]}.`;
+  const amount = message.match(/^(.+) must be a positive amount\.$/);
+  if (amount) return `${amount[1]} debe ser un monto positivo.`;
+  const validDate = message.match(/^(.+) must be a valid ISO date\.$/);
+  if (validDate) return `${validDate[1]} debe ser una fecha ISO valida.`;
+  const validOrderCode = message.match(/^(.+) must be a valid order code\.$/);
+  if (validOrderCode) return `${validOrderCode[1]} debe ser un codigo de pedido valido.`;
+  return message;
+}

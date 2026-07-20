@@ -4,8 +4,9 @@ import { CommerceController } from "./controllers/commerce-controller";
 import { HealthController } from "./controllers/health-controller";
 import { createDatabase, type DatabaseContext } from "./database/database";
 import { withCors } from "./http/cors";
+import { authMiddleware, requireRole } from "./middleware/auth.middleware";
 import { createRouter } from "./routes";
-import { AuthSessionService } from "./services/auth-session-service";
+import { AuthService } from "./services/auth-service";
 import { CommerceService } from "./services/commerce-service";
 import { HealthService } from "./services/health-service";
 import { OnChainClient } from "./onchain/OnChainClient";
@@ -23,11 +24,17 @@ export function createApiApplication(
 ): ApiApplication {
   const onchain = config.onchain ? new OnChainClient(config.onchain) : null;
   const commerce = new CommerceService(database.repositories, database.mode === "mock", onchain);
-  const authSessions = new AuthSessionService(config.auth);
+  const auth = new AuthService(database.userRepository, config.auth);
+  const authMiddlewareFn = authMiddleware(config.auth);
+
   const router = createRouter(
     new HealthController(new HealthService(database)),
     new CommerceController(commerce),
-    new AuthController(authSessions),
+    new AuthController(auth),
+    authMiddlewareFn,
+    requireRole("admin", "operator", "viewer", "agent"),
+    requireRole("admin", "operator"),
+    requireRole("admin"),
   );
   return {
     fetch: withCors((request) => router.handle(request), config.corsOrigins),
