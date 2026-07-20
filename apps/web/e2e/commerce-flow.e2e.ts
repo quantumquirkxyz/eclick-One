@@ -77,7 +77,7 @@ test.describe("Complete Commerce Flow", () => {
     await page.getByText("Products").first().click();
     await page.waitForURL("**/app/products");
 
-    await expect(page.getByText("Catalog")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Catalog" })).toBeVisible();
     await expect(page.getByText("Academic Laptop")).toBeVisible();
   });
 
