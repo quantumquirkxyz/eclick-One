@@ -22,6 +22,7 @@ export function createRouter(
   router.register("POST", "/api/v1/customers", commerceController.createClient);
   router.register("POST", "/api/v1/orders", commerceController.createOrder);
   router.register("POST", "/api/v1/payments", commerceController.recordPayment);
+  router.register("POST", "/api/v1/compliance/report", commerceController.reportCompliance);
   router.register("PATCH", "/api/v1/orders/:codigo_pedido/status", commerceController.transitionOrderStatus);
   router.register("GET", "/api/v1/orders/:codigo_pedido/onchain", commerceController.orderOnChainStatus);
   return router;

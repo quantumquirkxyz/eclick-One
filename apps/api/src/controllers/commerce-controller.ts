@@ -1,7 +1,7 @@
 import type { OrderStatus, NewClient, NewOrder, NewPayment } from "@eclick-one/domain";
 import { BadRequestError } from "../errors/app-error";
 import { localeFromRequest } from "../i18n";
-import type { CommerceService } from "../services/commerce-service";
+import type { CommerceService, ComplianceReport } from "../services/commerce-service";
 import type { ControllerResult } from "./controller";
 
 const MAX_JSON_BODY_BYTES = 64_000;
@@ -80,6 +80,16 @@ export class CommerceController {
         codigo_pedido: codigoPedido,
         estado: body.estado,
       }),
+    };
+  };
+
+  reportCompliance = async (request: Request): Promise<ControllerResult> => {
+    const body = await readJsonObject<ComplianceReport>(request);
+    if (!body.orderCode || !body.status || !body.message) {
+      throw new BadRequestError("orderCode, status, and message are required.");
+    }
+    return {
+      body: await this.service.reportCompliance(body),
     };
   };
 }
