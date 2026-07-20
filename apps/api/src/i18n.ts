@@ -11,7 +11,7 @@ export function apiText(locale: ApiLocale, key: keyof typeof messages.en): strin
 
 export function translateApiMessage(message: string, locale: ApiLocale): string {
   if (locale === "en") return englishMessageMap[message] ?? message;
-  return spanishMessageMap[message] ?? message;
+  return spanishMessageMap[message] ?? translateSpanishPattern(message);
 }
 
 const messages = {
@@ -64,6 +64,11 @@ const spanishMessageMap: Record<string, string> = {
   "estado is required.": "estado es obligatorio.",
   "codigo_pedido is required.": "codigo_pedido es obligatorio.",
   "Request body must be valid JSON.": "El cuerpo de la solicitud debe ser JSON valido.",
+  "Validation failed.": "La validacion fallo.",
+  "Request body is too large.": "El cuerpo de la solicitud es demasiado grande.",
+  "Request body must be a JSON object.": "El cuerpo de la solicitud debe ser un objeto JSON.",
+  "Content-Type must be application/json.": "Content-Type debe ser application/json.",
+  "Accept-Language must be en or es.": "Accept-Language debe ser en o es.",
   "cantidad must be a positive integer.": "cantidad debe ser un entero positivo.",
   "fecha_entrega cannot be earlier than fecha_pedido.": "fecha_entrega no puede ser anterior a fecha_pedido.",
   "Order status is not allowed.": "El estado del pedido no esta permitido.",
@@ -87,3 +92,19 @@ const englishMessageMap: Record<string, string> = {
   "Token invalido o expirado.": "Invalid or expired token.",
   "El token de actualizacion ha sido revocado.": "Refresh token has been revoked.",
 };
+
+function translateSpanishPattern(message: string): string {
+  const nonEmpty = message.match(/^(.+) must be a non-empty string\.$/);
+  if (nonEmpty) return `${nonEmpty[1]} debe ser texto no vacio.`;
+  const stringValue = message.match(/^(.+) must be a string\.$/);
+  if (stringValue) return `${stringValue[1]} debe ser texto.`;
+  const integer = message.match(/^(.+) must be an integer greater than or equal to (\d+)\.$/);
+  if (integer) return `${integer[1]} debe ser un entero mayor o igual a ${integer[2]}.`;
+  const amount = message.match(/^(.+) must be a positive amount\.$/);
+  if (amount) return `${amount[1]} debe ser un monto positivo.`;
+  const validDate = message.match(/^(.+) must be a valid ISO date\.$/);
+  if (validDate) return `${validDate[1]} debe ser una fecha ISO valida.`;
+  const validOrderCode = message.match(/^(.+) must be a valid order code\.$/);
+  if (validOrderCode) return `${validOrderCode[1]} debe ser un codigo de pedido valido.`;
+  return message;
+}

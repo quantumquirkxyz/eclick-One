@@ -51,12 +51,101 @@ describe("API application", () => {
         headers: {
           ...headers,
           "content-type": "application/json",
-          "content-length": "70001",
+          "content-length": "1000001",
         },
         body: JSON.stringify({ nombre: "A" }),
       }),
     );
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({ error: { code: "BAD_REQUEST" } });
+  });
+
+  test("rejects JSON mutation requests without JSON content type", async () => {
+    const response = await app.fetch(
+      new Request("http://localhost/api/v1/orders", {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "BAD_REQUEST",
+        details: { fields: [{ field: "content-type" }] },
+      },
+    });
+  });
+
+  test("rejects unsupported accept-language values", async () => {
+    const response = await app.fetch(
+      new Request("http://localhost/api/v1/dashboard", {
+        headers: { "accept-language": "fr-FR" },
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "BAD_REQUEST",
+        details: { fields: [{ field: "accept-language" }] },
+      },
+    });
+  });
+
+  test("returns field-level validation errors in Spanish", async () => {
+    const response = await app.fetch(
+      new Request("http://localhost/api/v1/payments", {
+        method: "POST",
+        headers: {
+          "accept-language": "es",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          codigo_pedido: "oops",
+          monto_pagado: -1,
+          fecha_pago: "not-a-date",
+          tipo_tarjeta: "BAD",
+        }),
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "BAD_REQUEST",
+        message: "La validacion fallo.",
+        details: {
+          fields: [
+            { field: "codigo_pedido", message: "codigo_pedido debe ser un codigo de pedido valido." },
+            { field: "monto_pagado", message: "monto_pagado debe ser un monto positivo." },
+            { field: "fecha_pago", message: "fecha_pago debe ser una fecha ISO valida." },
+            { field: "tipo_tarjeta" },
+          ],
+        },
+      },
+    });
+  });
+
+  test("sanitizes customer string input before persistence", async () => {
+    const response = await app.fetch(
+      new Request("http://localhost/api/v1/customers", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          nombre: "  <Ada>  ",
+          apellido: "Lovelace",
+          identificacion: "ID-123",
+          provincia: { codigo: "PA", nombre: "Panama", prefijo: "PA" },
+          tipo_tarjeta: "CR",
+          paz_y_salvo: true,
+          email: "ada@example.com",
+          phone: "+507 6000-0000",
+        }),
+      }),
+    );
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      nombre: "&lt;Ada&gt;",
+      apellido: "Lovelace",
+      email: "ada@example.com",
+    });
   });
 });
