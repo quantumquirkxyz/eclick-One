@@ -132,3 +132,56 @@ export interface ProductPreference {
   cant_solicitudes: number;
   cantidad_total: number;
 }
+
+export interface User {
+  id: number;
+  email: string;
+  nombre: string;
+  apellido: string;
+  passwordHash: string;
+  activo: boolean;
+  createdAt: string;
+}
+
+export interface NewUser {
+  email: string;
+  nombre: string;
+  apellido: string;
+  password: string;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  nombre: string;
+  apellido: string;
+  password: string;
+}
+
+export interface RefreshRequest {
+  refreshToken: string;
+}
+
+export interface RefreshTokenRecord {
+  id: number;
+  userId: number;
+  tokenHash: string;
+  expiresAt: string;
+  revoked: boolean;
+}
+
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  type: "access" | "refresh";
+}

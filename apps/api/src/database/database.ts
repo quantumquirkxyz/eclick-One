@@ -1,16 +1,18 @@
 import {
   MockCommerceRepository,
+  MockUserRepository,
   TursoClient,
   TursoCommerceRepository,
   tursoConfigFromEnv,
 } from "@eclick-one/db";
-import type { CommerceRepositories } from "@eclick-one/domain";
+import type { CommerceRepositories, UserRepository } from "@eclick-one/domain";
 import type { Environment } from "@eclick-one/shared";
 
 export type RepositoryMode = "mock" | "turso";
 
 export interface DatabaseContext {
   repositories: CommerceRepositories;
+  userRepository: UserRepository;
   mode: RepositoryMode;
   ping(): Promise<void>;
   close(): Promise<void>;
@@ -33,6 +35,7 @@ export function createDatabase(env: Environment): DatabaseContext {
 function createMockDatabase(): DatabaseContext {
   return {
     repositories: new MockCommerceRepository(),
+    userRepository: new MockUserRepository(),
     mode: "mock",
     async ping() {},
     async close() {},
@@ -43,6 +46,14 @@ function createTursoDatabase(env: Environment): DatabaseContext {
   const client = new TursoClient(tursoConfigFromEnv(env));
   return {
     repositories: new TursoCommerceRepository(client),
+    userRepository: {
+      findByEmail: async () => null,
+      findById: async () => null,
+      createUser: async () => { throw new Error("User repository not implemented for Turso."); },
+      saveRefreshToken: async () => { throw new Error("User repository not implemented for Turso."); },
+      findRefreshToken: async () => null,
+      revokeRefreshToken: async () => {},
+    },
     mode: "turso",
     ping: () => client.ping(),
     close: () => client.close(),
