@@ -24,6 +24,20 @@ export class BadRequestError extends AppError {
   }
 }
 
+export class UnauthorizedError extends AppError {
+  constructor(message = "Authentication is required.", details?: unknown) {
+    super(message, 401, "UNAUTHORIZED", details);
+    this.name = "UnauthorizedError";
+  }
+}
+
+export class TooManyRequestsError extends AppError {
+  constructor(message = "Too many authentication attempts.", details?: unknown) {
+    super(message, 429, "TOO_MANY_REQUESTS", details);
+    this.name = "TooManyRequestsError";
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message = "Operation not allowed.", details?: unknown) {
     super(message, 409, "CONFLICT", details);
@@ -31,9 +45,23 @@ export class ConflictError extends AppError {
   }
 }
 
+export class UnauthorizedError extends AppError {
+  constructor(message = "Unauthorized.") {
+    super(message, 401, "UNAUTHORIZED");
+    this.name = "UnauthorizedError";
+  }
+}
+
 export class ServiceUnavailableError extends AppError {
   constructor(message = "Service temporarily unavailable.", details?: unknown) {
     super(message, 503, "SERVICE_UNAVAILABLE", details);
     this.name = "ServiceUnavailableError";
+  }
+}
+
+export class UnauthorizedError extends AppError {
+  constructor(message = "Unauthorized.") {
+    super(message, 401, "UNAUTHORIZED");
+    this.name = "UnauthorizedError";
   }
 }

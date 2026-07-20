@@ -508,7 +508,55 @@ Verify deletion:
 git ls-remote --exit-code origin feature/42-short-description 2>/dev/null && echo "branch still exists" || echo "branch deleted"
 ```
 
-If autonomous merge is not configured, stop after merge and report the PR/MR URL with instructions for the human to close the issue and delete the branch.
+#### Post-merge polling for human-merged PRs/MRs
+
+When `autonomous_merge` is `false` and the merge must be performed by a human (e.g., branch protection requires human merge), do not stop. Instead:
+
+1. **Report** the PR/MR URL with a note asking the human to merge.
+2. **Poll** every 30 seconds (up to `ci_poll_timeout_minutes`) to detect when the PR/MR has been merged.
+
+##### GitHub polling
+
+```bash
+gh pr view <pr-id> --repo owner/repo --json state,merged
+```
+
+When `merged` is `true`, proceed to cleanup.
+
+##### GitLab polling
+
+```bash
+glab mr view <mr-id> --project-id <id> --json state,merged
+```
+
+When `state` is `"merged"`, proceed to cleanup.
+
+##### Post-merge cleanup
+
+Once the PR/MR is detected as merged:
+
+1. Close the issue:
+   ```bash
+   gh issue close <issue-id> --repo owner/repo
+   ```
+   Or for GitLab:
+   ```bash
+   glab issue close <iid> --project-id <id>
+   ```
+
+2. Delete the remote branch if the platform did not auto-delete it:
+   ```bash
+   git push origin --delete feature/<id>-<short-description> 2>/dev/null || true
+   ```
+
+3. Update project status to done if the issue belongs to a project board.
+
+4. Verify branch deletion:
+   ```bash
+   git ls-remote --exit-code origin feature/<id>-<short-description> 2>/dev/null && echo "branch still exists" || echo "branch deleted"
+   ```
+
+If the PR/MR is still open after `ci_poll_timeout_minutes`, report BLOCKED with the PR/MR URL and note that the human has not yet merged.
 
 ### 6.8 Failure recovery
 

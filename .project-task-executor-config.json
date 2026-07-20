@@ -1,0 +1,15 @@
+{
+  "autonomous_merge": true,
+  "quality_gates": {
+    "coverage_delta_block_pct": 2.0,
+    "require_changelog_entry": false,
+    "breaking_change_label": "breaking-change",
+    "license_compliance_check": true
+  },
+  "orchestration": {
+    "invoke_reviewer_after_pr": true,
+    "invoke_qa_after_ci_pass": false,
+    "invoke_docs_after_merge": false,
+    "review_timeout_minutes": 15
+  }
+}
