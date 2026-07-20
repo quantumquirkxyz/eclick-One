@@ -1,6 +1,9 @@
 export const CARD_TYPES = ["DB", "CR"] as const satisfies readonly string[];
 export type CardType = (typeof CARD_TYPES)[number];
 
+export const ROLES = ["admin", "operator", "viewer", "agent"] as const satisfies readonly string[];
+export type Role = (typeof ROLES)[number];
+
 export const ORDER_STATUSES = [
   "generado",
   "proceso",
@@ -139,6 +142,7 @@ export interface User {
   nombre: string;
   apellido: string;
   passwordHash: string;
+  role: Role;
   activo: boolean;
   createdAt: string;
 }
@@ -148,6 +152,7 @@ export interface NewUser {
   nombre: string;
   apellido: string;
   password: string;
+  role?: Role;
 }
 
 export interface AuthTokens {

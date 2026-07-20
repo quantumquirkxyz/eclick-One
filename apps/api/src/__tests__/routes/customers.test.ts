@@ -5,7 +5,7 @@ import { createApiApplication } from "../../app";
 const auth = createAuthConfig({ JWT_SECRET: "test-secret-that-must-be-at-least-32-characters-long!!" });
 async function authHeader(): Promise<{ Authorization: string }> {
   const token = await signAccessToken(
-    { sub: "0", email: "test@example.com", type: "access" },
+    { sub: "0", email: "test@example.com", type: "access", role: "admin" },
     auth,
   );
   return { Authorization: `Bearer ${token}` };

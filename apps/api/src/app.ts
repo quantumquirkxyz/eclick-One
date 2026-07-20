@@ -4,7 +4,7 @@ import { CommerceController } from "./controllers/commerce-controller";
 import { HealthController } from "./controllers/health-controller";
 import { createDatabase, type DatabaseContext } from "./database/database";
 import { withCors } from "./http/cors";
-import { authMiddleware } from "./middleware/auth.middleware";
+import { authMiddleware, requireRole } from "./middleware/auth.middleware";
 import { createRouter } from "./routes";
 import { AuthService } from "./services/auth-service";
 import { CommerceService } from "./services/commerce-service";
@@ -32,6 +32,9 @@ export function createApiApplication(
     new CommerceController(commerce),
     new AuthController(auth),
     authMiddlewareFn,
+    requireRole("admin", "operator", "viewer", "agent"),
+    requireRole("admin", "operator"),
+    requireRole("admin"),
   );
   return {
     fetch: withCors((request) => router.handle(request), config.corsOrigins),

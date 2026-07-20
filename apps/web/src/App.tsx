@@ -29,14 +29,14 @@ import { useI18n } from "./i18n";
 export function App() {
   const { t } = useI18n();
   const navItems: readonly NavItem[] = [
-    { path: "/app", label: t("nav.summary"), icon: LayoutDashboard, end: true },
-    { path: "/app/customers", label: t("nav.customers"), icon: Users },
-    { path: "/app/orders", label: t("nav.orders"), icon: ClipboardList },
-    { path: "/app/payments", label: t("nav.payments"), icon: Receipt },
-    { path: "/app/products", label: t("nav.products"), icon: Package },
-    { path: "/app/inventory", label: t("nav.inventory"), icon: Boxes },
-    { path: "/app/reports", label: t("nav.reports"), icon: BarChart3 },
-    { path: "/app/web3", label: t("nav.web3"), icon: Globe },
+    { path: "/app", label: t("nav.summary"), icon: LayoutDashboard, end: true, allowedRoles: ["admin", "operator", "viewer"] },
+    { path: "/app/customers", label: t("nav.customers"), icon: Users, allowedRoles: ["admin", "operator"] },
+    { path: "/app/orders", label: t("nav.orders"), icon: ClipboardList, allowedRoles: ["admin", "operator"] },
+    { path: "/app/payments", label: t("nav.payments"), icon: Receipt, allowedRoles: ["admin", "operator"] },
+    { path: "/app/products", label: t("nav.products"), icon: Package, allowedRoles: ["admin", "operator"] },
+    { path: "/app/inventory", label: t("nav.inventory"), icon: Boxes, allowedRoles: ["admin", "operator"] },
+    { path: "/app/reports", label: t("nav.reports"), icon: BarChart3, allowedRoles: ["admin", "operator", "viewer"] },
+    { path: "/app/web3", label: t("nav.web3"), icon: Globe, allowedRoles: ["admin", "operator", "viewer"] },
   ];
 
   return (

@@ -46,14 +46,14 @@ export class AuthController {
     return { status: 204, body: null };
   };
 
-  verify = async (request: AuthenticatedRequest): Promise<ControllerResult<{ user: { id: number; email: string; nombre: string; apellido: string } }>> => {
+  verify = async (request: AuthenticatedRequest): Promise<ControllerResult<{ user: { id: number; email: string; nombre: string; apellido: string; role: string } }>> => {
     const user = request.user;
     if (!user) throw new BadRequestError("Not authenticated.");
     const fullUser = await this.service.validateUser(user.id);
     if (!fullUser) throw new BadRequestError("User not found.");
     return {
       body: {
-        user: { id: fullUser.id, email: fullUser.email, nombre: fullUser.nombre, apellido: fullUser.apellido },
+        user: { id: fullUser.id, email: fullUser.email, nombre: fullUser.nombre, apellido: fullUser.apellido, role: fullUser.role },
       },
     };
   };

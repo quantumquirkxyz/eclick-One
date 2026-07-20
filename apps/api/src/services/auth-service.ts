@@ -75,7 +75,7 @@ export class AuthService {
   }
 
   private async issueTokens(user: User): Promise<AuthTokens> {
-    const tokens = await sharedIssueTokens(user.id, user.email, this.auth);
+    const tokens = await sharedIssueTokens(user.id, user.email, user.role, this.auth);
     const tokenHash = await hashToken(tokens.refreshToken);
     await this.users.saveRefreshToken(user.id, tokenHash, new Date(Date.now() + this.auth.refreshTokenTtlSeconds * 1000).toISOString());
     return tokens;

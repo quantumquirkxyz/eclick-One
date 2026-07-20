@@ -1,9 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
 
+export type Role = "admin" | "operator" | "viewer" | "agent";
+
 export interface JwtPayload {
   sub: string;
   email: string;
   type: "access" | "refresh";
+  role: Role;
   [key: string]: unknown;
 }
 
@@ -52,10 +55,11 @@ export async function verifyToken(token: string, config: AuthConfig): Promise<Jw
   return payload as unknown as JwtPayload;
 }
 
-export async function issueTokens(userId: number, email: string, config: AuthConfig): Promise<TokenPair> {
+export async function issueTokens(userId: number, email: string, role: Role, config: AuthConfig): Promise<TokenPair> {
+  const payload = { sub: String(userId), email, role };
   const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken({ sub: String(userId), email, type: "access" }, config),
-    signRefreshToken({ sub: String(userId), email, type: "refresh" }, config),
+    signAccessToken({ ...payload, type: "access" }, config),
+    signRefreshToken({ ...payload, type: "refresh" }, config),
   ]);
   return { accessToken, refreshToken, expiresIn: config.accessTokenTtlSeconds };
 }

@@ -9,6 +9,9 @@ export function createRouter(
   commerceController: CommerceController,
   authController: AuthController,
   authMiddleware: Middleware,
+  viewerOrAbove: Middleware,
+  operatorOrAbove: Middleware,
+  adminOnly: Middleware,
 ): Router {
   const router = new Router();
   router.register("GET", "/api/v1/health", healthController.check);
@@ -17,21 +20,21 @@ export function createRouter(
   router.register("POST", "/api/v1/auth/refresh", authController.refresh);
   router.register("POST", "/api/v1/auth/logout", authController.logout);
   router.register("GET", "/api/v1/auth/verify", authController.verify, [authMiddleware]);
-  router.register("GET", "/api/v1/dashboard", commerceController.dashboard, [authMiddleware]);
-  router.register("GET", "/api/v1/provinces", commerceController.provinces, [authMiddleware]);
-  router.register("GET", "/api/v1/customers", commerceController.clients, [authMiddleware]);
-  router.register("GET", "/api/v1/clientes", commerceController.clients, [authMiddleware]);
-  router.register("GET", "/api/v1/customers/:codigo_cliente/preference", commerceController.clientPreference, [authMiddleware]);
-  router.register("GET", "/api/v1/products", commerceController.products, [authMiddleware]);
-  router.register("GET", "/api/v1/inventory", commerceController.inventory, [authMiddleware]);
-  router.register("GET", "/api/v1/orders", commerceController.orders, [authMiddleware]);
-  router.register("GET", "/api/v1/orders/current", commerceController.currentOrders, [authMiddleware]);
-  router.register("GET", "/api/v1/payments", commerceController.payments, [authMiddleware]);
-  router.register("GET", "/api/v1/reports", commerceController.reports, [authMiddleware]);
-  router.register("POST", "/api/v1/customers", commerceController.createClient, [authMiddleware]);
-  router.register("POST", "/api/v1/orders", commerceController.createOrder, [authMiddleware]);
-  router.register("POST", "/api/v1/payments", commerceController.recordPayment, [authMiddleware]);
-  router.register("PATCH", "/api/v1/orders/:codigo_pedido/status", commerceController.transitionOrderStatus, [authMiddleware]);
-  router.register("GET", "/api/v1/orders/:codigo_pedido/onchain", commerceController.orderOnChainStatus, [authMiddleware]);
+  router.register("GET", "/api/v1/dashboard", commerceController.dashboard, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/provinces", commerceController.provinces, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/customers", commerceController.clients, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/clientes", commerceController.clients, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/customers/:codigo_cliente/preference", commerceController.clientPreference, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/products", commerceController.products, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/inventory", commerceController.inventory, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/orders", commerceController.orders, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/orders/current", commerceController.currentOrders, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/payments", commerceController.payments, [authMiddleware, viewerOrAbove]);
+  router.register("GET", "/api/v1/reports", commerceController.reports, [authMiddleware, viewerOrAbove]);
+  router.register("POST", "/api/v1/customers", commerceController.createClient, [authMiddleware, operatorOrAbove]);
+  router.register("POST", "/api/v1/orders", commerceController.createOrder, [authMiddleware, operatorOrAbove]);
+  router.register("POST", "/api/v1/payments", commerceController.recordPayment, [authMiddleware, operatorOrAbove]);
+  router.register("PATCH", "/api/v1/orders/:codigo_pedido/status", commerceController.transitionOrderStatus, [authMiddleware, operatorOrAbove]);
+  router.register("GET", "/api/v1/orders/:codigo_pedido/onchain", commerceController.orderOnChainStatus, [authMiddleware, viewerOrAbove]);
   return router;
 }

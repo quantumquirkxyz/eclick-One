@@ -27,6 +27,7 @@ export interface StoredUser {
   email: string;
   nombre: string;
   apellido: string;
+  role: "admin" | "operator" | "viewer" | "agent";
 }
 
 export const authApi = {
