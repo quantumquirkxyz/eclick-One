@@ -62,6 +62,23 @@ describe("auth service", () => {
     expect(tokens.refreshToken).toBeTruthy();
   });
 
+  test("issues distinct refresh tokens for successive sessions", async () => {
+    const service = createService();
+    const registered = await service.register({
+      email: "user@example.com",
+      nombre: "Ana",
+      apellido: "Morales",
+      password: "secure-password-123",
+    });
+
+    const loggedIn = await service.login({
+      email: "user@example.com",
+      password: "secure-password-123",
+    });
+
+    expect(loggedIn.refreshToken).not.toBe(registered.refreshToken);
+  });
+
   test("rejects login with invalid password", async () => {
     const service = createService();
     await service.register({
