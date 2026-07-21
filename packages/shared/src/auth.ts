@@ -56,7 +56,7 @@ export async function verifyToken(token: string, config: AuthConfig): Promise<Jw
 }
 
 export async function issueTokens(userId: number, email: string, role: Role, config: AuthConfig): Promise<TokenPair> {
-  const payload = { sub: String(userId), email, role };
+  const payload = { sub: String(userId), email, role, jti: crypto.randomUUID() };
   const [accessToken, refreshToken] = await Promise.all([
     signAccessToken({ ...payload, type: "access" }, config),
     signRefreshToken({ ...payload, type: "refresh" }, config),

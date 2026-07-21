@@ -7,3 +7,4 @@ export * from "./repositories/mock-user-repository";
 export * from "./repositories/sql-commerce-repository";
 export * from "./repositories/turso-commerce-repository";
 export * from "./repositories/mock-user-repository";
+export * from "./repositories/turso-user-repository";
