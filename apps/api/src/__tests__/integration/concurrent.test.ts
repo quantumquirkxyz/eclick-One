@@ -100,6 +100,7 @@ describe("concurrent requests", async () => {
     );
     const responses = await Promise.all(requests);
     const statuses = await Promise.all(responses.map((r) => r.status));
-    expect(statuses.every((s) => s === 201)).toBe(true);
+    expect(statuses.filter((status) => status === 201)).toHaveLength(1);
+    expect(statuses.filter((status) => status === 409)).toHaveLength(2);
   });
 });

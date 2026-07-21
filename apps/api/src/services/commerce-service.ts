@@ -30,6 +30,14 @@ import {
 import { apiText, type ApiLocale } from "../i18n";
 import type { OnChainClient } from "../onchain/OnChainClient";
 
+export interface ComplianceReport {
+  timestamp: string;
+  orderCode: string;
+  status: "compliant" | "violation" | "warning";
+  message: string;
+  details: Record<string, unknown>;
+}
+
 export interface DashboardSnapshot {
   readonly kind: "dashboard";
   synthetic: boolean;
@@ -367,6 +375,14 @@ export class CommerceService {
         { key: "payments", title: apiText(locale, "reportPayments"), rows: payments },
       ],
     };
+  }
+
+  async reportCompliance(report: ComplianceReport): Promise<{ accepted: boolean }> {
+    if (!report.timestamp || !report.orderCode || !report.status || !report.message) {
+      return { accepted: false };
+    }
+    console.log(`[Compliance] ${report.status}: ${report.orderCode} - ${report.message}`);
+    return { accepted: true };
   }
 
   private async ensureClient(code: number): Promise<Client> {

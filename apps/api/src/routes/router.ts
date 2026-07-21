@@ -2,6 +2,7 @@ import { AppError } from "../errors/app-error";
 import type { Controller } from "../controllers/controller";
 import { assertAcceptLanguage } from "../http/validation";
 import { apiText, localeFromRequest, translateApiMessage, type ApiLocale } from "../i18n";
+import { DomainRuleError } from "@eclick-one/domain";
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type Middleware = (request: Request) => Promise<Response | undefined>;
@@ -79,6 +80,18 @@ function errorResponse(error: unknown, locale: ApiLocale = "en"): Response {
         },
       },
       error.status,
+    );
+  }
+
+  if (error instanceof DomainRuleError) {
+    return jsonResponse(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: translateApiMessage(error.message, locale),
+        },
+      },
+      400,
     );
   }
 
