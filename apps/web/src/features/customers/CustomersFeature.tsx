@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Search, Users } from "lucide-react";
 import { commerceApi, validateClient } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
+import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
@@ -26,7 +28,7 @@ export function CustomersFeature() {
   const [form, setForm] = useState<NewCommerceClient>(emptyForm);
   const [notice, setNotice] = useState<string | null>(null);
   const [preferenceCode, setPreferenceCode] = useState("");
-  const [preference, setPreference] = useState<string>(t("customers.noLookup"));
+  const [preference, setPreference] = useState<string | null>(null);
 
   const load = async (): Promise<void> => {
     setState({ status: "loading" });
@@ -50,9 +52,6 @@ export function CustomersFeature() {
   }
   if (state.status === "error") {
     return <ResourceState status="error" title={t("customers.title")} error={state.message} onRetry={load} />;
-  }
-  if (state.clients.length === 0) {
-    return <ResourceState status="empty" title={t("customers.title")} description={t("customers.empty")} onRetry={load} />;
   }
 
   const createClient = async (): Promise<void> => {
@@ -129,21 +128,38 @@ export function CustomersFeature() {
             <Field label={t("customers.customerCode")} value={preferenceCode} onChange={setPreferenceCode} />
             <button className="secondary-button" onClick={() => void searchPreference()}>{t("customers.lookup")}</button>
           </div>
-          <p className="inline-status">{preference}</p>
+          {preference ? (
+            <p className="inline-status">{preference}</p>
+          ) : (
+            <EmptyState
+              icon={Search}
+              title={t("customers.preferenceEmptyTitle")}
+              description={t("customers.preferenceEmptyDescription")}
+              compact
+            />
+          )}
         </section>
       </div>
       <section className="panel">
         <h3>{t("customers.list")}</h3>
-        <DataTable
-          columns={[t("customers.code"), t("common.customer"), t("customers.province"), t("customers.card"), t("customers.goodStanding")]}
-          rows={state.clients.map((client) => [
-            String(client.codigo_cliente),
-            `${client.nombre} ${client.apellido}`,
-            provinceName(client.provincia.codigo, client.provincia.nombre),
-            client.tipo_tarjeta,
-            client.paz_y_salvo ? t("common.yes") : t("common.no"),
-          ])}
-        />
+        {state.clients.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title={t("customers.listEmptyTitle")}
+            description={t("customers.listEmptyDescription")}
+          />
+        ) : (
+          <DataTable
+            columns={[t("customers.code"), t("common.customer"), t("customers.province"), t("customers.card"), t("customers.goodStanding")]}
+            rows={state.clients.map((client) => [
+              String(client.codigo_cliente),
+              `${client.nombre} ${client.apellido}`,
+              provinceName(client.provincia.codigo, client.provincia.nombre),
+              client.tipo_tarjeta,
+              client.paz_y_salvo ? t("common.yes") : t("common.no"),
+            ])}
+          />
+        )}
       </section>
     </section>
   );

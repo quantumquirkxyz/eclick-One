@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { ClipboardList, CreditCard, Wallet } from "lucide-react";
 import { commerceApi, validatePayment } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
+import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
@@ -55,7 +57,6 @@ export function PaymentsFeature() {
 
   if (state.status === "loading") return <PaymentsLoadingSkeleton title={t("payments.title")} description={t("payments.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("payments.title")} error={state.message} onRetry={load} />;
-  if (state.payments.length === 0) return <ResourceState status="empty" title={t("payments.title")} description={t("payments.empty")} onRetry={load} />;
 
   const recordPayment = async (): Promise<void> => {
     try {
@@ -70,6 +71,8 @@ export function PaymentsFeature() {
     }
   };
 
+  const payableOrders = state.orders.filter((order) => order.estado === "generado" || order.estado === "proceso");
+
   return (
     <section>
       <div className="page-title">
@@ -82,69 +85,96 @@ export function PaymentsFeature() {
       <div className="grid two">
         <section className="panel">
           <h3>{t("payments.register")}</h3>
-          <div className="form-grid">
-            <Select
-              label={t("common.order")}
-              value={form.codigo_pedido}
-              options={state.orders.map((order) => ({ value: order.codigo_pedido, label: `${order.codigo_pedido} · ${status(order.estado)}` }))}
-              onChange={(value) => {
-                const order = state.orders.find((item) => item.codigo_pedido === value);
-                setForm({
-                  ...form,
-                  codigo_pedido: value,
-                  monto_pagado: order?.monto ?? form.monto_pagado,
-                });
-              }}
+          {state.orders.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              title={t("payments.registerEmptyTitle")}
+              description={t("payments.registerEmptyDescription")}
+              compact
             />
-            <Field label={t("common.amount")} value={String(form.monto_pagado)} onChange={(value) => setForm({ ...form, monto_pagado: Number(value) })} type="number" />
-            <Field label={t("payments.paymentDate")} value={form.fecha_pago} onChange={(value) => setForm({ ...form, fecha_pago: value })} type="datetime-local" />
-            <Select
-              label={t("payments.cardType")}
-              value={form.tipo_tarjeta}
-              options={[{ value: "DB", label: "DB" }, { value: "CR", label: "CR" }]}
-              onChange={(value) => setForm({ ...form, tipo_tarjeta: value as NewCommercePayment["tipo_tarjeta"] })}
-            />
-            <Field
-              label={t("common.reference")}
-              value={form.referencia ?? ""}
-              onChange={(value) =>
-                setForm(
-                  value.trim().length
-                    ? { ...form, referencia: value }
-                    : (() => {
-                        const next = { ...form };
-                        delete next.referencia;
-                        return next;
-                      })(),
-                )
-              }
-            />
-          </div>
-          <button className="primary-button" onClick={() => void recordPayment()}>{t("payments.register")}</button>
+          ) : (
+            <>
+              <div className="form-grid">
+                <Select
+                  label={t("common.order")}
+                  value={form.codigo_pedido}
+                  options={state.orders.map((order) => ({ value: order.codigo_pedido, label: `${order.codigo_pedido} · ${status(order.estado)}` }))}
+                  onChange={(value) => {
+                    const order = state.orders.find((item) => item.codigo_pedido === value);
+                    setForm({
+                      ...form,
+                      codigo_pedido: value,
+                      monto_pagado: order?.monto ?? form.monto_pagado,
+                    });
+                  }}
+                />
+                <Field label={t("common.amount")} value={String(form.monto_pagado)} onChange={(value) => setForm({ ...form, monto_pagado: Number(value) })} type="number" />
+                <Field label={t("payments.paymentDate")} value={form.fecha_pago} onChange={(value) => setForm({ ...form, fecha_pago: value })} type="datetime-local" />
+                <Select
+                  label={t("payments.cardType")}
+                  value={form.tipo_tarjeta}
+                  options={[{ value: "DB", label: "DB" }, { value: "CR", label: "CR" }]}
+                  onChange={(value) => setForm({ ...form, tipo_tarjeta: value as NewCommercePayment["tipo_tarjeta"] })}
+                />
+                <Field
+                  label={t("common.reference")}
+                  value={form.referencia ?? ""}
+                  onChange={(value) =>
+                    setForm(
+                      value.trim().length
+                        ? { ...form, referencia: value }
+                        : (() => {
+                            const next = { ...form };
+                            delete next.referencia;
+                            return next;
+                          })(),
+                    )
+                  }
+                />
+              </div>
+              <button className="primary-button" onClick={() => void recordPayment()} disabled={!selectedOrder}>{t("payments.register")}</button>
+            </>
+          )}
         </section>
         <section className="panel">
           <h3>{t("payments.currentOrders")}</h3>
-          <DataTable
-            columns={[t("common.order"), t("common.status"), t("common.amount")]}
-            rows={state.orders
-              .filter((order) => order.estado === "generado" || order.estado === "proceso")
-              .map((order) => [order.codigo_pedido, status(order.estado), money(order.monto)])}
-          />
+          {payableOrders.length === 0 ? (
+            <EmptyState
+              icon={ClipboardList}
+              title={t("payments.currentEmptyTitle")}
+              description={t("payments.currentEmptyDescription")}
+              compact
+            />
+          ) : (
+            <DataTable
+              columns={[t("common.order"), t("common.status"), t("common.amount")]}
+              rows={payableOrders.map((order) => [order.codigo_pedido, status(order.estado), money(order.monto)])}
+            />
+          )}
         </section>
       </div>
       <section className="panel">
         <h3>{t("payments.history")}</h3>
-        <DataTable
-          columns={["ID", t("common.order"), t("common.amount"), t("customers.card"), t("common.date"), t("common.reference")]}
-          rows={state.payments.map((payment) => [
-            String(payment.id_pago),
-            payment.codigo_pedido,
-            money(payment.monto_pagado),
-            payment.tipo_tarjeta,
-            payment.fecha_pago,
-            payment.referencia ?? t("payments.noReference"),
-          ])}
-        />
+        {state.payments.length === 0 ? (
+          <EmptyState
+            icon={CreditCard}
+            title={t("payments.historyEmptyTitle")}
+            description={t("payments.historyEmptyDescription")}
+            compact
+          />
+        ) : (
+          <DataTable
+            columns={["ID", t("common.order"), t("common.amount"), t("customers.card"), t("common.date"), t("common.reference")]}
+            rows={state.payments.map((payment) => [
+              String(payment.id_pago),
+              payment.codigo_pedido,
+              money(payment.monto_pagado),
+              payment.tipo_tarjeta,
+              payment.fecha_pago,
+              payment.referencia ?? t("payments.noReference"),
+            ])}
+          />
+        )}
       </section>
     </section>
   );

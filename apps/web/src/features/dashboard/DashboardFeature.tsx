@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { LayoutDashboard } from "lucide-react";
 import { commerceApi, type DashboardSnapshot } from "../../services/api/commerce";
 import { DataTable } from "../../components/tables/DataTable";
 import { ResourceState } from "../../components/layout/ResourceState";
+import { EmptyState } from "../../components/EmptyState";
 import { StatusChart } from "../../components/charts/StatusChart";
 import { AgentActivityPanel } from "../../components/agent/AgentActivityPanel";
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonPage, SkeletonPageTitle, SkeletonTable, SkeletonText } from "../../components/Skeleton";
@@ -48,6 +50,17 @@ export function DashboardFeature() {
           <p>{data.notice}</p>
         </div>
       </div>
+      {!nonEmpty ? (
+        <section className="panel">
+          <EmptyState
+            icon={LayoutDashboard}
+            title={t("dashboard.emptyTitle")}
+            description={t("dashboard.emptyDescription")}
+            actionLabel={t("dashboard.emptyAction")}
+            onAction={load}
+          />
+        </section>
+      ) : null}
       <div className="metrics">
         <Metric label={t("nav.customers")} value={String(data.metrics.clients)} note={t("dashboard.activeBase")} />
         <Metric label={t("dashboard.currentOrders")} value={String(data.metrics.currentOrders)} note={t("dashboard.generatedOrProcess")} />
@@ -127,7 +140,6 @@ export function DashboardFeature() {
           ])}
         />
       </section>
-      {!nonEmpty ? <ResourceState status="empty" title={t("nav.summary")} description={t("dashboard.empty")} onRetry={load} /> : null}
     </section>
   );
 }

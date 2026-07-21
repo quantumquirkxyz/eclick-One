@@ -24,6 +24,14 @@ code { font-family: var(--font-mono); }
 .inline-form { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
 .inline-status { margin-top: 12px; color: var(--color-accent); font-weight: 700; }
 .resource-state { display: grid; gap: 12px; }
+.empty-state { display: grid; justify-items: start; gap: 14px; border: 1px dashed #cbd5e1; border-radius: 10px; background: linear-gradient(180deg, #f8fbfc 0%, #fff 100%); padding: 22px; }
+.empty-state-compact { gap: 12px; padding: 18px; }
+.empty-state-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: #e0f2fe; color: #0369a1; }
+.empty-state-compact .empty-state-icon { width: 44px; height: 44px; border-radius: 12px; }
+.empty-state-copy { display: grid; gap: 6px; }
+.empty-state-copy h4 { font-size: 15px; color: #172433; }
+.empty-state-copy p { color: #64748b; font-size: 13px; line-height: 1.55; }
+.empty-state-action { justify-self: start; }
 .switch-row { display: flex; align-items: center; gap: 8px; align-self: end; padding-top: 20px; color: #334155; font-size: 14px; }
 @media (max-width: 560px) { .panel .form-grid,.inline-form { grid-template-columns: 1fr; } }
 

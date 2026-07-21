@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { BarChart3 } from "lucide-react";
 import { commerceApi } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
+import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonChart, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
@@ -30,7 +32,6 @@ export function ReportsFeature() {
 
   if (state.status === "loading") return <ReportsLoadingSkeleton title={t("reports.title")} description={t("reports.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("reports.title")} error={state.message} onRetry={load} />;
-  if (state.sections.length === 0) return <ResourceState status="empty" title={t("reports.title")} description={t("reports.empty")} onRetry={load} />;
 
   return (
     <section>
@@ -41,12 +42,24 @@ export function ReportsFeature() {
         </div>
       </div>
       <div className="demo-note">{t(state.synthetic ? "reports.generatedMock" : "reports.generatedSql", { date: date(state.generatedAt) })}</div>
-      {state.sections.map((section) => (
-        <section className="panel" key={section.key}>
-          <h3>{section.title}</h3>
-          <DataTable columns={[t("reports.detail")]} rows={formatRows(section.rows)} />
+      {state.sections.length === 0 ? (
+        <section className="panel">
+          <EmptyState
+            icon={BarChart3}
+            title={t("reports.emptyTitle")}
+            description={t("reports.emptyDescription")}
+            actionLabel={t("common.reloadData")}
+            onAction={load}
+          />
         </section>
-      ))}
+      ) : (
+        state.sections.map((section) => (
+          <section className="panel" key={section.key}>
+            <h3>{section.title}</h3>
+            <DataTable columns={[t("reports.detail")]} rows={formatRows(section.rows)} />
+          </section>
+        ))
+      )}
     </section>
   );
 }
