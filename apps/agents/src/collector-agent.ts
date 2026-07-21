@@ -7,6 +7,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
+import { createAuthConfig } from "@eclick-one/shared";
 import { agentActivity } from "./agent-activity";
 import { startAgentServer } from "./agent-http";
 import { ORDER_MANAGER_ABI, OrderStatus, ORDER_STATUS_LABELS } from "./contract-abi";
@@ -55,6 +56,7 @@ const publicClient = createPublicClient({
   chain: foundry,
   transport: http(RPC_URL),
 });
+const agentAuth = createAuthConfig(Bun.env);
 
 const processedLogs = new Set<string>();
 const persistence = AgentPersistence.getInstance();
@@ -320,6 +322,6 @@ startAgentServer(AGENT_PORT, {
   name: "collector",
   wallet: account.address,
   description: "Monitors PaymentRecorded events and transitions orders to delivered",
-});
+}, agentAuth);
 
 pollEvents();

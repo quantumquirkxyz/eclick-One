@@ -1,3 +1,4 @@
+import { verifyToken, type AuthConfig } from "@eclick-one/shared";
 import { agentActivity } from "./agent-activity";
 
 export interface AgentInfo {
@@ -6,8 +7,39 @@ export interface AgentInfo {
   description: string;
 }
 
-export function startAgentServer(port: number, info: AgentInfo): void {
-  Bun.serve({
+interface AgentHttpErrorBody {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+function errorResponse(status: number, code: string, message: string): Response {
+  return Response.json(
+    { error: { code, message } } satisfies AgentHttpErrorBody,
+    {
+      status,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    },
+  );
+}
+
+async function authorizeAgentRequest(request: Request, auth: AuthConfig): Promise<Response | null> {
+  const header = request.headers.get("authorization");
+  if (!header?.startsWith("Bearer ")) {
+    return errorResponse(401, "UNAUTHORIZED", "Missing or invalid authorization token.");
+  }
+
+  try {
+    await verifyToken(header.slice("Bearer ".length).trim(), auth);
+    return null;
+  } catch {
+    return errorResponse(401, "UNAUTHORIZED", "Invalid or expired token.");
+  }
+}
+
+export function startAgentServer(port: number, info: AgentInfo, auth: AuthConfig) {
+  const server = Bun.serve({
     port,
     async fetch(request) {
       const url = new URL(request.url);
@@ -21,6 +53,11 @@ export function startAgentServer(port: number, info: AgentInfo): void {
         }), {
           headers: { "Content-Type": "application/json" },
         });
+      }
+
+      const authError = await authorizeAgentRequest(request, auth);
+      if (authError) {
+        return authError;
       }
 
       if (url.pathname === "/activity") {
@@ -61,4 +98,5 @@ export function startAgentServer(port: number, info: AgentInfo): void {
     },
   });
   agentActivity.log("info", `Agent HTTP server listening on :${port}`);
+  return server;
 }

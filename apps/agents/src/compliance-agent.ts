@@ -1,5 +1,6 @@
 import { createPublicClient, http, type Address, type Hash } from "viem";
 import { foundry } from "viem/chains";
+import { createAuthConfig } from "@eclick-one/shared";
 import { agentActivity } from "./agent-activity";
 import { startAgentServer } from "./agent-http";
 import { ORDER_MANAGER_ABI, OrderStatus, ORDER_STATUS_LABELS } from "./contract-abi";
@@ -37,6 +38,7 @@ const publicClient = createPublicClient({
   chain: foundry,
   transport: http(RPC_URL),
 });
+const agentAuth = createAuthConfig(Bun.env);
 
 type LogEntry = {
   blockNumber: bigint;
@@ -343,6 +345,6 @@ startAgentServer(AGENT_PORT, {
   name: "compliance",
   wallet: "read-only",
   description: "Monitors order state transitions and validates them against business rules",
-});
+}, agentAuth);
 
 pollEvents();
