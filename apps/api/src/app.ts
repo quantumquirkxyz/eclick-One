@@ -1,6 +1,7 @@
 import type { Environment } from "@eclick-one/shared";
 import { AuthController } from "./controllers/auth-controller";
 import { CommerceController } from "./controllers/commerce-controller";
+import { DocsController } from "./controllers/docs-controller";
 import { HealthController } from "./controllers/health-controller";
 import { createDatabase, type DatabaseContext } from "./database/database";
 import { withCors } from "./http/cors";
@@ -29,6 +30,7 @@ export function createApiApplication(
 
   const router = createRouter(
     new HealthController(new HealthService(database)),
+    new DocsController(),
     new CommerceController(commerce),
     new AuthController(auth),
     authMiddlewareFn,

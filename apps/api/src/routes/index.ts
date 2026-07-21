@@ -1,11 +1,13 @@
 import type { AuthController } from "../controllers/auth-controller";
 import type { CommerceController } from "../controllers/commerce-controller";
+import type { DocsController } from "../controllers/docs-controller";
 import type { HealthController } from "../controllers/health-controller";
 import type { Middleware } from "./router";
 import { Router } from "./router";
 
 export function createRouter(
   healthController: HealthController,
+  docsController: DocsController,
   commerceController: CommerceController,
   authController: AuthController,
   authMiddleware: Middleware,
@@ -15,6 +17,9 @@ export function createRouter(
 ): Router {
   const router = new Router();
   router.register("GET", "/api/v1/health", healthController.check);
+  router.register("GET", "/api/v1/openapi.yaml", docsController.spec);
+  router.register("GET", "/api/v1/docs", docsController.redirect);
+  router.register("GET", "/docs", docsController.ui);
   router.register("POST", "/api/v1/auth/register", authController.register);
   router.register("POST", "/api/v1/auth/login", authController.login);
   router.register("POST", "/api/v1/auth/refresh", authController.refresh);
