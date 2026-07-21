@@ -41,7 +41,7 @@ test.describe("Complete Commerce Flow", () => {
 
     const orderLabel = `e2e-order-${Date.now()}`;
     await page.getByLabel("Address").fill("Avenida Central, Panama");
-    await page.getByLabel("Label").fill(orderLabel);
+    await page.getByRole("textbox", { name: /^Label$/ }).fill(orderLabel);
     await page.getByRole("button", { name: "Create order" }).click();
     await expect(page.getByText("Order created in mock mode.")).toBeVisible();
 
