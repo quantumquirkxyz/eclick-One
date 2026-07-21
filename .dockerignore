@@ -1,0 +1,23 @@
+.git
+.github
+.agents
+.context
+node_modules
+**/node_modules
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+apps/contracts/cache
+apps/contracts/out
+apps/contracts/broadcast
+.env
+.env.*
+!.env.example
+.skill-state.json
+.execution-log.json
+skill-execution.log
+*.log
+Dockerfile
+docker-compose*.yml
+eclick One - Logo.png

@@ -117,6 +117,23 @@ bun run dev
 # Web: http://localhost:5173 | API: http://localhost:3000
 ```
 
+### Docker Compose (stack completo)
+
+```bash
+cp .env.example .env
+docker compose up --build
+# Web: http://localhost | API: http://localhost:3000 | Anvil: http://localhost:8545
+```
+
+El compose levanta Anvil, despliega los contratos locales, inicia la API, sirve la SPA compilada con Nginx y ejecuta los agentes Collector y Compliance. Por defecto usa `REPOSITORY_MODE=mock`; para Turso, exporta `REPOSITORY_MODE=turso`, `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` antes de ejecutar `docker compose up --build`.
+
+Los servicios `api`, `collector-agent` y `compliance-agent` montan sus fuentes en modo solo lectura y corren con `bun --watch`, lo que permite iterar durante desarrollo sin reconstruir la imagen en cada cambio. Para reiniciar desde cero:
+
+```bash
+docker compose down --remove-orphans
+docker compose up --build
+```
+
 ### Completo (con Web3 + AI Agents)
 
 ```bash

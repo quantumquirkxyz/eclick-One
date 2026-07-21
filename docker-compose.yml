@@ -1,0 +1,149 @@
+services:
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:latest
+    entrypoint: ["anvil"]
+    command: ["--host", "0.0.0.0"]
+    ports:
+      - "8545:8545"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "cast block-number --rpc-url http://127.0.0.1:8545 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    cpus: 0.50
+    mem_limit: 512m
+
+  contracts-deploy:
+    image: ghcr.io/foundry-rs/foundry:latest
+    working_dir: /workspace/apps/contracts
+    environment:
+      DEPLOYER_PRIVATE_KEY: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+    volumes:
+      - .:/workspace
+    depends_on:
+      anvil:
+        condition: service_healthy
+    entrypoint: ["sh", "-lc"]
+    command:
+      - >
+        forge script script/Deploy.s.sol --broadcast --rpc-url http://anvil:8545
+        --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+        && cast send 0x5FbDB2315678afecb367f032d93F642f64180aa3
+        "addCollector(address)" 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+        --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+        --rpc-url http://anvil:8545
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ["bun", "--watch", "apps/api/src/server.ts"]
+    environment:
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: 3000
+      REPOSITORY_MODE: ${REPOSITORY_MODE:-mock}
+      JWT_SECRET: ${JWT_SECRET:-docker-compose-local-secret-at-least-32-characters}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-900}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-604800}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://web:8080}
+      TURSO_DATABASE_URL: ${TURSO_DATABASE_URL:-}
+      TURSO_AUTH_TOKEN: ${TURSO_AUTH_TOKEN:-}
+      ONCHAIN_RPC_URL: http://anvil:8545
+      ONCHAIN_CHAIN_ID: 31337
+      ONCHAIN_ORDER_MANAGER_ADDRESS: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+      ONCHAIN_PAYMENT_LEDGER_ADDRESS: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+      ONCHAIN_COLLECTOR_PRIVATE_KEY: 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/api/src:/app/apps/api/src:ro
+      - ./packages/domain/src:/app/packages/domain/src:ro
+      - ./packages/db/src:/app/packages/db/src:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+    depends_on:
+      anvil:
+        condition: service_healthy
+      contracts-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bun -e \"const r = await fetch('http://127.0.0.1:3000/api/v1/health'); if (!r.ok) process.exit(1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    cpus: 0.75
+    mem_limit: 768m
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+    ports:
+      - "80:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    cpus: 0.50
+    mem_limit: 256m
+
+  collector-agent:
+    build:
+      context: .
+      dockerfile: apps/agents/Dockerfile
+    command: ["bun", "--watch", "apps/agents/src/collector-agent.ts"]
+    environment:
+      AGENT_PORT: 3100
+      AGENT_HEALTH_PORT: 3100
+      AGENT_API_BASE_URL: http://api:3000
+      AGENT_POLL_INTERVAL: ${AGENT_POLL_INTERVAL:-2000}
+      ONCHAIN_RPC_URL: http://anvil:8545
+      ONCHAIN_ORDER_MANAGER_ADDRESS: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+      ONCHAIN_COLLECTOR_PRIVATE_KEY: 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./apps/agents/src:/app/apps/agents/src:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      contracts-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    cpus: 0.50
+    mem_limit: 512m
+
+  compliance-agent:
+    build:
+      context: .
+      dockerfile: apps/agents/Dockerfile
+    command: ["bun", "--watch", "apps/agents/src/compliance-agent.ts"]
+    environment:
+      COMPLIANCE_AGENT_PORT: 3101
+      AGENT_HEALTH_PORT: 3101
+      AGENT_API_BASE_URL: http://api:3000
+      AGENT_POLL_INTERVAL: ${AGENT_POLL_INTERVAL:-2000}
+      ONCHAIN_RPC_URL: http://anvil:8545
+      ONCHAIN_ORDER_MANAGER_ADDRESS: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+    ports:
+      - "3101:3101"
+    volumes:
+      - ./apps/agents/src:/app/apps/agents/src:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      contracts-deploy:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    cpus: 0.50
+    mem_limit: 512m
