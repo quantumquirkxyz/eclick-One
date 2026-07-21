@@ -12,14 +12,18 @@ function tokens(accessToken: string, refreshToken: string, accessExpiresInMs: nu
   };
 }
 
+function expiredRefreshableSession(accessToken: string, refreshToken = "refresh-token"): AuthTokenPair {
+  return tokens(accessToken, refreshToken, -60_000);
+}
+
 describe("SessionManager", () => {
   test("queues concurrent refreshes behind one network call", async () => {
     let calls = 0;
     const manager = new SessionManager(async () => {
       calls += 1;
-      return tokens("next-access", "", 60_000);
+      return tokens("next-access", "next-refresh", 60_000);
     });
-    manager.setSession(tokens("old-access", "", 1));
+    manager.setSession(expiredRefreshableSession("old-access"));
 
     const [first, second] = await Promise.all([manager.getAccessToken(), manager.getAccessToken()]);
     expect(first).toBe("next-access");
@@ -31,7 +35,7 @@ describe("SessionManager", () => {
     const manager = new SessionManager(async () => {
       throw new Error("refresh failed");
     });
-    manager.setSession(tokens("old-access", "", 1));
+    manager.setSession(expiredRefreshableSession("old-access"));
 
     expect(await manager.getAccessToken()).toBeNull();
     expect(manager.getRefreshToken()).toBeNull();
