@@ -159,7 +159,7 @@ describe("payments routes", async () => {
         method: "POST",
         headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
-          codigo_pedido: "NONEXISTENT",
+          codigo_pedido: "PA-SYN-9999",
           monto_pagado: 35,
           fecha_pago: "2025-01-15T12:00:00.000Z",
           tipo_tarjeta: "DB",

@@ -108,7 +108,7 @@ describe("orders routes", async () => {
     expect(response.status).toBe(400);
   });
 
-  test("returns 500 for order date in the past", async () => {
+  test("returns 400 for order date in the past", async () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
@@ -124,7 +124,7 @@ describe("orders routes", async () => {
         }),
       }),
     );
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
   });
 
   test("transitions order status to in-process", async () => {
@@ -188,7 +188,7 @@ describe("orders routes", async () => {
 
   test("returns 404 when transitioning non-existent order", async () => {
     const response = await app.fetch(
-      new Request("http://localhost/api/v1/orders/NONEXISTENT/status", {
+      new Request("http://localhost/api/v1/orders/PA-SYN-9999/status", {
         method: "PATCH",
         headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({ estado: "proceso" }),

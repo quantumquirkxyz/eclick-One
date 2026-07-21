@@ -136,12 +136,12 @@ describe("order lifecycle integration", async () => {
         body: JSON.stringify({ estado: "facturado" }),
       }),
     );
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
   });
 
   test("returns 404 for non-existent order in lifecycle", async () => {
     const response = await app.fetch(
-      new Request("http://localhost/api/v1/orders/NONEXISTENT/status", {
+      new Request("http://localhost/api/v1/orders/PA-SYN-9999/status", {
         method: "PATCH",
         headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({ estado: "proceso" }),
