@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { ClipboardList, History, RefreshCcw } from "lucide-react";
 import { commerceApi, validateOrder, validateTransition } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
+import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { OnChainStatusBadge } from "../../components/agent/OnChainStatusBadge";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
@@ -74,7 +76,6 @@ export function OrdersFeature() {
 
   if (state.status === "loading") return <OrdersLoadingSkeleton title={t("orders.title")} description={t("orders.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("orders.title")} error={state.message} onRetry={load} />;
-  if (state.orders.length === 0) return <ResourceState status="empty" title={t("orders.title")} description={t("orders.empty")} onRetry={load} />;
 
   const createOrder = async (): Promise<void> => {
     try {
@@ -100,6 +101,9 @@ export function OrdersFeature() {
       setNotice(error instanceof Error ? error.message : t("orders.updateError"));
     }
   };
+
+  const hasCurrentOrders = state.currentOrders.length > 0;
+  const hasOrderHistory = state.orders.length > 0;
 
   return (
     <section>
@@ -136,50 +140,79 @@ export function OrdersFeature() {
         </section>
         <section className="panel">
           <h3>{t("orders.changeStatus")}</h3>
-          <div className="form-grid">
-            <Select
-              label={t("common.order")}
-              value={statusForm.codigo_pedido}
-              options={state.currentOrders.map((order) => ({ value: order.codigo_pedido, label: order.codigo_pedido }))}
-              onChange={(value) => setStatusForm({ ...statusForm, codigo_pedido: value })}
+          {hasCurrentOrders ? (
+            <>
+              <div className="form-grid">
+                <Select
+                  label={t("common.order")}
+                  value={statusForm.codigo_pedido}
+                  options={state.currentOrders.map((order) => ({ value: order.codigo_pedido, label: order.codigo_pedido }))}
+                  onChange={(value) => setStatusForm({ ...statusForm, codigo_pedido: value })}
+                />
+                <Select
+                  label={t("common.status")}
+                  value={statusForm.estado}
+                  options={[{ value: "generado", label: status("generado") }, { value: "proceso", label: status("proceso") }, { value: "entregado", label: status("entregado") }, { value: "cancelado", label: status("cancelado") }, { value: "facturado", label: status("facturado") }]}
+                  onChange={(value) => setStatusForm({ ...statusForm, estado: value as CommerceOrderStatus })}
+                />
+              </div>
+              <button className="secondary-button" onClick={() => void changeStatus()}>{t("orders.updateStatus")}</button>
+            </>
+          ) : (
+            <EmptyState
+              icon={RefreshCcw}
+              title={t("orders.statusEmptyTitle")}
+              description={t("orders.statusEmptyDescription")}
+              compact
             />
-            <Select
-              label={t("common.status")}
-              value={statusForm.estado}
-              options={[{ value: "generado", label: status("generado") }, { value: "proceso", label: status("proceso") }, { value: "entregado", label: status("entregado") }, { value: "cancelado", label: status("cancelado") }, { value: "facturado", label: status("facturado") }]}
-              onChange={(value) => setStatusForm({ ...statusForm, estado: value as CommerceOrderStatus })}
-            />
-          </div>
-          <button className="secondary-button" onClick={() => void changeStatus()}>{t("orders.updateStatus")}</button>
+          )}
         </section>
       </div>
       <section className="panel">
         <h3>{t("orders.current")}</h3>
-        <DataTable
-          columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.date"), t("common.status"), t("dashboard.onChain")]}
-          rows={state.currentOrders.map((order) => [
-            order.codigo_pedido,
-            customerLabel(state.clients, order.codigo_cliente),
-            productLabel(state.products, order.codigo_producto, productName),
-            order.fecha_pedido,
-            status(order.estado),
-            <OnChainStatusBadge key={order.codigo_pedido} orderCode={order.codigo_pedido} />,
-          ])}
-        />
+        {hasCurrentOrders ? (
+          <DataTable
+            columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.date"), t("common.status"), t("dashboard.onChain")]}
+            rows={state.currentOrders.map((order) => [
+              order.codigo_pedido,
+              customerLabel(state.clients, order.codigo_cliente),
+              productLabel(state.products, order.codigo_producto, productName),
+              order.fecha_pedido,
+              status(order.estado),
+              <OnChainStatusBadge key={order.codigo_pedido} orderCode={order.codigo_pedido} />,
+            ])}
+          />
+        ) : (
+          <EmptyState
+            icon={ClipboardList}
+            title={t("orders.currentEmptyTitle")}
+            description={t("orders.currentEmptyDescription")}
+            compact
+          />
+        )}
       </section>
       <section className="panel">
         <h3>{t("orders.history")}</h3>
-        <DataTable
-          columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.amount"), t("common.status"), t("dashboard.onChain")]}
-          rows={state.orders.map((order) => [
-            order.codigo_pedido,
-            customerLabel(state.clients, order.codigo_cliente),
-            productLabel(state.products, order.codigo_producto, productName),
-            String(order.monto),
-            status(order.estado),
-            <OnChainStatusBadge key={order.codigo_pedido} orderCode={order.codigo_pedido} />,
-          ])}
-        />
+        {hasOrderHistory ? (
+          <DataTable
+            columns={[t("common.order"), t("common.customer"), t("common.product"), t("common.amount"), t("common.status"), t("dashboard.onChain")]}
+            rows={state.orders.map((order) => [
+              order.codigo_pedido,
+              customerLabel(state.clients, order.codigo_cliente),
+              productLabel(state.products, order.codigo_producto, productName),
+              String(order.monto),
+              status(order.estado),
+              <OnChainStatusBadge key={order.codigo_pedido} orderCode={order.codigo_pedido} />,
+            ])}
+          />
+        ) : (
+          <EmptyState
+            icon={History}
+            title={t("orders.historyEmptyTitle")}
+            description={t("orders.historyEmptyDescription")}
+            compact
+          />
+        )}
       </section>
     </section>
   );

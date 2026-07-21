@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Package } from "lucide-react";
 import { commerceApi } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
+import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
@@ -27,7 +29,6 @@ export function ProductsFeature() {
 
   if (state.status === "loading") return <ProductsLoadingSkeleton title={t("products.title")} description={t("products.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("products.title")} error={state.message} onRetry={load} />;
-  if (state.products.length === 0) return <ResourceState status="empty" title={t("products.title")} description={t("products.empty")} onRetry={load} />;
 
   return (
     <section>
@@ -39,10 +40,20 @@ export function ProductsFeature() {
       </div>
       <section className="panel">
         <h3>{t("products.catalog")}</h3>
-        <DataTable
-          columns={[t("customers.code"), t("products.name"), t("products.category")]}
-          rows={state.products.map((product) => [String(product.codigo_producto), productName(product.codigo_producto, product.nombre), categoryName(product.categoria)])}
-        />
+        {state.products.length === 0 ? (
+          <EmptyState
+            icon={Package}
+            title={t("products.emptyTitle")}
+            description={t("products.emptyDescription")}
+            actionLabel={t("common.reloadData")}
+            onAction={load}
+          />
+        ) : (
+          <DataTable
+            columns={[t("customers.code"), t("products.name"), t("products.category")]}
+            rows={state.products.map((product) => [String(product.codigo_producto), productName(product.codigo_producto, product.nombre), categoryName(product.categoria)])}
+          />
+        )}
       </section>
     </section>
   );

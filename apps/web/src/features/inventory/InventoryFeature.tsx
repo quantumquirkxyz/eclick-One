@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Warehouse } from "lucide-react";
 import { commerceApi } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
+import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
@@ -27,7 +29,6 @@ export function InventoryFeature() {
 
   if (state.status === "loading") return <InventoryLoadingSkeleton title={t("inventory.title")} description={t("inventory.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("inventory.title")} error={state.message} onRetry={load} />;
-  if (state.inventory.length === 0) return <ResourceState status="empty" title={t("inventory.title")} description={t("inventory.empty")} onRetry={load} />;
 
   return (
     <section>
@@ -39,16 +40,26 @@ export function InventoryFeature() {
       </div>
       <section className="panel">
         <h3>{t("inventory.summary")}</h3>
-        <DataTable
-          columns={[t("common.product"), t("dashboard.sales"), t("dashboard.warehouse"), t("dashboard.reserved"), t("dashboard.available")]}
-          rows={state.inventory.map((item) => [
-            String(item.codigo_producto),
-            String(item.cant_ventas),
-            String(item.cant_bodega),
-            String(item.cant_reservado),
-            String(item.cant_bodega - item.cant_reservado),
-          ])}
-        />
+        {state.inventory.length === 0 ? (
+          <EmptyState
+            icon={Warehouse}
+            title={t("inventory.emptyTitle")}
+            description={t("inventory.emptyDescription")}
+            actionLabel={t("common.reloadData")}
+            onAction={load}
+          />
+        ) : (
+          <DataTable
+            columns={[t("common.product"), t("dashboard.sales"), t("dashboard.warehouse"), t("dashboard.reserved"), t("dashboard.available")]}
+            rows={state.inventory.map((item) => [
+              String(item.codigo_producto),
+              String(item.cant_ventas),
+              String(item.cant_bodega),
+              String(item.cant_reservado),
+              String(item.cant_bodega - item.cant_reservado),
+            ])}
+          />
+        )}
       </section>
     </section>
   );
