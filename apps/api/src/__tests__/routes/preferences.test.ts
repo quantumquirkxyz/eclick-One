@@ -23,12 +23,47 @@ describe("client preference routes", async () => {
   const app = createApp();
 
   test("returns preference for existing client", async () => {
+    const orderPayloads = [
+      {
+        codigo_cliente: 1,
+        codigo_producto: 1000,
+        cantidad: 1,
+        direccion: "Preference Route 1",
+        fecha_pedido: "2026-07-18T08:00:00.000Z",
+        etiqueta: "route-preference-1",
+        tipo_duracion: "48h",
+      },
+      {
+        codigo_cliente: 1,
+        codigo_producto: 1000,
+        cantidad: 2,
+        direccion: "Preference Route 2",
+        fecha_pedido: "2026-07-19T08:00:00.000Z",
+        etiqueta: "route-preference-2",
+        tipo_duracion: "48h",
+      },
+    ];
+    for (const payload of orderPayloads) {
+      const createResponse = await app.fetch(
+        new Request("http://localhost/api/v1/orders", {
+          method: "POST",
+          headers: { ...headers, "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        }),
+      );
+      expect(createResponse.status).toBe(201);
+    }
+
     const response = await app.fetch(
       new Request("http://localhost/api/v1/customers/1/preference", { headers }),
     );
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toMatchObject({ codigo_producto: expect.any(Number) });
+    expect(body).toMatchObject({
+      codigo_producto: 1000,
+      cant_solicitudes: 3,
+      cantidad_total: 5,
+    });
   });
 
   test("returns 404 for non-existent client preference", async () => {

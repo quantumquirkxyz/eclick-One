@@ -135,6 +135,46 @@ docker compose down --remove-orphans
 docker compose up --build
 ```
 
+### Demo guiada con datos semilla
+
+El modo `mock` ahora incluye un dataset demo más amplio para ventas, pagos, inventario, provincias y estados de órdenes. Sobre esa base, el repositorio trae dos scripts para dejar una demo lista para mostrar sin carga manual.
+
+```bash
+bun run demo:walkthrough
+```
+
+Ese flujo:
+
+- levanta `anvil`, contratos, API, frontend y ambos agentes con `docker compose`
+- espera a que los health checks respondan
+- ejecuta `bun run demo:seed` para registrar un operador demo y completar escenarios API-driven adicionales
+- deja la URL del frontend lista para abrir
+
+Si ya tienes la stack arriba, puedes ejecutar solo el seed:
+
+```bash
+bun run demo:seed
+```
+
+Variables útiles:
+
+- `DEMO_API_URL` para apuntar el seed a otra API distinta de `http://localhost:3000/api/v1`
+- `DEMO_WEB_URL` para personalizar la URL del frontend que abre el walkthrough
+- `DEMO_SEED_EMAIL` y `DEMO_SEED_PASSWORD` para sobrescribir las credenciales demo
+
+Credenciales por defecto de la demo:
+
+- Usuario: `demo.operator@eclick.one`
+- Password: `DemoSeedPassword-2026`
+
+Escenarios incluidos en la demo:
+
+- catálogo con 20 productos y cobertura multi-provincia
+- clientes en paz y salvo y no paz y salvo
+- órdenes en `generado`, `proceso`, `entregado`, `facturado` y `cancelado`
+- pagos registrados y pedidos en riesgo para enseñar dashboard y reportes
+- tres órdenes reproducibles creadas por script para mostrar onboarding, lifecycle y cancelación
+
 ### Completo (con Web3 + AI Agents)
 
 ```bash
