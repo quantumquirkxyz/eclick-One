@@ -14,12 +14,7 @@ contract PaymentLedger {
     Payment[] public payments;
     mapping(bytes32 => uint256[]) private orderPaymentIndices;
 
-    event PaymentRecorded(
-        uint256 indexed paymentId,
-        bytes32 indexed orderId,
-        uint256 amount,
-        uint256 timestamp
-    );
+    event PaymentRecorded(uint256 indexed paymentId, bytes32 indexed orderId, uint256 amount, uint256 timestamp);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner");
@@ -30,19 +25,13 @@ contract PaymentLedger {
         owner = msg.sender;
     }
 
-    function recordPayment(
-        bytes32 orderId,
-        uint256 amount,
-        string calldata cardType,
-        string calldata ref_
-    ) external {
-        payments.push(Payment({
-            orderId: orderId,
-            amount: amount,
-            timestamp: block.timestamp,
-            cardType: cardType,
-            ref: ref_
-        }));
+    function recordPayment(bytes32 orderId, uint256 amount, string calldata cardType, string calldata ref_) external {
+        require(orderId != bytes32(0), "Order ID required");
+        require(amount != 0, "Amount must be positive");
+
+        payments.push(
+            Payment({orderId: orderId, amount: amount, timestamp: block.timestamp, cardType: cardType, ref: ref_})
+        );
 
         uint256 paymentId = payments.length - 1;
         orderPaymentIndices[orderId].push(paymentId);
