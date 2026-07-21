@@ -6,11 +6,12 @@ import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
+import { normalizeAppError, type AppError } from "../../services/api/client";
 import type { CommerceClient, NewCommerceClient, CommerceProvince } from "../../types/commerce";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "error"; message: string }
+  | { status: "error"; error: AppError }
   | { status: "success"; clients: readonly CommerceClient[]; provinces: readonly CommerceProvince[] };
 
 const emptyForm: NewCommerceClient = {
@@ -39,7 +40,7 @@ export function CustomersFeature() {
         setForm((current) => ({ ...current, provincia: provinces[0]! }));
       }
     } catch (error) {
-      setState({ status: "error", message: error instanceof Error ? error.message : t("customers.error") });
+      setState({ status: "error", error: normalizeAppError(error, t("customers.error")) });
     }
   };
 
@@ -51,7 +52,7 @@ export function CustomersFeature() {
     return <CustomersLoadingSkeleton title={t("customers.title")} description={t("customers.loading")} />;
   }
   if (state.status === "error") {
-    return <ResourceState status="error" title={t("customers.title")} error={state.message} onRetry={load} />;
+    return <ResourceState status="error" title={t("customers.title")} error={state.error} onRetry={load} />;
   }
 
   const createClient = async (): Promise<void> => {

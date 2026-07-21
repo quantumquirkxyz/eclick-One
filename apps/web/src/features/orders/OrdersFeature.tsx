@@ -7,11 +7,12 @@ import { DataTable } from "../../components/tables/DataTable";
 import { OnChainStatusBadge } from "../../components/agent/OnChainStatusBadge";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
+import { normalizeAppError, type AppError } from "../../services/api/client";
 import type { CommerceClient, CommerceOrderStatus, NewCommerceOrder, CommerceOrder, CommerceProduct } from "../../types/commerce";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "error"; message: string }
+  | { status: "error"; error: AppError }
   | {
       status: "success";
       clients: readonly CommerceClient[];
@@ -57,7 +58,7 @@ export function OrdersFeature() {
       }));
       setStatusForm((current) => ({ ...current, codigo_pedido: currentOrders[0]?.codigo_pedido ?? orders[0]?.codigo_pedido ?? "" }));
     } catch (error) {
-      setState({ status: "error", message: error instanceof Error ? error.message : t("orders.error") });
+      setState({ status: "error", error: normalizeAppError(error, t("orders.error")) });
     }
   };
 
@@ -75,7 +76,7 @@ export function OrdersFeature() {
   );
 
   if (state.status === "loading") return <OrdersLoadingSkeleton title={t("orders.title")} description={t("orders.loading")} />;
-  if (state.status === "error") return <ResourceState status="error" title={t("orders.title")} error={state.message} onRetry={load} />;
+  if (state.status === "error") return <ResourceState status="error" title={t("orders.title")} error={state.error} onRetry={load} />;
 
   const createOrder = async (): Promise<void> => {
     try {

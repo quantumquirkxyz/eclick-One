@@ -10,12 +10,17 @@ import {
 } from "lucide-react";
 import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { PageErrorBoundary } from "./components/ErrorBoundary";
 import { AppShell, type NavItem } from "./components/layout/AppShell";
+import { OfflineBanner } from "./components/OfflineBanner";
 import { PublicLayout } from "./components/layout/PublicLayout";
+import { ForbiddenPage } from "./pages/ForbiddenPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { ServerErrorPage } from "./pages/ServerErrorPage";
+import { TimeoutPage } from "./pages/TimeoutPage";
 import { Web3Feature } from "./features/web3/Web3Feature";
 import { CustomersFeature } from "./features/customers/CustomersFeature";
 import { DashboardFeature } from "./features/dashboard/DashboardFeature";
@@ -40,23 +45,30 @@ export function App() {
   ];
 
   return (
-    <Routes>
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<LandingPage />} />
-      </Route>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/app" element={<ProtectedRoute><AppShell navItems={navItems} /></ProtectedRoute>}>
-        <Route index element={<DashboardFeature />} />
-        <Route path="customers" element={<CustomersFeature />} />
-        <Route path="orders" element={<OrdersFeature />} />
-        <Route path="payments" element={<PaymentsFeature />} />
-        <Route path="products" element={<ProductsFeature />} />
-        <Route path="inventory" element={<InventoryFeature />} />
-        <Route path="reports" element={<ReportsFeature />} />
-        <Route path="web3" element={<Web3Feature />} />
-      </Route>
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <>
+      <OfflineBanner />
+      <Routes>
+        <Route element={<PageErrorBoundary><PublicLayout /></PageErrorBoundary>}>
+          <Route path="/" element={<PageErrorBoundary><LandingPage /></PageErrorBoundary>} />
+        </Route>
+        <Route path="/login" element={<PageErrorBoundary><LoginPage /></PageErrorBoundary>} />
+        <Route path="/register" element={<PageErrorBoundary><RegisterPage /></PageErrorBoundary>} />
+        <Route path="/403" element={<PageErrorBoundary><ForbiddenPage /></PageErrorBoundary>} />
+        <Route path="/500" element={<PageErrorBoundary><ServerErrorPage /></PageErrorBoundary>} />
+        <Route path="/timeout" element={<PageErrorBoundary><TimeoutPage /></PageErrorBoundary>} />
+        <Route path="/app" element={<PageErrorBoundary><ProtectedRoute><AppShell navItems={navItems} /></ProtectedRoute></PageErrorBoundary>}>
+          <Route index element={<PageErrorBoundary><DashboardFeature /></PageErrorBoundary>} />
+          <Route path="customers" element={<PageErrorBoundary><CustomersFeature /></PageErrorBoundary>} />
+          <Route path="orders" element={<PageErrorBoundary><OrdersFeature /></PageErrorBoundary>} />
+          <Route path="payments" element={<PageErrorBoundary><PaymentsFeature /></PageErrorBoundary>} />
+          <Route path="products" element={<PageErrorBoundary><ProductsFeature /></PageErrorBoundary>} />
+          <Route path="inventory" element={<PageErrorBoundary><InventoryFeature /></PageErrorBoundary>} />
+          <Route path="reports" element={<PageErrorBoundary><ReportsFeature /></PageErrorBoundary>} />
+          <Route path="web3" element={<PageErrorBoundary><Web3Feature /></PageErrorBoundary>} />
+          <Route path="*" element={<PageErrorBoundary><NotFoundPage homePath="/app" /></PageErrorBoundary>} />
+        </Route>
+        <Route path="*" element={<PageErrorBoundary><NotFoundPage /></PageErrorBoundary>} />
+      </Routes>
+    </>
   );
 }

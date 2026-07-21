@@ -8,10 +8,11 @@ import { StatusChart } from "../../components/charts/StatusChart";
 import { AgentActivityPanel } from "../../components/agent/AgentActivityPanel";
 import { Skeleton, SkeletonCard, SkeletonChart, SkeletonPage, SkeletonPageTitle, SkeletonTable, SkeletonText } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
+import { normalizeAppError, type AppError } from "../../services/api/client";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "error"; message: string }
+  | { status: "error"; error: AppError }
   | { status: "success"; data: DashboardSnapshot };
 
 export function DashboardFeature() {
@@ -23,7 +24,7 @@ export function DashboardFeature() {
     try {
       setState({ status: "success", data: await commerceApi.getDashboard() });
     } catch (error) {
-      setState({ status: "error", message: error instanceof Error ? error.message : t("dashboard.error") });
+      setState({ status: "error", error: normalizeAppError(error, t("dashboard.error")) });
     }
   };
 
@@ -36,7 +37,7 @@ export function DashboardFeature() {
   }
 
   if (state.status === "error") {
-    return <ResourceState status="error" title={t("nav.summary")} error={state.message} onRetry={load} />;
+    return <ResourceState status="error" title={t("nav.summary")} error={state.error} onRetry={load} />;
   }
 
   const { data } = state;
