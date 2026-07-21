@@ -20,6 +20,7 @@
     "demo:seed": "bun scripts/demo-seed.ts",
     "demo:walkthrough": "bash scripts/demo-walkthrough.sh",
     "docs:screenshots": "bash scripts/capture-user-manual-screenshots.sh",
+    "validate:openapi": "bun scripts/validate-openapi.ts",
     "build": "bun --filter '*' build",
     "typecheck": "bun --filter '*' typecheck",
     "test": "bun test apps/api apps/agents packages apps/contracts",
@@ -27,8 +28,10 @@
     "test:web": "bun --cwd apps/web test"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
     "@types/bun": "^1.2.19",
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "yaml": "^2.9.0"
   }
 }

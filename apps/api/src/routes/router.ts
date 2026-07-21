@@ -38,6 +38,9 @@ export class Router {
     try {
       assertAcceptLanguage(request);
       const result = await match.controller(request, match.params);
+      if (result.response) {
+        return result.response;
+      }
       return jsonResponse(result.body, result.status ?? 200, result.headers);
     } catch (error) {
       return errorResponse(error, locale);

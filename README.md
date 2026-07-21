@@ -17,6 +17,7 @@ packages/
 docs/
   db-contract.md  Contrato de superficie SQL esperada
   deployment-guide.md  Runbook de despliegue para local, staging y producción
+  openapi.yaml  Especificación OpenAPI 3.1 servida en /api/v1/openapi.yaml
   user-manual.md  Manual funcional con walkthrough y capturas
 ```
 

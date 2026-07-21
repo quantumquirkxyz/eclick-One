@@ -1,0 +1,1300 @@
+openapi: 3.1.0
+info:
+  title: eclick One API
+  version: 1.0.0
+  description: |
+    OpenAPI contract for the Bun REST API implemented in this repository.
+    The documented surface matches the routes currently registered by `apps/api/src/routes/index.ts`.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+tags:
+  - name: System
+  - name: Auth
+  - name: Dashboard
+  - name: Customers
+  - name: Products
+  - name: Inventory
+  - name: Orders
+  - name: Payments
+  - name: Reports
+  - name: Compliance
+paths:
+  /api/v1/health:
+    get:
+      tags: [System]
+      summary: Read API health
+      parameters:
+        - in: query
+          name: deep
+          schema:
+            type: boolean
+          description: When true, also pings the configured repository.
+      responses:
+        "200":
+          description: Health snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthCheck"
+              examples:
+                shallow:
+                  value:
+                    status: ok
+                    service: eclick-one-api
+                    repositoryMode: mock
+                    database: not_checked
+                    databaseMetrics:
+                      totalQueries: 0
+                      totalErrors: 0
+                    responseTimeMs: 0.41
+                    timestamp: "2026-07-21T18:30:00.000Z"
+                    uptime: 42
+        default:
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/openapi.yaml:
+    get:
+      tags: [System]
+      summary: Download the OpenAPI YAML document
+      responses:
+        "200":
+          description: OpenAPI specification
+          content:
+            application/yaml:
+              schema:
+                type: string
+  /api/v1/docs:
+    get:
+      tags: [System]
+      summary: Redirect to the public API documentation UI
+      responses:
+        "302":
+          description: Redirect response
+          headers:
+            location:
+              schema:
+                type: string
+                example: /docs
+  /docs:
+    get:
+      tags: [System]
+      summary: Render the ReDoc user interface
+      responses:
+        "200":
+          description: HTML documentation page
+          content:
+            text/html:
+              schema:
+                type: string
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            examples:
+              operator:
+                value:
+                  email: operator@example.com
+                  nombre: Ana
+                  apellido: Morales
+                  password: SecurePassword-2026
+      responses:
+        "201":
+          description: Tokens for the newly registered user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              default:
+                value:
+                  email: operator@example.com
+                  password: SecurePassword-2026
+      responses:
+        "200":
+          description: Access and refresh tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate a refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: Rotated access and refresh tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokens"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke a refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "204":
+          description: Token revoked
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/auth/verify:
+    get:
+      tags: [Auth]
+      summary: Read the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Read the operations dashboard snapshot
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSnapshot"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/provinces:
+    get:
+      tags: [Customers]
+      summary: List provinces
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Provinces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Province"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/customers:
+    get:
+      tags: [Customers]
+      summary: List customers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags: [Customers]
+      summary: Create a customer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewClient"
+            examples:
+              basic:
+                value:
+                  nombre: Laura
+                  apellido: Rojas
+                  identificacion: "8-123-456"
+                  provincia:
+                    codigo: PA
+                    nombre: Panama
+                    prefijo: PA
+                  tipo_tarjeta: DB
+                  paz_y_salvo: true
+                  email: laura@example.com
+                  phone: "+507 6000-1000"
+      responses:
+        "201":
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "400":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/clientes:
+    get:
+      tags: [Customers]
+      summary: List customers using the bilingual alias route
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/customers/{codigo_cliente}/preference:
+    get:
+      tags: [Customers]
+      summary: Read a customer's preferred product
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CustomerCode"
+      responses:
+        "200":
+          description: Product preference or null if no preference has been established
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ProductPreference"
+                  - type: "null"
+        "400":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/products:
+    get:
+      tags: [Products]
+      summary: List products
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/inventory:
+    get:
+      tags: [Inventory]
+      summary: List inventory records
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Inventory
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Inventory"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/orders:
+    get:
+      tags: [Orders]
+      summary: List orders
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags: [Orders]
+      summary: Create an order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrder"
+            examples:
+              scheduled:
+                value:
+                  codigo_cliente: 1
+                  codigo_producto: 1000
+                  cantidad: 2
+                  direccion: Avenida Balboa, Panama City
+                  fecha_pedido: "2026-07-22T10:00:00.000Z"
+                  etiqueta: july-demo-order
+                  tipo_duracion: 48h
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/orders/current:
+    get:
+      tags: [Orders]
+      summary: List current orders
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/orders/{codigo_pedido}/status:
+    patch:
+      tags: [Orders]
+      summary: Transition an order status
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderCode"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderStatusUpdateRequest"
+            examples:
+              inProcess:
+                value:
+                  estado: proceso
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/orders/{codigo_pedido}/onchain:
+    get:
+      tags: [Orders]
+      summary: Read the on-chain status for an order
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrderCode"
+      responses:
+        "200":
+          description: On-chain projection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnChainOrderStatus"
+        "400":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/payments:
+    get:
+      tags: [Payments]
+      summary: List payments
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags: [Payments]
+      summary: Record a payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPayment"
+            examples:
+              exact:
+                value:
+                  codigo_pedido: PA-SYN-0001
+                  monto_pagado: 35
+                  fecha_pago: "2026-07-22T12:00:00.000Z"
+                  tipo_tarjeta: DB
+                  referencia: REF-001
+      responses:
+        "201":
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "400":
+          $ref: "#/components/responses/ValidationErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/reports:
+    get:
+      tags: [Reports]
+      summary: Read operational reports
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Reports payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportsResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/compliance/report:
+    post:
+      tags: [Compliance]
+      summary: Submit a compliance evaluation result
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComplianceReportRequest"
+      responses:
+        "200":
+          description: Compliance report accepted flag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceReportResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    CustomerCode:
+      in: path
+      name: codigo_cliente
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    OrderCode:
+      in: path
+      name: codigo_pedido
+      required: true
+      schema:
+        type: string
+        pattern: "^[A-Z]{2}-[A-Z0-9-]{1,64}$"
+        example: PA-SYN-0001
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ValidationErrorResponse:
+      description: Validation error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationErrorEnvelope"
+  schemas:
+    AuthTokens:
+      type: object
+      additionalProperties: false
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          example: 900
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [email, nombre, apellido, password]
+      properties:
+        email:
+          type: string
+          format: email
+        nombre:
+          type: string
+          minLength: 1
+        apellido:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 8
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    VerifyResponse:
+      type: object
+      additionalProperties: false
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthenticatedUser"
+    AuthenticatedUser:
+      type: object
+      additionalProperties: false
+      required: [id, email, nombre, apellido, role]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        nombre:
+          type: string
+        apellido:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+    Role:
+      type: string
+      enum: [admin, operator, viewer, agent]
+    CardType:
+      type: string
+      enum: [DB, CR]
+    OrderStatus:
+      type: string
+      enum: [generado, proceso, entregado, cancelado, facturado]
+    Province:
+      type: object
+      additionalProperties: false
+      required: [id, codigo, nombre, prefijo]
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+          pattern: "^[A-Z]{2}$"
+        nombre:
+          type: string
+        prefijo:
+          type: string
+          pattern: "^[A-Z]{2}$"
+    Client:
+      type: object
+      additionalProperties: false
+      required:
+        - codigo_cliente
+        - nombre
+        - apellido
+        - identificacion
+        - provincia
+        - tipo_tarjeta
+        - paz_y_salvo
+      properties:
+        codigo_cliente:
+          type: integer
+          minimum: 1
+        nombre:
+          type: string
+        apellido:
+          type: string
+        identificacion:
+          type: string
+        provincia:
+          $ref: "#/components/schemas/Province"
+        tipo_tarjeta:
+          $ref: "#/components/schemas/CardType"
+        paz_y_salvo:
+          type: boolean
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+    NewClient:
+      type: object
+      additionalProperties: false
+      required: [nombre, apellido, identificacion, provincia, tipo_tarjeta, paz_y_salvo]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+        apellido:
+          type: string
+          minLength: 1
+        identificacion:
+          type: string
+          minLength: 1
+        provincia:
+          $ref: "#/components/schemas/ProvinceInput"
+        tipo_tarjeta:
+          $ref: "#/components/schemas/CardType"
+        paz_y_salvo:
+          type: boolean
+        numero_tarjeta:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+    ProvinceInput:
+      type: object
+      additionalProperties: false
+      required: [codigo, nombre, prefijo]
+      properties:
+        id:
+          type: string
+        codigo:
+          type: string
+          pattern: "^[A-Z]{2}$"
+        nombre:
+          type: string
+          minLength: 1
+        prefijo:
+          type: string
+          pattern: "^[A-Z]{2}$"
+    Product:
+      type: object
+      additionalProperties: false
+      required: [codigo_producto, nombre, categoria]
+      properties:
+        codigo_producto:
+          type: integer
+          minimum: 1000
+        nombre:
+          type: string
+        categoria:
+          type: string
+        activo:
+          type: boolean
+    Inventory:
+      type: object
+      additionalProperties: false
+      required: [codigo_producto, cant_ventas, cant_bodega, cant_reservado]
+      properties:
+        codigo_producto:
+          type: integer
+          minimum: 1000
+        cant_ventas:
+          type: integer
+        cant_bodega:
+          type: integer
+        cant_reservado:
+          type: integer
+        nivel_reposicion:
+          type: integer
+    Order:
+      type: object
+      additionalProperties: false
+      required:
+        - codigo_pedido
+        - codigo_cliente
+        - codigo_producto
+        - cantidad
+        - monto
+        - etiqueta
+        - direccion
+        - fecha_pedido
+        - estado
+        - tipo_duracion
+      properties:
+        codigo_pedido:
+          type: string
+          pattern: "^[A-Z]{2}-[A-Z0-9-]{1,64}$"
+        codigo_cliente:
+          type: integer
+        codigo_producto:
+          type: integer
+        cantidad:
+          type: integer
+          minimum: 1
+        monto:
+          type: number
+        etiqueta:
+          type: string
+        direccion:
+          type: string
+        fecha_pedido:
+          type: string
+          format: date-time
+        fecha_entrega:
+          type: string
+          format: date-time
+        estado:
+          $ref: "#/components/schemas/OrderStatus"
+        tipo_duracion:
+          type: string
+        pagado:
+          type: boolean
+    NewOrder:
+      type: object
+      additionalProperties: false
+      required:
+        - codigo_cliente
+        - codigo_producto
+        - cantidad
+        - direccion
+        - fecha_pedido
+        - etiqueta
+        - tipo_duracion
+      properties:
+        codigo_cliente:
+          type: integer
+          minimum: 1
+        codigo_producto:
+          type: integer
+          minimum: 1000
+        cantidad:
+          type: integer
+          minimum: 1
+        direccion:
+          type: string
+          minLength: 1
+        fecha_pedido:
+          type: string
+          format: date-time
+        etiqueta:
+          type: string
+          minLength: 1
+        tipo_duracion:
+          type: string
+          minLength: 1
+        fecha_entrega:
+          type: string
+          format: date-time
+    OrderStatusUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [estado]
+      properties:
+        estado:
+          $ref: "#/components/schemas/OrderStatus"
+    Payment:
+      type: object
+      additionalProperties: false
+      required: [id_pago, codigo_pedido, monto_pagado, fecha_pago, tipo_tarjeta]
+      properties:
+        id_pago:
+          type: integer
+          minimum: 1
+        codigo_pedido:
+          type: string
+          pattern: "^[A-Z]{2}-[A-Z0-9-]{1,64}$"
+        monto_pagado:
+          type: number
+          exclusiveMinimum: 0
+        fecha_pago:
+          type: string
+          format: date-time
+        tipo_tarjeta:
+          $ref: "#/components/schemas/CardType"
+        referencia:
+          type: string
+    NewPayment:
+      type: object
+      additionalProperties: false
+      required: [codigo_pedido, monto_pagado, fecha_pago, tipo_tarjeta]
+      properties:
+        codigo_pedido:
+          type: string
+          pattern: "^[A-Z]{2}-[A-Z0-9-]{1,64}$"
+        monto_pagado:
+          type: number
+          exclusiveMinimum: 0
+        fecha_pago:
+          type: string
+          format: date-time
+        tipo_tarjeta:
+          $ref: "#/components/schemas/CardType"
+        referencia:
+          type: string
+    ProductPreference:
+      type: object
+      additionalProperties: false
+      required: [codigo_producto, cant_solicitudes, cantidad_total]
+      properties:
+        codigo_producto:
+          type: integer
+        cant_solicitudes:
+          type: integer
+        cantidad_total:
+          type: integer
+    OnChainOrderStatus:
+      type: object
+      additionalProperties: false
+      required: [onChain, status]
+      properties:
+        onChain:
+          type: boolean
+        status:
+          oneOf:
+            - type: integer
+            - type: "null"
+        txHash:
+          type: string
+    DashboardSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - synthetic
+        - notice
+        - metrics
+        - orderStatuses
+        - ordersByMonth
+        - paymentsByMonth
+        - inventorySummary
+        - topProducts
+        - nonCompliantClients
+        - atRiskOrders
+        - preferencesByClient
+      properties:
+        kind:
+          type: string
+          const: dashboard
+        synthetic:
+          type: boolean
+        notice:
+          type: string
+        metrics:
+          $ref: "#/components/schemas/DashboardMetrics"
+        orderStatuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderStatusCount"
+        ordersByMonth:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrdersByMonthRow"
+        paymentsByMonth:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentsByMonthRow"
+        inventorySummary:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventorySummaryRow"
+        topProducts:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopProductRow"
+        nonCompliantClients:
+          type: array
+          items:
+            $ref: "#/components/schemas/NonCompliantClientRow"
+        atRiskOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/AtRiskOrderRow"
+        preferencesByClient:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreferenceByClientRow"
+    DashboardMetrics:
+      type: object
+      additionalProperties: false
+      required: [clients, products, orders, currentOrders, collected, notPazYSalvo, atRiskOrders]
+      properties:
+        clients:
+          type: integer
+        products:
+          type: integer
+        orders:
+          type: integer
+        currentOrders:
+          type: integer
+        collected:
+          type: number
+        notPazYSalvo:
+          type: integer
+        atRiskOrders:
+          type: integer
+    OrderStatusCount:
+      type: object
+      additionalProperties: false
+      required: [status, count]
+      properties:
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        count:
+          type: integer
+    OrdersByMonthRow:
+      type: object
+      additionalProperties: false
+      required: [month, orders]
+      properties:
+        month:
+          type: string
+          pattern: "^\\d{4}-\\d{2}$"
+        orders:
+          type: integer
+    PaymentsByMonthRow:
+      type: object
+      additionalProperties: false
+      required: [month, payments, amount]
+      properties:
+        month:
+          type: string
+          pattern: "^\\d{4}-\\d{2}$"
+        payments:
+          type: integer
+        amount:
+          type: number
+    InventorySummaryRow:
+      type: object
+      additionalProperties: false
+      required: [codigo_producto, nombre, ventas, bodega, reservado, disponible]
+      properties:
+        codigo_producto:
+          type: integer
+        nombre:
+          type: string
+        ventas:
+          type: integer
+        bodega:
+          type: integer
+        reservado:
+          type: integer
+        disponible:
+          type: integer
+    TopProductRow:
+      type: object
+      additionalProperties: false
+      required: [codigo_producto, nombre, cantidad, pedidos]
+      properties:
+        codigo_producto:
+          type: integer
+        nombre:
+          type: string
+        cantidad:
+          type: integer
+        pedidos:
+          type: integer
+    NonCompliantClientRow:
+      type: object
+      additionalProperties: false
+      required: [codigo_cliente, nombre, apellido]
+      properties:
+        codigo_cliente:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+    AtRiskOrderRow:
+      type: object
+      additionalProperties: false
+      required: [codigo_pedido, codigo_cliente, estado, hoursOpen]
+      properties:
+        codigo_pedido:
+          type: string
+        codigo_cliente:
+          type: integer
+        estado:
+          $ref: "#/components/schemas/OrderStatus"
+        hoursOpen:
+          type: integer
+    PreferenceByClientRow:
+      type: object
+      additionalProperties: false
+      required: [codigo_cliente, nombre, apellido, preference]
+      properties:
+        codigo_cliente:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+        preference:
+          oneOf:
+            - $ref: "#/components/schemas/ProductPreference"
+            - type: "null"
+    ReportsResponse:
+      type: object
+      additionalProperties: false
+      required: [synthetic, generatedAt, sections]
+      properties:
+        synthetic:
+          type: boolean
+        generatedAt:
+          type: string
+          format: date-time
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportSection"
+    ReportSection:
+      type: object
+      additionalProperties: false
+      required: [key, title, rows]
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        rows:
+          type: array
+          items: {}
+    ComplianceReportRequest:
+      type: object
+      additionalProperties: false
+      required: [timestamp, orderCode, status, message, details]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        orderCode:
+          type: string
+          pattern: "^[A-Z]{2}-[A-Z0-9-]{1,64}$"
+        status:
+          type: string
+          enum: [compliant, violation, warning]
+        message:
+          type: string
+          minLength: 1
+        details:
+          type: object
+          additionalProperties: true
+    ComplianceReportResponse:
+      type: object
+      additionalProperties: false
+      required: [accepted]
+      properties:
+        accepted:
+          type: boolean
+    HealthCheck:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - service
+        - repositoryMode
+        - database
+        - databaseMetrics
+        - responseTimeMs
+        - timestamp
+        - uptime
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+        repositoryMode:
+          type: string
+        database:
+          type: string
+          enum: [reachable, not_checked]
+        databaseMetrics:
+          type: object
+          additionalProperties: true
+        responseTimeMs:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: integer
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorBody"
+    ValidationErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          allOf:
+            - $ref: "#/components/schemas/ErrorBody"
+            - type: object
+              properties:
+                details:
+                  $ref: "#/components/schemas/ValidationDetails"
+    ErrorBody:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          examples: [BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT, INTERNAL_ERROR]
+        message:
+          type: string
+        details:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: "null"
+    ValidationDetails:
+      type: object
+      additionalProperties: false
+      required: [fields]
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationFieldError"
+    ValidationFieldError:
+      type: object
+      additionalProperties: false
+      required: [field, message]
+      properties:
+        field:
+          type: string
+        message:
+          type: string
