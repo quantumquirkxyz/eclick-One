@@ -19,6 +19,7 @@
     "dev:deploy": "forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545",
     "demo:seed": "bun scripts/demo-seed.ts",
     "demo:walkthrough": "bash scripts/demo-walkthrough.sh",
+    "docs:screenshots": "bash scripts/capture-user-manual-screenshots.sh",
     "build": "bun --filter '*' build",
     "typecheck": "bun --filter '*' typecheck",
     "test": "bun test apps/api apps/agents packages apps/contracts",

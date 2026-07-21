@@ -17,6 +17,7 @@ packages/
 docs/
   db-contract.md  Contrato de superficie SQL esperada
   deployment-guide.md  Runbook de despliegue para local, staging y producción
+  user-manual.md  Manual funcional con walkthrough y capturas
 ```
 
 El flujo de dependencias es hacia adentro: las aplicaciones y adaptadores dependen de `@eclick-one/domain`; el paquete domain no tiene dependencias externas.
