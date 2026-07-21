@@ -8,11 +8,16 @@ test.describe("Error Handling Flow", () => {
 
   test("show validation error on login with empty fields", async ({ page }) => {
     await page.goto("/login");
-    await page.locator("button[type='submit']").click();
-    const emailIsMissing = await page
-      .locator('input[autocomplete="email"]')
-      .evaluate((input) => input instanceof HTMLInputElement && input.validity.valueMissing);
-    expect(emailIsMissing).toBe(true);
+    const submitButton = page.locator("button[type='submit']");
+    await expect(submitButton).toBeDisabled();
+
+    await page.locator('input[autocomplete="email"]').focus();
+    await page.locator('input[autocomplete="email"]').blur();
+    await page.locator('input[autocomplete="current-password"]').focus();
+    await page.locator('input[autocomplete="current-password"]').blur();
+
+    await expect(page.locator("#email-error")).toBeVisible();
+    await expect(page.locator("#password-error")).toBeVisible();
   });
 
   test("show error on login with invalid credentials", async ({ page }) => {
@@ -36,7 +41,8 @@ test.describe("Error Handling Flow", () => {
     await page.fill('input[autocomplete="email"]', "test@shortpass.com");
     await page.locator('input[autocomplete="new-password"]').first().fill("123");
     await page.locator('input[autocomplete="new-password"]').nth(1).fill("123");
-    await page.locator("button[type='submit']").click();
-    await expect(page.getByText("Password must be at least 8 characters.").or(page.getByText("La contrasena debe tener al menos 8 caracteres."))).toBeVisible();
+    await page.locator('input[autocomplete="new-password"]').nth(1).blur();
+    await expect(page.locator("button[type='submit']")).toBeDisabled();
+    await expect(page.locator("#password-error")).toBeVisible();
   });
 });

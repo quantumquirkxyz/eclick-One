@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ClipboardList, History, RefreshCcw } from "lucide-react";
+import { FieldMessage, FormErrorSummary, useFormValidation } from "../../components/forms/useFormValidation";
 import { commerceApi, validateOrder, validateTransition } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { EmptyState } from "../../components/EmptyState";
@@ -40,6 +41,30 @@ export function OrdersFeature() {
     estado: "proceso",
   });
   const [notice, setNotice] = useState<string | null>(null);
+  const formValues = useMemo(() => ({
+    codigo_cliente: String(form.codigo_cliente),
+    codigo_producto: String(form.codigo_producto),
+    cantidad: String(form.cantidad),
+    direccion: form.direccion,
+    fecha_pedido: form.fecha_pedido,
+    etiqueta: form.etiqueta,
+    tipo_duracion: form.tipo_duracion,
+  }), [form]);
+  const validation = useFormValidation({
+    values: formValues,
+    validators: {
+      codigo_cliente: [(value) => (value.trim().length === 0 ? t("validation.customerRequired") : null)],
+      codigo_producto: [(value) => (value.trim().length === 0 ? t("validation.productRequired") : null)],
+      cantidad: [
+        (value) => (value.trim().length === 0 ? t("validation.quantityPositive") : null),
+        (value) => (Number(value) >= 1 ? null : t("validation.quantityPositive")),
+      ],
+      direccion: [(value) => (value.trim().length === 0 ? t("validation.addressRequired") : null)],
+      fecha_pedido: [(value) => (value.trim().length === 0 ? t("validation.dateRequired") : null)],
+      etiqueta: [(value) => (value.trim().length === 0 ? t("validation.required") : null)],
+      tipo_duracion: [(value) => (value.trim().length === 0 ? t("validation.required") : null)],
+    },
+  });
 
   const load = async (): Promise<void> => {
     setState({ status: "loading" });
@@ -66,6 +91,14 @@ export function OrdersFeature() {
     void load();
   }, []);
 
+  useEffect(() => {
+    if (!notice) {
+      return;
+    }
+    const timeout = setTimeout(() => setNotice(null), 5000);
+    return () => clearTimeout(timeout);
+  }, [notice]);
+
   const selectedClient = useMemo(
     () => (state.status === "success" ? state.clients.find((item) => item.codigo_cliente === form.codigo_cliente) : undefined),
     [state, form.codigo_cliente],
@@ -85,6 +118,7 @@ export function OrdersFeature() {
       await commerceApi.createOrder(form);
       setNotice(t("orders.created"));
       setForm((current) => ({ ...current, direccion: "" }));
+      validation.resetValidation();
       await load();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : t("orders.createError"));
@@ -114,30 +148,23 @@ export function OrdersFeature() {
           <p>{t("orders.subtitle")}</p>
         </div>
       </div>
-      {notice ? <div className="demo-note">{notice}</div> : null}
+      {notice ? <div className="form-success-note">{notice}</div> : null}
       <div className="grid two">
         <section className="panel">
           <h3>{t("orders.create")}</h3>
-          <div className="form-grid">
-            <Select
-              label={t("orders.customer")}
-              value={String(form.codigo_cliente)}
-              options={state.clients.map((client) => ({ value: String(client.codigo_cliente), label: `${client.nombre} ${client.apellido}` }))}
-              onChange={(value) => setForm({ ...form, codigo_cliente: Number(value) })}
-            />
-            <Select
-              label={t("orders.product")}
-              value={String(form.codigo_producto)}
-              options={state.products.map((product) => ({ value: String(product.codigo_producto), label: productName(product.codigo_producto, product.nombre) }))}
-              onChange={(value) => setForm({ ...form, codigo_producto: Number(value) })}
-            />
-            <Field label={t("orders.quantity")} value={String(form.cantidad)} onChange={(value) => setForm({ ...form, cantidad: Number(value) })} type="number" />
-            <Field label={t("orders.address")} value={form.direccion} onChange={(value) => setForm({ ...form, direccion: value })} />
-            <Field label={t("orders.orderDate")} value={form.fecha_pedido} onChange={(value) => setForm({ ...form, fecha_pedido: value })} type="datetime-local" />
-            <Field label={t("orders.label")} value={form.etiqueta} onChange={(value) => setForm({ ...form, etiqueta: value })} />
-            <Field label={t("orders.durationType")} value={form.tipo_duracion} onChange={(value) => setForm({ ...form, tipo_duracion: value })} />
-          </div>
-          <button className="primary-button" onClick={() => void createOrder()}>{t("orders.create")}</button>
+          <FormErrorSummary title={t("validation.summaryTitle")} errors={Object.values(validation.errors).filter((error): error is string => Boolean(error))} />
+          <form onSubmit={(event) => validation.onSubmit(event, createOrder)} noValidate>
+            <div className="form-grid">
+              <Select name="codigo_cliente" label={t("orders.customer")} value={String(form.codigo_cliente)} options={state.clients.map((client) => ({ value: String(client.codigo_cliente), label: `${client.nombre} ${client.apellido}` }))} onChange={(value) => setForm({ ...form, codigo_cliente: Number(value) })} onBlur={() => validation.markBlurred("codigo_cliente")} error={validation.getError("codigo_cliente")} success={validation.shouldShowSuccess("codigo_cliente")} />
+              <Select name="codigo_producto" label={t("orders.product")} value={String(form.codigo_producto)} options={state.products.map((product) => ({ value: String(product.codigo_producto), label: productName(product.codigo_producto, product.nombre) }))} onChange={(value) => setForm({ ...form, codigo_producto: Number(value) })} onBlur={() => validation.markBlurred("codigo_producto")} error={validation.getError("codigo_producto")} success={validation.shouldShowSuccess("codigo_producto")} />
+              <Field name="cantidad" label={t("orders.quantity")} value={String(form.cantidad)} onChange={(value) => setForm({ ...form, cantidad: Number(value) })} onBlur={() => validation.markBlurred("cantidad")} error={validation.getError("cantidad")} success={validation.shouldShowSuccess("cantidad")} type="number" inputMode="numeric" />
+              <Field name="direccion" label={t("orders.address")} value={form.direccion} onChange={(value) => setForm({ ...form, direccion: value })} onBlur={() => validation.markBlurred("direccion")} error={validation.getError("direccion")} success={validation.shouldShowSuccess("direccion")} />
+              <Field name="fecha_pedido" label={t("orders.orderDate")} value={form.fecha_pedido} onChange={(value) => setForm({ ...form, fecha_pedido: value })} onBlur={() => validation.markBlurred("fecha_pedido")} error={validation.getError("fecha_pedido")} success={validation.shouldShowSuccess("fecha_pedido")} type="datetime-local" />
+              <Field name="etiqueta" label={t("orders.label")} value={form.etiqueta} onChange={(value) => setForm({ ...form, etiqueta: value })} onBlur={() => validation.markBlurred("etiqueta")} error={validation.getError("etiqueta")} success={validation.shouldShowSuccess("etiqueta")} />
+              <Field name="tipo_duracion" label={t("orders.durationType")} value={form.tipo_duracion} onChange={(value) => setForm({ ...form, tipo_duracion: value })} onBlur={() => validation.markBlurred("tipo_duracion")} error={validation.getError("tipo_duracion")} success={validation.shouldShowSuccess("tipo_duracion")} />
+            </div>
+            <button className="primary-button" type="submit" disabled={!validation.isValid}>{t("orders.create")}</button>
+          </form>
         </section>
         <section className="panel">
           <h3>{t("orders.changeStatus")}</h3>
@@ -145,12 +172,14 @@ export function OrdersFeature() {
             <>
               <div className="form-grid">
                 <Select
+                  name="status_order"
                   label={t("common.order")}
                   value={statusForm.codigo_pedido}
                   options={state.currentOrders.map((order) => ({ value: order.codigo_pedido, label: order.codigo_pedido }))}
                   onChange={(value) => setStatusForm({ ...statusForm, codigo_pedido: value })}
                 />
                 <Select
+                  name="status"
                   label={t("common.status")}
                   value={statusForm.estado}
                   options={[{ value: "generado", label: status("generado") }, { value: "proceso", label: status("proceso") }, { value: "entregado", label: status("entregado") }, { value: "cancelado", label: status("cancelado") }, { value: "facturado", label: status("facturado") }]}
@@ -262,45 +291,65 @@ function OrdersLoadingSkeleton({ title, description }: { title: string; descript
 }
 
 function Field({
+  name,
   label,
   value,
   onChange,
+  onBlur,
+  error,
+  success = false,
   type = "text",
+  inputMode,
 }: {
+  name: string;
   label: string;
   value: string;
   onChange(value: string): void;
+  onBlur?(): void;
+  error?: string | null | undefined;
+  success?: boolean;
   type?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 }) {
   return (
     <label className="field">
       <span>{label}</span>
-      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+      <input name={name} type={type} value={value} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? `${name}-error` : undefined} className={success ? "field-valid" : undefined} inputMode={inputMode} />
+      <FieldMessage id={`${name}-error`} error={error} />
     </label>
   );
 }
 
 function Select({
+  name,
   label,
   value,
   options,
   onChange,
+  onBlur,
+  error,
+  success = false,
 }: {
+  name: string;
   label: string;
   value: string;
   options: readonly { value: string; label: string }[];
   onChange(value: string): void;
+  onBlur?(): void;
+  error?: string | null | undefined;
+  success?: boolean;
 }) {
   return (
     <label className="field">
       <span>{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
+      <select name={name} value={value} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? `${name}-error` : undefined} className={success ? "field-valid" : undefined}>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
       </select>
+      <FieldMessage id={`${name}-error`} error={error} />
     </label>
   );
 }
