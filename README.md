@@ -16,6 +16,7 @@ packages/
   shared/       Helpers de entorno y utilidades compartidas
 docs/
   db-contract.md  Contrato de superficie SQL esperada
+  deployment-guide.md  Runbook de despliegue para local, staging y producción
 ```
 
 El flujo de dependencias es hacia adentro: las aplicaciones y adaptadores dependen de `@eclick-one/domain`; el paquete domain no tiene dependencias externas.
