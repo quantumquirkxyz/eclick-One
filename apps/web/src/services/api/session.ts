@@ -7,17 +7,20 @@ export interface SessionUser {
 
 export interface AuthTokenPair {
   accessToken: string;
-  accessTokenExpiresAt: string;
-  refreshTokenExpiresAt: string;
+  accessTokenExpiresAt?: string;
+  refreshTokenExpiresAt?: string;
+  expiresIn?: number;
   refreshToken?: string;
   tokenType: "Bearer";
-  user: SessionUser;
+  user?: SessionUser;
 }
 
 type RefreshFn = () => Promise<AuthTokenPair>;
+type ClearFn = () => void;
 
 const REFRESH_LEEWAY_MS = 30_000;
 const PROACTIVE_REFRESH_RATIO = 0.8;
+const DEFAULT_REFRESH_TTL_SECONDS = 604_800;
 const LOGOUT_EVENT = "eclick-one:logout";
 
 export class SessionManager {
@@ -30,7 +33,7 @@ export class SessionManager {
   private refreshPromise: Promise<string | null> | null = null;
   private readonly logoutChannel: BroadcastChannel | null;
 
-  constructor(private readonly refreshFn: RefreshFn) {
+  constructor(private readonly refreshFn: RefreshFn, private readonly onSessionCleared?: ClearFn) {
     this.logoutChannel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(LOGOUT_EVENT);
     this.logoutChannel?.addEventListener("message", () => {
       this.clearLocalSession();
@@ -41,10 +44,10 @@ export class SessionManager {
     const now = Date.now();
     this.accessToken = tokens.accessToken;
     this.accessTokenIssuedAt = now;
-    this.accessTokenExpiresAt = Date.parse(tokens.accessTokenExpiresAt);
+    this.accessTokenExpiresAt = expiryMs(tokens.accessTokenExpiresAt, tokens.expiresIn, now);
     this.refreshToken = tokens.refreshToken ?? null;
-    this.refreshTokenExpiresAt = Date.parse(tokens.refreshTokenExpiresAt);
-    this.hasRefreshSession = true;
+    this.refreshTokenExpiresAt = expiryMs(tokens.refreshTokenExpiresAt, DEFAULT_REFRESH_TTL_SECONDS, now);
+    this.hasRefreshSession = Boolean(this.refreshToken);
   }
 
   clearSession(): void {
@@ -106,5 +109,15 @@ export class SessionManager {
     this.refreshToken = null;
     this.refreshTokenExpiresAt = 0;
     this.hasRefreshSession = false;
+    this.onSessionCleared?.();
   }
+}
+
+function expiryMs(expiresAt: string | undefined, expiresInSeconds: number | undefined, now: number): number {
+  const absolute = expiresAt ? Date.parse(expiresAt) : Number.NaN;
+  if (Number.isFinite(absolute)) return absolute;
+  const ttlSeconds = Number.isFinite(expiresInSeconds) && expiresInSeconds && expiresInSeconds > 0
+    ? expiresInSeconds
+    : DEFAULT_REFRESH_TTL_SECONDS;
+  return now + ttlSeconds * 1000;
 }

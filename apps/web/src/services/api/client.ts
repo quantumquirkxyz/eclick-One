@@ -2,6 +2,9 @@ import { getCurrentLocale } from "../../i18n";
 import { SessionManager, type AuthTokenPair } from "./session";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
+const STORAGE_ACCESS_KEY = "eclick-one-access-token";
+const STORAGE_REFRESH_KEY = "eclick-one-refresh-token";
+const STORAGE_USER_KEY = "eclick-one-user";
 
 export class ApiError extends Error {
   constructor(
@@ -19,14 +22,14 @@ export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
-  const response = await sendApiRequest(path, init, await sessionManager.getAccessToken());
+  const response = await sendApiRequest(path, init, await getRequestAccessToken());
   if (response.status === 401) {
     const refreshedAccessToken = await sessionManager.refreshAfterUnauthorized();
     if (refreshedAccessToken) {
       const retry = await sendApiRequest(path, init, refreshedAccessToken);
       return parseApiResponse<T>(retry);
     }
-    sessionManager.clearSession();
+    clearApiSession();
   }
   return parseApiResponse<T>(response);
 }
@@ -37,6 +40,12 @@ export function setApiSession(tokens: AuthTokenPair): void {
 
 export function clearApiSession(): void {
   sessionManager.clearSession();
+}
+
+async function getRequestAccessToken(): Promise<string | null> {
+  const sessionAccessToken = await sessionManager.getAccessToken();
+  if (sessionAccessToken) return sessionAccessToken;
+  return hydrateStoredApiSession();
 }
 
 async function sendApiRequest(
@@ -80,12 +89,36 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-const sessionManager = new SessionManager(async () =>
-  rawApiRequest<AuthTokenPair>("/api/v1/auth/refresh", {
+const sessionManager: SessionManager = new SessionManager(refreshAuthSession, clearPersistedAuth);
+
+async function refreshAuthSession(): Promise<AuthTokenPair> {
+  return rawApiRequest<AuthTokenPair>("/api/v1/auth/refresh", {
     method: "POST",
-    body: JSON.stringify({}),
-  }),
-);
+    body: JSON.stringify({ refreshToken: sessionManager.getRefreshToken() }),
+  });
+}
+
+function hydrateStoredApiSession(): string | null {
+  if (typeof localStorage === "undefined") {
+    return null;
+  }
+  const accessToken = localStorage.getItem(STORAGE_ACCESS_KEY);
+  const refreshToken = localStorage.getItem(STORAGE_REFRESH_KEY);
+  if (!accessToken) return null;
+  if (refreshToken) {
+    sessionManager.setSession({ accessToken, refreshToken, tokenType: "Bearer" });
+  }
+  return accessToken;
+}
+
+function clearPersistedAuth(): void {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+  localStorage.removeItem(STORAGE_ACCESS_KEY);
+  localStorage.removeItem(STORAGE_REFRESH_KEY);
+  localStorage.removeItem(STORAGE_USER_KEY);
+}
 
 async function rawApiRequest<T>(path: string, init: RequestInit): Promise<T> {
   return parseApiResponse(await sendApiRequest(path, init, null));
