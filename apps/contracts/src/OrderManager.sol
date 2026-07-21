@@ -2,7 +2,14 @@
 pragma solidity ^0.8.28;
 
 contract OrderManager {
-    enum OrderStatus { None, Generated, InProcess, Delivered, Cancelled, Invoiced }
+    enum OrderStatus {
+        None,
+        Generated,
+        InProcess,
+        Delivered,
+        Cancelled,
+        Invoiced
+    }
 
     struct Order {
         OrderStatus status;
@@ -31,12 +38,7 @@ contract OrderManager {
         uint256 quantity,
         uint256 amount
     );
-    event OrderStatusTransitioned(
-        bytes32 indexed orderId,
-        OrderStatus from,
-        OrderStatus to,
-        address triggeredBy
-    );
+    event OrderStatusTransitioned(bytes32 indexed orderId, OrderStatus from, OrderStatus to, address triggeredBy);
     event PaymentRecorded(bytes32 indexed orderId, uint256 amount);
     event CollectorAdded(address indexed collector);
     event CollectorRemoved(address indexed collector);
@@ -79,6 +81,12 @@ contract OrderManager {
         uint256 quantity,
         uint256 amount
     ) external {
+        require(bytes(orderCode).length != 0, "Order code required");
+        require(clientCode != 0, "Client code required");
+        require(productCode != 0, "Product code required");
+        require(quantity != 0, "Quantity must be positive");
+        require(amount != 0, "Amount must be positive");
+
         bytes32 orderId = keccak256(bytes(orderCode));
         require(!orders[orderId].exists, "Order already exists");
 
@@ -156,6 +164,8 @@ contract OrderManager {
         Order storage order = orders[orderId];
         require(order.exists, "Order not found");
         require(!order.isPaid, "Already paid");
+        require(order.status != OrderStatus.Cancelled, "Cancelled orders cannot be paid");
+        require(amount != 0, "Amount must be positive");
         require(amount == order.amount, "Amount must match order amount");
 
         order.isPaid = true;
