@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { commerceApi, validatePayment } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { DataTable } from "../../components/tables/DataTable";
+import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
 import type { NewCommercePayment, CommercePayment, CommerceOrder } from "../../types/commerce";
 
@@ -52,7 +53,7 @@ export function PaymentsFeature() {
     [state, form.codigo_pedido],
   );
 
-  if (state.status === "loading") return <ResourceState status="loading" title={t("payments.title")} description={t("payments.loading")} />;
+  if (state.status === "loading") return <PaymentsLoadingSkeleton title={t("payments.title")} description={t("payments.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("payments.title")} error={state.message} onRetry={load} />;
   if (state.payments.length === 0) return <ResourceState status="empty" title={t("payments.title")} description={t("payments.empty")} onRetry={load} />;
 
@@ -146,6 +147,36 @@ export function PaymentsFeature() {
         />
       </section>
     </section>
+  );
+}
+
+function PaymentsLoadingSkeleton({ title, description }: { title: string; description: string }) {
+  return (
+    <SkeletonPage title={title} description={description}>
+      <SkeletonPageTitle />
+      <div className="grid two">
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <div className="form-grid skeleton-form-grid">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div className="field" key={index}>
+                <Skeleton className="skeleton-field-label" />
+                <Skeleton className="skeleton-input" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="skeleton-button" />
+        </section>
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <SkeletonTable columns={3} rows={4} className="skeleton-table-compact" />
+        </section>
+      </div>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={6} rows={6} />
+      </section>
+    </SkeletonPage>
   );
 }
 
