@@ -1,5 +1,8 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useI18n } from "../../i18n";
+import { ForbiddenPage } from "../../pages/ForbiddenPage";
+import { ResourceState } from "../layout/ResourceState";
 
 type AllowedRole = "admin" | "operator" | "viewer" | "agent";
 
@@ -13,9 +16,10 @@ const ROLE_HIERARCHY: Record<AllowedRole, number> = {
 export function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: AllowedRole[] }) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
+  const { t } = useI18n();
 
   if (isLoading) {
-    return <div className="resource-state"><p className="text-muted">Loading...</p></div>;
+    return <ResourceState status="loading" title={t("common.loading")} />;
   }
 
   if (!isAuthenticated) {
@@ -23,7 +27,7 @@ export function ProtectedRoute({ children, allowedRoles }: { children: React.Rea
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <div className="resource-state"><p className="text-muted">You do not have permission to access this page.</p></div>;
+    return <ForbiddenPage />;
   }
 
   return <>{children}</>;

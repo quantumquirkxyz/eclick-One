@@ -6,11 +6,12 @@ import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
+import { normalizeAppError, type AppError } from "../../services/api/client";
 import type { NewCommercePayment, CommercePayment, CommerceOrder } from "../../types/commerce";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "error"; message: string }
+  | { status: "error"; error: AppError }
   | { status: "success"; payments: readonly CommercePayment[]; orders: readonly CommerceOrder[] };
 
 type PaymentForm = Omit<NewCommercePayment, "referencia"> & { referencia?: string };
@@ -42,7 +43,7 @@ export function PaymentsFeature() {
         }));
       }
     } catch (error) {
-      setState({ status: "error", message: error instanceof Error ? error.message : t("payments.error") });
+      setState({ status: "error", error: normalizeAppError(error, t("payments.error")) });
     }
   };
 
@@ -56,7 +57,7 @@ export function PaymentsFeature() {
   );
 
   if (state.status === "loading") return <PaymentsLoadingSkeleton title={t("payments.title")} description={t("payments.loading")} />;
-  if (state.status === "error") return <ResourceState status="error" title={t("payments.title")} error={state.message} onRetry={load} />;
+  if (state.status === "error") return <ResourceState status="error" title={t("payments.title")} error={state.error} onRetry={load} />;
 
   const recordPayment = async (): Promise<void> => {
     try {

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { useI18n } from "../../i18n";
+import { ErrorState } from "../ErrorState";
+import { normalizeAppError, type AppError } from "../../services/api/client";
 
 export function ResourceState({
   status,
@@ -12,7 +14,7 @@ export function ResourceState({
   status: "loading" | "error" | "empty" | "success";
   title: string;
   description?: string;
-  error?: string;
+  error?: AppError | Error | string;
   onRetry?: () => void;
   children?: ReactNode;
 }) {
@@ -29,12 +31,7 @@ export function ResourceState({
     return (
       <section className="panel resource-state">
         <h3>{title}</h3>
-        <p>{error ?? description ?? t("common.noRecords")}</p>
-        {onRetry ? (
-          <button className="primary-button" onClick={onRetry}>
-            {t("common.retry")}
-          </button>
-        ) : null}
+        {onRetry ? <ErrorState error={typeof error === "string" ? normalizeAppError(new Error(error), description) : (error ?? new Error(description ?? t("common.noRecords")))} onRetry={onRetry} /> : <p>{description ?? t("common.noRecords")}</p>}
       </section>
     );
   }

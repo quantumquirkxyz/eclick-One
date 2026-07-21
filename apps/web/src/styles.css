@@ -24,6 +24,20 @@ code { font-family: var(--font-mono); }
 .inline-form { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
 .inline-status { margin-top: 12px; color: var(--color-accent); font-weight: 700; }
 .resource-state { display: grid; gap: 12px; }
+.offline-banner { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; background: #991b1b; color: #fff; font-size: 13px; font-weight: 700; }
+.system-state-page { display: grid; min-height: 100vh; place-items: center; background: #f8fafb; padding: 24px; }
+.error-state { display: grid; justify-items: start; gap: 14px; border: 1px solid #fecaca; border-radius: 10px; background: linear-gradient(180deg, #fff7f7 0%, #fff 100%); padding: 22px; }
+.error-state-full-page { width: min(100%, 560px); box-shadow: 0 12px 36px #0f172a12; }
+.error-state-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: #fee2e2; color: #b91c1c; }
+.error-state-copy { display: grid; gap: 6px; }
+.error-state-copy h2 { font-size: 20px; color: #172433; }
+.error-state-copy p { color: #64748b; font-size: 14px; line-height: 1.6; }
+.error-state-copy small { color: #94a3b8; font-size: 12px; }
+.error-state-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.error-state-actions .primary-button,.error-state-actions .secondary-button,.error-toast .secondary-button { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.error-toast { position: fixed; right: 18px; bottom: 18px; z-index: 60; display: flex; align-items: start; gap: 10px; max-width: 360px; border: 1px solid #fecaca; border-radius: 10px; background: #fff; box-shadow: 0 12px 30px #0f172a24; padding: 14px; }
+.error-toast strong { display: block; margin-bottom: 4px; color: #172433; font-size: 13px; }
+.error-toast p { color: #64748b; font-size: 12px; line-height: 1.5; }
 .empty-state { display: grid; justify-items: start; gap: 14px; border: 1px dashed #cbd5e1; border-radius: 10px; background: linear-gradient(180deg, #f8fbfc 0%, #fff 100%); padding: 22px; }
 .empty-state-compact { gap: 12px; padding: 18px; }
 .empty-state-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: #e0f2fe; color: #0369a1; }

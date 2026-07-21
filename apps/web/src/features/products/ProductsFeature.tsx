@@ -6,9 +6,10 @@ import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
+import { normalizeAppError, type AppError } from "../../services/api/client";
 import type { CommerceProduct } from "../../types/commerce";
 
-type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "success"; products: readonly CommerceProduct[] };
+type LoadState = { status: "loading" } | { status: "error"; error: AppError } | { status: "success"; products: readonly CommerceProduct[] };
 
 export function ProductsFeature() {
   const { t, productName, categoryName } = useI18n();
@@ -19,7 +20,7 @@ export function ProductsFeature() {
     try {
       setState({ status: "success", products: await commerceApi.listProducts() });
     } catch (error) {
-      setState({ status: "error", message: error instanceof Error ? error.message : t("products.error") });
+      setState({ status: "error", error: normalizeAppError(error, t("products.error")) });
     }
   };
 
@@ -28,7 +29,7 @@ export function ProductsFeature() {
   }, []);
 
   if (state.status === "loading") return <ProductsLoadingSkeleton title={t("products.title")} description={t("products.loading")} />;
-  if (state.status === "error") return <ResourceState status="error" title={t("products.title")} error={state.message} onRetry={load} />;
+  if (state.status === "error") return <ResourceState status="error" title={t("products.title")} error={state.error} onRetry={load} />;
 
   return (
     <section>

@@ -6,9 +6,10 @@ import { EmptyState } from "../../components/EmptyState";
 import { DataTable } from "../../components/tables/DataTable";
 import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
+import { normalizeAppError, type AppError } from "../../services/api/client";
 import type { CommerceInventory } from "../../types/commerce";
 
-type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "success"; inventory: readonly CommerceInventory[] };
+type LoadState = { status: "loading" } | { status: "error"; error: AppError } | { status: "success"; inventory: readonly CommerceInventory[] };
 
 export function InventoryFeature() {
   const { t } = useI18n();
@@ -19,7 +20,7 @@ export function InventoryFeature() {
     try {
       setState({ status: "success", inventory: await commerceApi.listInventory() });
     } catch (error) {
-      setState({ status: "error", message: error instanceof Error ? error.message : t("inventory.error") });
+      setState({ status: "error", error: normalizeAppError(error, t("inventory.error")) });
     }
   };
 
@@ -28,7 +29,7 @@ export function InventoryFeature() {
   }, []);
 
   if (state.status === "loading") return <InventoryLoadingSkeleton title={t("inventory.title")} description={t("inventory.loading")} />;
-  if (state.status === "error") return <ResourceState status="error" title={t("inventory.title")} error={state.message} onRetry={load} />;
+  if (state.status === "error") return <ResourceState status="error" title={t("inventory.title")} error={state.error} onRetry={load} />;
 
   return (
     <section>
