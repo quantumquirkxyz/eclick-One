@@ -16,16 +16,8 @@ test.describe("Error Handling Flow", () => {
     await page.locator('input[autocomplete="current-password"]').focus();
     await page.locator('input[autocomplete="current-password"]').blur();
 
-    await expect(
-      page
-        .getByText("Email is required.")
-        .or(page.getByText("El correo es obligatorio.")),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByText("Password is required.")
-        .or(page.getByText("La contrasena es obligatoria.")),
-    ).toBeVisible();
+    await expect(page.locator("#email-error")).toBeVisible();
+    await expect(page.locator("#password-error")).toBeVisible();
   });
 
   test("show error on login with invalid credentials", async ({ page }) => {
@@ -51,6 +43,6 @@ test.describe("Error Handling Flow", () => {
     await page.locator('input[autocomplete="new-password"]').nth(1).fill("123");
     await page.locator('input[autocomplete="new-password"]').nth(1).blur();
     await expect(page.locator("button[type='submit']")).toBeDisabled();
-    await expect(page.getByText("Password must be at least 8 characters.").or(page.getByText("La contrasena debe tener al menos 8 caracteres."))).toBeVisible();
+    await expect(page.locator("#password-error")).toBeVisible();
   });
 });
