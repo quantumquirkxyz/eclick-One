@@ -118,4 +118,3 @@ async function captureSpanishDashboard(page: Page) {
 function screenshotPath(filename: string): string {
   return path.join(screenshotsDir, filename);
 }
-
