@@ -45,23 +45,9 @@ export class ConflictError extends AppError {
   }
 }
 
-export class UnauthorizedError extends AppError {
-  constructor(message = "Unauthorized.") {
-    super(message, 401, "UNAUTHORIZED");
-    this.name = "UnauthorizedError";
-  }
-}
-
 export class ServiceUnavailableError extends AppError {
   constructor(message = "Service temporarily unavailable.", details?: unknown) {
     super(message, 503, "SERVICE_UNAVAILABLE", details);
     this.name = "ServiceUnavailableError";
-  }
-}
-
-export class UnauthorizedError extends AppError {
-  constructor(message = "Unauthorized.") {
-    super(message, 401, "UNAUTHORIZED");
-    this.name = "UnauthorizedError";
   }
 }

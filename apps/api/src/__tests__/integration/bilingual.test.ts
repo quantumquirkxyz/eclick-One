@@ -30,7 +30,10 @@ describe("bilingual responses", async () => {
     );
     expect(response.status).toBe(400);
     const body = await response.json();
-    expect(body.error.message).toBe("codigo_cliente must be an integer.");
+    expect(body.error.message).toBe("Validation failed.");
+    expect(body.error.details).toMatchObject({
+      fields: [{ field: "codigo_cliente", message: "codigo_cliente must be a positive integer." }],
+    });
   });
 
   test("returns Spanish error for Spanish accept-language", async () => {
@@ -41,7 +44,10 @@ describe("bilingual responses", async () => {
     );
     expect(response.status).toBe(400);
     const body = await response.json();
-    expect(body.error.message).toBe("codigo_cliente debe ser un entero.");
+    expect(body.error.message).toBe("La validacion fallo.");
+    expect(body.error.details).toMatchObject({
+      fields: [{ field: "codigo_cliente", message: "codigo_cliente debe ser un entero positivo." }],
+    });
   });
 
   test("returns Spanish dashboard notice", async () => {

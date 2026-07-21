@@ -98,6 +98,8 @@ function translateSpanishPattern(message: string): string {
   if (nonEmpty) return `${nonEmpty[1]} debe ser texto no vacio.`;
   const stringValue = message.match(/^(.+) must be a string\.$/);
   if (stringValue) return `${stringValue[1]} debe ser texto.`;
+  const positiveInteger = message.match(/^(.+) must be a positive integer\.$/);
+  if (positiveInteger) return `${positiveInteger[1]} debe ser un entero positivo.`;
   const integer = message.match(/^(.+) must be an integer greater than or equal to (\d+)\.$/);
   if (integer) return `${integer[1]} debe ser un entero mayor o igual a ${integer[2]}.`;
   const amount = message.match(/^(.+) must be a positive amount\.$/);

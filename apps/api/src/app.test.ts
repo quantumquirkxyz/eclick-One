@@ -64,6 +64,7 @@ describe("API application", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/orders", {
         method: "POST",
+        headers,
         body: JSON.stringify({}),
       }),
     );
@@ -79,7 +80,7 @@ describe("API application", () => {
   test("rejects unsupported accept-language values", async () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/dashboard", {
-        headers: { "accept-language": "fr-FR" },
+        headers: { ...headers, "accept-language": "fr-FR" },
       }),
     );
     expect(response.status).toBe(400);
@@ -96,6 +97,7 @@ describe("API application", () => {
       new Request("http://localhost/api/v1/payments", {
         method: "POST",
         headers: {
+          ...headers,
           "accept-language": "es",
           "content-type": "application/json",
         },
@@ -128,7 +130,7 @@ describe("API application", () => {
     const response = await app.fetch(
       new Request("http://localhost/api/v1/customers", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
           nombre: "  <Ada>  ",
           apellido: "Lovelace",
