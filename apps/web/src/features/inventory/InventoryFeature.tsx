@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { commerceApi } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { DataTable } from "../../components/tables/DataTable";
+import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
 import type { CommerceInventory } from "../../types/commerce";
 
@@ -24,7 +25,7 @@ export function InventoryFeature() {
     void load();
   }, []);
 
-  if (state.status === "loading") return <ResourceState status="loading" title={t("inventory.title")} description={t("inventory.loading")} />;
+  if (state.status === "loading") return <InventoryLoadingSkeleton title={t("inventory.title")} description={t("inventory.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("inventory.title")} error={state.message} onRetry={load} />;
   if (state.inventory.length === 0) return <ResourceState status="empty" title={t("inventory.title")} description={t("inventory.empty")} onRetry={load} />;
 
@@ -50,5 +51,17 @@ export function InventoryFeature() {
         />
       </section>
     </section>
+  );
+}
+
+function InventoryLoadingSkeleton({ title, description }: { title: string; description: string }) {
+  return (
+    <SkeletonPage title={title} description={description}>
+      <SkeletonPageTitle />
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={5} rows={8} />
+      </section>
+    </SkeletonPage>
   );
 }

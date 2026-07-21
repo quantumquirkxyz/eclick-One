@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { collectorApi, complianceApi, type AgentHealth, type AgentMetrics, type AgentActivityEntry, type AgentInfo } from "../../services/agent/agent";
+import { Skeleton, SkeletonCard, SkeletonPage, SkeletonPageTitle, SkeletonTable, SkeletonText } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
 
 function useAgent<H, M, A>(
@@ -10,12 +11,20 @@ function useAgent<H, M, A>(
   const [metrics, setMetrics] = useState<M | null>(null);
   const [activity, setActivity] = useState<A | null>(null);
   const [info, setInfo] = useState<AgentInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const load = async () => {
-    setHealth(await api.health());
-    setMetrics(await api.metrics());
-    setActivity(await api.activity(10));
-    if (!info) setInfo(await api.info());
+    const [nextHealth, nextMetrics, nextActivity, nextInfo] = await Promise.all([
+      api.health(),
+      api.metrics(),
+      api.activity(10),
+      info ? Promise.resolve(info) : api.info(),
+    ]);
+    setHealth(nextHealth);
+    setMetrics(nextMetrics);
+    setActivity(nextActivity);
+    if (!info) setInfo(nextInfo);
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -24,7 +33,7 @@ function useAgent<H, M, A>(
     return () => clearInterval(interval);
   }, []);
 
-  return { health, metrics, activity, info, reload: load };
+  return { health, metrics, activity, info, isLoading, reload: load };
 }
 
 function AgentCard({
@@ -181,8 +190,13 @@ export function Web3Feature() {
   const { t } = useI18n();
   const collector = useAgent<AgentHealth, AgentMetrics, readonly AgentActivityEntry[]>(collectorApi, 3000);
   const compliance = useAgent<AgentHealth, AgentMetrics, readonly AgentActivityEntry[]>(complianceApi, 3000);
+  const isLoading = collector.isLoading || compliance.isLoading;
 
   const anyOnline = (collector.health?.status === "ok") || (compliance.health?.status === "ok");
+
+  if (isLoading) {
+    return <Web3LoadingSkeleton title={t("nav.web3")} description={t("common.loading")} />;
+  }
 
   return (
     <section>
@@ -250,5 +264,43 @@ export function Web3Feature() {
         </div>
       </div>
     </section>
+  );
+}
+
+function Web3LoadingSkeleton({ title, description }: { title: string; description: string }) {
+  return (
+    <SkeletonPage title={title} description={description}>
+      <SkeletonPageTitle />
+      <div className="grid two" style={{ marginTop: 16 }}>
+        <SkeletonCard lines={6} />
+        <SkeletonCard lines={6} />
+      </div>
+      <div className="grid two" style={{ marginTop: 16 }}>
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <SkeletonText lines={5} widths={["42%", "88%", "52%", "72%", "36%"]} className="skeleton-stack-gap" />
+        </section>
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <div className="inline-form">
+            <Skeleton className="skeleton-input" />
+            <Skeleton className="skeleton-button" />
+          </div>
+          <Skeleton className="skeleton-inline-status" />
+        </section>
+      </div>
+      <section className="panel" style={{ marginTop: 16 }} aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <div className="architecture-flow" style={{ padding: 16 }}>
+          {Array.from({ length: 5 }, (_, index) => (
+            <div className="architecture-node" key={index}>
+              <Skeleton className="skeleton-node-icon" />
+              <Skeleton className="skeleton-node-label" />
+              {index < 4 ? <b>→</b> : null}
+            </div>
+          ))}
+        </div>
+      </section>
+    </SkeletonPage>
   );
 }

@@ -3,6 +3,7 @@ import { commerceApi, validateOrder, validateTransition } from "../../services/a
 import { ResourceState } from "../../components/layout/ResourceState";
 import { DataTable } from "../../components/tables/DataTable";
 import { OnChainStatusBadge } from "../../components/agent/OnChainStatusBadge";
+import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
 import type { CommerceClient, CommerceOrderStatus, NewCommerceOrder, CommerceOrder, CommerceProduct } from "../../types/commerce";
 
@@ -71,7 +72,7 @@ export function OrdersFeature() {
     [state, statusForm.codigo_pedido],
   );
 
-  if (state.status === "loading") return <ResourceState status="loading" title={t("orders.title")} description={t("orders.loading")} />;
+  if (state.status === "loading") return <OrdersLoadingSkeleton title={t("orders.title")} description={t("orders.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("orders.title")} error={state.message} onRetry={load} />;
   if (state.orders.length === 0) return <ResourceState status="empty" title={t("orders.title")} description={t("orders.empty")} onRetry={load} />;
 
@@ -181,6 +182,48 @@ export function OrdersFeature() {
         />
       </section>
     </section>
+  );
+}
+
+function OrdersLoadingSkeleton({ title, description }: { title: string; description: string }) {
+  return (
+    <SkeletonPage title={title} description={description}>
+      <SkeletonPageTitle />
+      <div className="grid two">
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <div className="form-grid skeleton-form-grid">
+            {Array.from({ length: 7 }, (_, index) => (
+              <div className="field" key={index}>
+                <Skeleton className="skeleton-field-label" />
+                <Skeleton className="skeleton-input" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="skeleton-button" />
+        </section>
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <div className="form-grid skeleton-form-grid">
+            {Array.from({ length: 2 }, (_, index) => (
+              <div className="field" key={index}>
+                <Skeleton className="skeleton-field-label" />
+                <Skeleton className="skeleton-input" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="skeleton-button skeleton-button-secondary" />
+        </section>
+      </div>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={6} rows={5} />
+      </section>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={6} rows={6} />
+      </section>
+    </SkeletonPage>
   );
 }
 

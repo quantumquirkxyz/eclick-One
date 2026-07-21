@@ -4,6 +4,7 @@ import { DataTable } from "../../components/tables/DataTable";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { StatusChart } from "../../components/charts/StatusChart";
 import { AgentActivityPanel } from "../../components/agent/AgentActivityPanel";
+import { Skeleton, SkeletonCard, SkeletonChart, SkeletonPage, SkeletonPageTitle, SkeletonTable, SkeletonText } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
 
 type LoadState =
@@ -29,7 +30,7 @@ export function DashboardFeature() {
   }, []);
 
   if (state.status === "loading") {
-    return <ResourceState status="loading" title={t("nav.summary")} description={t("dashboard.loading")} />;
+    return <DashboardLoadingSkeleton title={t("nav.summary")} description={t("dashboard.loading")} />;
   }
 
   if (state.status === "error") {
@@ -128,6 +129,53 @@ export function DashboardFeature() {
       </section>
       {!nonEmpty ? <ResourceState status="empty" title={t("nav.summary")} description={t("dashboard.empty")} onRetry={load} /> : null}
     </section>
+  );
+}
+
+function DashboardLoadingSkeleton({ title, description }: { title: string; description: string }) {
+  return (
+    <SkeletonPage title={title} description={description}>
+      <SkeletonPageTitle />
+      <div className="metrics">
+        {Array.from({ length: 4 }, (_, index) => (
+          <article className="metric skeleton-metric-card" key={index} aria-hidden="true">
+            <Skeleton className="skeleton-metric-label" />
+            <Skeleton className="skeleton-metric-value" />
+            <Skeleton className="skeleton-metric-note" />
+          </article>
+        ))}
+      </div>
+      <div className="grid two">
+        <SkeletonChart height={260} />
+        <SkeletonCard lines={5} />
+      </div>
+      <div className="grid two">
+        <SkeletonCard lines={3} />
+      </div>
+      <div className="grid two">
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <SkeletonTable columns={2} rows={4} className="skeleton-table-compact" />
+        </section>
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <SkeletonTable columns={3} rows={4} className="skeleton-table-compact" />
+        </section>
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <SkeletonText lines={2} className="skeleton-stack-gap" />
+          <SkeletonTable columns={3} rows={4} className="skeleton-table-compact" />
+        </section>
+      </div>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={5} rows={5} />
+      </section>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={3} rows={5} />
+      </section>
+    </SkeletonPage>
   );
 }
 

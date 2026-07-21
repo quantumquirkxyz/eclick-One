@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { commerceApi, validateClient } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { DataTable } from "../../components/tables/DataTable";
+import { Skeleton, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
 import type { CommerceClient, NewCommerceClient, CommerceProvince } from "../../types/commerce";
 
@@ -45,7 +46,7 @@ export function CustomersFeature() {
   }, []);
 
   if (state.status === "loading") {
-    return <ResourceState status="loading" title={t("customers.title")} description={t("customers.loading")} />;
+    return <CustomersLoadingSkeleton title={t("customers.title")} description={t("customers.loading")} />;
   }
   if (state.status === "error") {
     return <ResourceState status="error" title={t("customers.title")} error={state.message} onRetry={load} />;
@@ -145,6 +146,47 @@ export function CustomersFeature() {
         />
       </section>
     </section>
+  );
+}
+
+function CustomersLoadingSkeleton({ title, description }: { title: string; description: string }) {
+  return (
+    <SkeletonPage title={title} description={description}>
+      <SkeletonPageTitle />
+      <div className="grid two">
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <div className="form-grid skeleton-form-grid">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div className="field" key={index}>
+                <Skeleton className="skeleton-field-label" />
+                <Skeleton className="skeleton-input" />
+              </div>
+            ))}
+            <div className="switch-row skeleton-switch-row">
+              <Skeleton className="skeleton-checkbox" />
+              <Skeleton className="skeleton-switch-label" />
+            </div>
+          </div>
+          <Skeleton className="skeleton-button" />
+        </section>
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <div className="inline-form">
+            <div className="field">
+              <Skeleton className="skeleton-field-label" />
+              <Skeleton className="skeleton-input" />
+            </div>
+            <Skeleton className="skeleton-button skeleton-button-secondary" />
+          </div>
+          <Skeleton className="skeleton-inline-status" />
+        </section>
+      </div>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={5} rows={6} />
+      </section>
+    </SkeletonPage>
   );
 }
 

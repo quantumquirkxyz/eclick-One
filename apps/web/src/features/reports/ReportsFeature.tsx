@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { commerceApi } from "../../services/api/commerce";
 import { ResourceState } from "../../components/layout/ResourceState";
 import { DataTable } from "../../components/tables/DataTable";
+import { Skeleton, SkeletonChart, SkeletonPage, SkeletonPageTitle, SkeletonTable } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
 
 type LoadState =
@@ -27,7 +28,7 @@ export function ReportsFeature() {
     void load();
   }, []);
 
-  if (state.status === "loading") return <ResourceState status="loading" title={t("reports.title")} description={t("reports.loading")} />;
+  if (state.status === "loading") return <ReportsLoadingSkeleton title={t("reports.title")} description={t("reports.loading")} />;
   if (state.status === "error") return <ResourceState status="error" title={t("reports.title")} error={state.message} onRetry={load} />;
   if (state.sections.length === 0) return <ResourceState status="empty" title={t("reports.title")} description={t("reports.empty")} onRetry={load} />;
 
@@ -47,6 +48,30 @@ export function ReportsFeature() {
         </section>
       ))}
     </section>
+  );
+}
+
+function ReportsLoadingSkeleton({ title, description }: { title: string; description: string }) {
+  return (
+    <SkeletonPage title={title} description={description}>
+      <SkeletonPageTitle />
+      <Skeleton className="skeleton-note" />
+      <div className="grid two">
+        <SkeletonChart height={220} />
+        <section className="panel" aria-hidden="true">
+          <Skeleton className="skeleton-heading" />
+          <SkeletonTable columns={1} rows={5} />
+        </section>
+      </div>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={1} rows={6} />
+      </section>
+      <section className="panel" aria-hidden="true">
+        <Skeleton className="skeleton-heading" />
+        <SkeletonTable columns={1} rows={6} />
+      </section>
+    </SkeletonPage>
   );
 }
 
