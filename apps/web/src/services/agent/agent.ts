@@ -1,3 +1,5 @@
+import { getStoredAccessToken } from "../api/auth";
+
 const AGENT_BASE_URL = "/agent";
 const COMPLIANCE_AGENT_BASE_URL = "/agent-compliance";
 
@@ -34,7 +36,12 @@ export interface AgentInfo {
 
 async function fetchAgent<T>(baseUrl: string, path: string): Promise<T | null> {
   try {
-    const response = await fetch(`${baseUrl}${path}`);
+    const headers = new Headers();
+    const accessToken = getStoredAccessToken();
+    if (accessToken) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+    const response = await fetch(`${baseUrl}${path}`, { headers });
     if (!response.ok) return null;
     return response.json();
   } catch {

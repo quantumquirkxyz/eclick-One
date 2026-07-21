@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@eclick-one/shared": "workspace:*",
     "viem": "^2.55.0"
   },
   "devDependencies": {
