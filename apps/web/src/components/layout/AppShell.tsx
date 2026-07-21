@@ -54,11 +54,12 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
 
   return (
     <div className="app">
+      {menuOpen ? <button className="mobile-backdrop mobile" type="button" aria-label={t("shell.closeMenu")} onClick={() => setMenuOpen(false)} /> : null}
       <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
         <div className="brand">
           <img className="brand-logo" src="/eclick-One-Logo-2.svg" alt="eclick One logo" />
           <div><strong>eclick One</strong><small>{t("shell.operations")}</small></div>
-          <button className="close mobile" onClick={() => setMenuOpen(false)} aria-label={t("shell.closeMenu")}>×</button>
+          <button className="close mobile" type="button" onClick={() => setMenuOpen(false)} aria-label={t("shell.closeMenu")}>×</button>
         </div>
         <nav aria-label={t("shell.operationalNav")}>
           {navItems.filter((item) => !item.allowedRoles || !user || item.allowedRoles.includes(user.role)).map(({ path, label, icon: Icon, end }) => (
@@ -70,10 +71,10 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
         <div className="side-footer">{t("shell.sideFooterTitle")}<br /><span>{repositoryMode === "turso" ? t("shell.connectedSql") : t("shell.mockApi")}</span></div>
       </aside>
       <div className="workspace">
-        <header>
-          <button className="icon-button mobile" onClick={() => setMenuOpen((open) => !open)} aria-label={t("shell.openMenu")}><Menu /></button>
+        <header className="app-header">
+          <button className="icon-button mobile" type="button" onClick={() => setMenuOpen((open) => !open)} aria-label={t("shell.openMenu")}><Menu /></button>
           <div><p className="eyebrow">{t("shell.eyebrow")}</p><h1>{currentItem?.label ?? t("shell.console")}</h1></div>
-                  <div className="header-actions">
+          <div className="header-actions">
             <LanguageSelector />
             <span className={`synthetic ${repositoryMode === "turso" ? "connected" : ""}`}>{repositoryMode === "turso" ? t("common.azureSql") : t("common.syntheticData")}</span>
             <span className={`synthetic ${web3Online ? "connected" : ""}`}>{web3Online ? t("dashboard.web3Connected") : t("dashboard.web3Disconnected")}</span>
