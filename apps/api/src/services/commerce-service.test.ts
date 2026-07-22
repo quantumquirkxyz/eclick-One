@@ -145,6 +145,16 @@ describe("commerce service", () => {
     });
   });
 
+  test("marks on-chain lookups as unavailable when no blockchain client exists", async () => {
+    const service = createService();
+
+    await expect(service.getOrderOnChainStatus("PA-SYN-0001")).resolves.toEqual({
+      onChain: false,
+      status: null,
+      unavailable: true,
+    });
+  });
+
   test("lists current orders only", async () => {
     const service = createService();
     const current = await service.listCurrentOrders();

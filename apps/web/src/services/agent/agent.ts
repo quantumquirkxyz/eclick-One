@@ -63,11 +63,17 @@ export const complianceApi = {
   info: () => fetchAgent<AgentInfo>(COMPLIANCE_AGENT_BASE_URL, "/info"),
 };
 
+export interface OnChainLookupResult {
+  onChain: boolean;
+  status: number | null;
+  unavailable: boolean;
+}
+
 export async function fetchOnChainStatus(
   orderCode: string,
-): Promise<{ onChain: boolean; status: number | null } | null> {
+): Promise<OnChainLookupResult | null> {
   try {
-    const response = await fetch(`/api/v1/orders/${orderCode}/onchain`);
+    const response = await fetch(`/api/v1/orders/${encodeURIComponent(orderCode)}/onchain`);
     if (!response.ok) return null;
     return response.json();
   } catch {

@@ -4,7 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { LanguageSelector, useI18n } from "../../i18n";
 import { apiRequest } from "../../services/api/client";
-import { collectorApi } from "../../services/agent/agent";
+import { fetchBlockchainStatus, type BlockchainStatus } from "../../services/api/blockchain";
 
 export interface NavItem {
   path: string;
@@ -22,7 +22,7 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [repositoryMode, setRepositoryMode] = useState<RepositoryMode>("mock");
-  const [web3Online, setWeb3Online] = useState(false);
+  const [blockchainStatus, setBlockchainStatus] = useState<BlockchainStatus | null>(null);
   const location = useLocation();
   const currentItem = navItems.find((item) => item.end ? location.pathname === item.path : location.pathname.startsWith(item.path));
 
@@ -37,8 +37,8 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
   useEffect(() => {
     let mounted = true;
     const check = async () => {
-      const health = await collectorApi.health();
-      if (mounted) setWeb3Online(health !== null && health.status === "ok");
+      const status = await fetchBlockchainStatus();
+      if (mounted) setBlockchainStatus(status);
     };
     void check();
     const interval = setInterval(check, 10000);
@@ -77,7 +77,13 @@ export function AppShell({ navItems }: { navItems: readonly NavItem[] }) {
           <div className="header-actions">
             <LanguageSelector />
             <span className={`synthetic ${repositoryMode === "turso" ? "connected" : ""}`}>{repositoryMode === "turso" ? t("common.azureSql") : t("common.syntheticData")}</span>
-            <span className={`synthetic ${web3Online ? "connected" : ""}`}>{web3Online ? t("dashboard.web3Connected") : t("dashboard.web3Disconnected")}</span>
+            <span className={`synthetic ${blockchainStatus?.mode === "connected" ? "connected" : blockchainStatus?.mode === "unavailable" ? "synthetic-warning" : ""}`}>
+              {blockchainStatus?.mode === "connected"
+                ? t("dashboard.web3Connected")
+                : blockchainStatus?.mode === "unavailable"
+                  ? t("dashboard.web3Unavailable")
+                  : t("dashboard.web3Disconnected")}
+            </span>
             {user && <><span className="role-badge">{user.role}</span><span className="avatar">{user.nombre.charAt(0)}{user.apellido.charAt(0)}</span></>}
             <button className="icon-button" onClick={handleLogout} title={t("auth.logout")} style={{ border: 0, background: "none", cursor: "pointer", color: "#64748b", display: "inline-flex", alignItems: "center" }}>
               <LogOut size={18} />

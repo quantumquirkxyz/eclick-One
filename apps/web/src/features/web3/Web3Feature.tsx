@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { collectorApi, complianceApi, type AgentHealth, type AgentMetrics, type AgentActivityEntry, type AgentInfo } from "../../services/agent/agent";
-import { Skeleton, SkeletonCard, SkeletonPage, SkeletonPageTitle, SkeletonTable, SkeletonText } from "../../components/Skeleton";
+import { collectorApi, complianceApi, type AgentActivityEntry, type AgentHealth, type AgentInfo, type AgentMetrics, type OnChainLookupResult } from "../../services/agent/agent";
+import { Skeleton, SkeletonCard, SkeletonPage, SkeletonPageTitle, SkeletonText } from "../../components/Skeleton";
 import { useI18n } from "../../i18n";
+import { fetchBlockchainStatus, type BlockchainStatus } from "../../services/api/blockchain";
 
 function useAgent<H, M, A>(
   api: { health(): Promise<H | null>; metrics(): Promise<M | null>; activity(count?: number): Promise<A | null>; info(): Promise<AgentInfo | null> },
@@ -34,6 +35,25 @@ function useAgent<H, M, A>(
   }, []);
 
   return { health, metrics, activity, info, isLoading, reload: load };
+}
+
+function useBlockchain(intervalMs = 10_000): { status: BlockchainStatus | null; isLoading: boolean; reload: () => Promise<void> } {
+  const [status, setStatus] = useState<BlockchainStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const load = async () => {
+    const nextStatus = await fetchBlockchainStatus();
+    setStatus(nextStatus);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    void load();
+    const interval = setInterval(load, intervalMs);
+    return () => clearInterval(interval);
+  }, []);
+
+  return { status, isLoading, reload: load };
 }
 
 function AgentCard({
@@ -93,52 +113,43 @@ function AgentCard({
   );
 }
 
-function ContractInfo() {
-  const [blockNumber, setBlockNumber] = useState<bigint | null>(null);
-  const [rpcUrl, setRpcUrl] = useState("");
-
-  useEffect(() => {
-    setRpcUrl(import.meta.env.VITE_ONCHAIN_RPC_URL ?? "http://localhost:8545");
-    const check = async () => {
-      try {
-        const response = await fetch("/api/v1/health");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.blockNumber) setBlockNumber(BigInt(data.blockNumber));
-        }
-      } catch {}
-    };
-    void check();
-  }, []);
-
+function ContractInfo({ status }: { status: BlockchainStatus | null }) {
   const orderManagerAddress = import.meta.env.VITE_ORDER_MANAGER_ADDRESS ?? "0x5FbDB2...";
+  const rpcUrl = import.meta.env.VITE_ONCHAIN_RPC_URL ?? "http://localhost:8545";
+  const blockNumber = status?.latestBlockNumber ? BigInt(status.latestBlockNumber) : null;
 
   return (
     <section className="panel">
       <h3>Smart Contracts</h3>
       <dl style={{ fontSize: 13, lineHeight: 2 }}>
-        <dt style={{ fontWeight: 700, color: "#64748b" }}>OrderManager</dt>
+        <dt style={{ fontWeight: 700, color: "#64748b" }}>Blockchain</dt>
+        <dd><code>{status?.mode === "connected" ? "Connected" : status?.mode === "unavailable" ? "Unavailable" : "Disconnected"}</code></dd>
+        <dt style={{ fontWeight: 700, color: "#64748b", marginTop: 8 }}>OrderManager</dt>
         <dd><code>{orderManagerAddress}</code></dd>
         <dt style={{ fontWeight: 700, color: "#64748b", marginTop: 8 }}>RPC URL</dt>
         <dd><code>{rpcUrl}</code></dd>
         <dt style={{ fontWeight: 700, color: "#64748b", marginTop: 8 }}>Chain ID</dt>
-        <dd><code>31337 (Anvil)</code></dd>
+        <dd><code>{status?.chainId ?? "—"}</code></dd>
         <dt style={{ fontWeight: 700, color: "#64748b", marginTop: 8 }}>Last Block</dt>
         <dd><code>{blockNumber?.toString() ?? "—"}</code></dd>
+        <dt style={{ fontWeight: 700, color: "#64748b", marginTop: 8 }}>Last Checked</dt>
+        <dd><code>{status ? new Date(status.lastCheckedAt).toLocaleString() : "—"}</code></dd>
       </dl>
+      {status && <p className={status.connected ? "text-muted" : "text-error"} style={{ marginTop: 12 }}>{status.message}</p>}
     </section>
   );
 }
 
-function OnChainOrderLookup() {
+function OnChainOrderLookup({ status }: { status: BlockchainStatus | null }) {
   const { t } = useI18n();
   const [orderCode, setOrderCode] = useState("");
   const [result, setResult] = useState<{ status: number; isPaid: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const isBlockchainAvailable = status?.connected === true;
 
   const lookup = async () => {
-    if (!orderCode.trim()) return;
+    if (!orderCode.trim() || !isBlockchainAvailable) return;
     setLoading(true);
     setError("");
     setResult(null);
@@ -148,11 +159,15 @@ function OnChainOrderLookup() {
         setError(`Status ${response.status}`);
         return;
       }
-      const data = await response.json();
+      const data = (await response.json()) as OnChainLookupResult;
+      if (data.unavailable) {
+        setError(t("dashboard.pendingSync"));
+        return;
+      }
       if (data.onChain && data.status !== null) {
         setResult({ status: data.status, isPaid: false });
       } else {
-        setError("Not found on-chain");
+        setError(t("dashboard.noOnChain"));
       }
     } catch (e) {
       setError(String(e));
@@ -171,11 +186,17 @@ function OnChainOrderLookup() {
           value={orderCode}
           onChange={(e) => setOrderCode(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && lookup()}
+          disabled={!isBlockchainAvailable}
         />
-        <button className="primary-button" onClick={lookup} disabled={loading}>
+        <button className="primary-button" onClick={lookup} disabled={loading || !isBlockchainAvailable}>
           {loading ? "..." : "Lookup"}
         </button>
       </div>
+      {!isBlockchainAvailable && (
+        <p className="text-error" style={{ marginTop: 8 }}>
+          {status?.mode === "unavailable" ? t("errors.blockchainUnavailableBanner") : t("errors.blockchainOfflineBanner")}
+        </p>
+      )}
       {result && (
         <div style={{ marginTop: 12 }}>
           <p>Status: <strong>{["None", "Generated", "In Process", "Delivered", "Cancelled", "Invoiced"][result.status] ?? result.status}</strong></p>
@@ -190,7 +211,8 @@ export function Web3Feature() {
   const { t } = useI18n();
   const collector = useAgent<AgentHealth, AgentMetrics, readonly AgentActivityEntry[]>(collectorApi, 3000);
   const compliance = useAgent<AgentHealth, AgentMetrics, readonly AgentActivityEntry[]>(complianceApi, 3000);
-  const isLoading = collector.isLoading || compliance.isLoading;
+  const blockchain = useBlockchain(5000);
+  const isLoading = collector.isLoading || compliance.isLoading || blockchain.isLoading;
 
   const anyOnline = (collector.health?.status === "ok") || (compliance.health?.status === "ok");
 
@@ -205,8 +227,12 @@ export function Web3Feature() {
           <h2>Web3 + AI Agents</h2>
           <p>
             {anyOnline
-              ? "Agentic Commerce Network — agents are online and monitoring on-chain activity"
-              : "Agentic Commerce Network — no agents detected (start anvil + agents to see them)"}
+              ? "Agentic Commerce Network - agents are online and monitoring on-chain activity"
+              : blockchain.status?.mode === "connected"
+                ? "Agentic Commerce Network - blockchain is online, but no agents detected"
+                : blockchain.status?.mode === "unavailable"
+                  ? "Agentic Commerce Network - blockchain infrastructure is unavailable"
+                  : "Agentic Commerce Network - blockchain is offline"}
           </p>
         </div>
       </div>
@@ -231,8 +257,8 @@ export function Web3Feature() {
       </div>
 
       <div className="grid two" style={{ marginTop: 16 }}>
-        <ContractInfo />
-        <OnChainOrderLookup />
+        <ContractInfo status={blockchain.status} />
+        <OnChainOrderLookup status={blockchain.status} />
       </div>
 
       <div className="panel" style={{ marginTop: 16 }}>
