@@ -64,4 +64,29 @@ describe("OnChainStatusBadge", () => {
       expect(screen.getByText(/On-chain/)).toBeDefined();
     });
   });
+
+  it("renders pending sync when the blockchain is unavailable", async () => {
+    vi.spyOn(global, "fetch").mockImplementation((url: string | URL | Request) => {
+      if (typeof url === "string" && url.includes("/onchain")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ onChain: false, status: null, unavailable: true }),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response);
+    });
+
+    render(
+      <TestWrapper>
+        <OnChainStatusBadge orderCode="TEST-001" />
+      </TestWrapper>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Pending sync")).toBeDefined();
+    });
+  });
 });

@@ -1,4 +1,5 @@
 import type { AuthController } from "../controllers/auth-controller";
+import type { BlockchainController } from "../controllers/blockchain-controller";
 import type { CommerceController } from "../controllers/commerce-controller";
 import type { DocsController } from "../controllers/docs-controller";
 import type { HealthController } from "../controllers/health-controller";
@@ -7,6 +8,7 @@ import { Router } from "./router";
 
 export function createRouter(
   healthController: HealthController,
+  blockchainController: BlockchainController,
   docsController: DocsController,
   commerceController: CommerceController,
   authController: AuthController,
@@ -17,6 +19,7 @@ export function createRouter(
 ): Router {
   const router = new Router();
   router.register("GET", "/api/v1/health", healthController.check);
+  router.register("GET", "/api/v1/blockchain/status", blockchainController.check, [authMiddleware, viewerOrAbove]);
   router.register("GET", "/api/v1/openapi.yaml", docsController.spec);
   router.register("GET", "/api/v1/docs", docsController.redirect);
   router.register("GET", "/docs", docsController.ui);

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { BlockchainBanner } from "./components/BlockchainBanner";
 import { PageErrorBoundary } from "./components/ErrorBoundary";
 import { AppShell, type NavItem } from "./components/layout/AppShell";
 import { OfflineBanner } from "./components/OfflineBanner";
@@ -47,6 +48,7 @@ export function App() {
   return (
     <>
       <OfflineBanner />
+      <BlockchainBanner />
       <Routes>
         <Route element={<PageErrorBoundary><PublicLayout /></PageErrorBoundary>}>
           <Route path="/" element={<PageErrorBoundary><LandingPage /></PageErrorBoundary>} />

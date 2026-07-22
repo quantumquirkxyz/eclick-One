@@ -28,7 +28,16 @@ import {
   NotFoundError,
 } from "../errors/app-error";
 import { apiText, type ApiLocale } from "../i18n";
-import type { OnChainClient } from "../onchain/OnChainClient";
+export interface OnChainOperations {
+  isAvailable(): Promise<boolean>;
+  createOrderOnChain(orderCode: string, clientCode: number, productCode: number, quantity: number, amount: number): Promise<string>;
+  recordPaymentOnChain(orderCode: string, amount: number): Promise<string>;
+  transitionToInProcess(orderCode: string): Promise<string>;
+  transitionToDelivered(orderCode: string): Promise<string>;
+  transitionToInvoiced(orderCode: string): Promise<string>;
+  cancelOrderOnChain(orderCode: string): Promise<string>;
+  getOrderStatusOnChain(orderCode: string): Promise<number>;
+}
 
 export interface ComplianceReport {
   timestamp: string;
@@ -36,6 +45,12 @@ export interface ComplianceReport {
   status: "compliant" | "violation" | "warning";
   message: string;
   details: Record<string, unknown>;
+}
+
+export interface OnChainStatusResult {
+  onChain: boolean;
+  status: number | null;
+  unavailable: boolean;
 }
 
 export interface DashboardSnapshot {
@@ -87,7 +102,7 @@ export class CommerceService {
   constructor(
     private readonly repositories: CommerceRepositories,
     private readonly synthetic: boolean,
-    private readonly onchain: OnChainClient | null,
+    private readonly onchain: OnChainOperations | null,
   ) {}
 
   listProvinces(): Promise<readonly Province[]> {
@@ -218,15 +233,19 @@ export class CommerceService {
     return updatedOrder;
   }
 
-  async getOrderOnChainStatus(codigoPedido: string): Promise<{ onChain: boolean; status: number | null; txHash?: string }> {
+  async getOrderOnChainStatus(codigoPedido: string): Promise<OnChainStatusResult> {
     if (!this.onchain) {
-      return { onChain: false, status: null };
+      return { onChain: false, status: null, unavailable: true };
+    }
+    const available = await this.onchain.isAvailable().catch(() => false);
+    if (!available) {
+      return { onChain: false, status: null, unavailable: true };
     }
     try {
       const status = await this.onchain.getOrderStatusOnChain(codigoPedido);
-      return { onChain: true, status };
+      return { onChain: true, status, unavailable: false };
     } catch {
-      return { onChain: false, status: null };
+      return { onChain: false, status: null, unavailable: false };
     }
   }
 

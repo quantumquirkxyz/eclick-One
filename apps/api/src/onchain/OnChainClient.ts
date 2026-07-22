@@ -158,4 +158,21 @@ export class OnChainClient {
     });
     return Number(status);
   }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      await this.publicClient.getChainId();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getChainId(): Promise<number> {
+    return Number(await this.publicClient.getChainId());
+  }
+
+  async getLatestBlockNumber(): Promise<bigint> {
+    return this.publicClient.getBlockNumber();
+  }
 }
